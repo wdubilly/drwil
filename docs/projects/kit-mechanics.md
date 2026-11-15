@@ -198,6 +198,14 @@ prouvé : les verdicts voyagent avec la preuve d'arbre de la PR (QUA-296). Dans 
 le job `checks` (artefact `arbre-prouve`) ; dans celui du gabarit, le job `plan` compare les arbres et passe les
 verdicts à `checks` (artefacts `proven-tree` et `proven-verdicts`). Règles et preuves : ces contrats, non recopiés ici.
 
+## 5. Consommation lue dans les journaux des outils
+
+`.githooks/consumption.mjs` lit les journaux de session de Claude Code (un dossier par projet) et ceux de Copilot CLI
+(un dossier pour tous les projets : seuls les appels faits dans le projet comptent, et un journal qui ne cite jamais
+le chemin du projet n'est pas analysé). Les clés d'appel sont préfixées par l'outil : un chantier mené avec les deux
+additionne ses parts sans rien compter deux fois. Formats relevés : la recette de consommation ; règles : QUA-042 et
+QUA-304, non recopiées ici.
+
 ## Reprise
 
 - Sondage d'attestation Claude Code : `drwil attest-poll` prépare le jugement ;

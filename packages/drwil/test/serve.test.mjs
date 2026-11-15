@@ -438,6 +438,52 @@ test("QUA-271 : aucune réponse de l'API ne porte de donnée nominative ni de se
   assert.match(tout, /un-chemin-de-fiche-vraiment-tres-long-et-lisible\.md/);
 });
 
+test("QUA-304 : la consommation de chaque chantier est répartie par outil ; une ligne sans outil nommé compte pour « outil inconnu » ; seuls le nom et les totaux sortent", async () => {
+  const ligne = (o) => JSON.stringify(o);
+  const p = await projet({
+    ".drwil/usage.jsonl": [
+      ligne({ workstream: "a", tokens: 10, output: 2, cache_read: 3, requests: 1, date: "2026-01-01", source: "claude-code-logs" }),
+      ligne({
+        workstream: "a",
+        tokens: 20,
+        date: "2026-01-02",
+        source: "claude-code-logs+copilot-cli-logs",
+        tools: {
+          "claude-code": { tokens: 5, output: 1, cache_read: 1, requests: 1, model: "m1", note: "Jeanne" },
+          "copilot-cli": { tokens: 15, output: 4, cache_read: "oups", requests: 2, duration_min: 9 },
+        },
+      }),
+      ligne({ workstream: "b", tokens: 7, date: "2026-01-03", source: "copilot-cli-logs" }),
+      ligne({ workstream: "c", tokens: 4, date: "2026-01-04", source: "estimate" }),
+      ligne({ workstream: "d", tokens: 3, date: "2026-01-05", tools: { "Jeanne Dupont": { tokens: 3 }, x: null } }),
+      ligne({ workstream: "e", tokens: 2, tools: [{ tokens: 99 }] }),
+    ].join("\n"),
+  });
+  const s = await demarrer(p);
+  const corps = await (await fetch(`${s.url}api/usage`)).text();
+  const parNom = Object.fromEntries(JSON.parse(corps).workstreams.map((w) => [w.workstream, w.tools]));
+  assert.deepEqual(parNom.a, [
+    { tool: "claude-code", tokens: 15, output: 3, cache_read: 4, requests: 2 },
+    { tool: "copilot-cli", tokens: 15, output: 4, cache_read: 0, requests: 2 },
+  ]);
+  assert.deepEqual(parNom.b, [{ tool: "copilot-cli", tokens: 7, output: 0, cache_read: 0, requests: 0 }]);
+  assert.deepEqual(parNom.c, [{ tool: "unknown", tokens: 4, output: 0, cache_read: 0, requests: 0 }]);
+  assert.deepEqual(
+    parNom.d,
+    [{ tool: "unknown", tokens: 3, output: 0, cache_read: 0, requests: 0 }],
+    "un nom d'outil hors forme ne sort pas",
+  );
+  assert.deepEqual(parNom.e, [{ tool: "unknown", tokens: 2, output: 0, cache_read: 0, requests: 0 }]);
+  for (const interdit of ["Jeanne", "m1", "note", "source"]) assert.ok(!corps.includes(interdit), interdit);
+  assert.equal(s.erreurs(), "");
+  // La page nomme chaque outil, « outil inconnu » pour une ligne sans outil nommé.
+  assert.match(scriptDeLaPage, /w\.tools/);
+  assert.equal(textes.fr["tool-unknown"], "outil inconnu");
+  assert.equal(textes.en["tool-unknown"], "unknown tool");
+  assert.equal(textes.fr["tool-claude-code"], "Claude Code");
+  assert.equal(textes.en["tool-copilot-cli"], "Copilot CLI");
+});
+
 test("QUA-271 : le filtre retire les clés nominatives à toute profondeur et masque secrets et courriels", () => {
   // Une fausse clé, assemblée pour que le contrôle des secrets (SEC-007) ne la prenne pas pour une vraie.
   const entete = ["RSA", "PRIVATE", "KEY-----"].join(" ");

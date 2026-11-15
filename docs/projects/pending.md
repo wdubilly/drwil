@@ -160,8 +160,6 @@ d'un outil) la dit dans son statut.
 
 ### Mesure
 
-- [ ] [IA] [P0] (0.11.2) La consommation de Copilot CLI est mesurée comme celle de Claude Code (cadré le 2026-11-12) —
-  `docs/projects/consommation-copilot-cli.md`.
 - [ ] [IA] [P0] (0.11.2) Le coût d'un chantier se répartit entre production, vérification et gouvernance, mesuré
   sur 10 chantiers, Copilot CLI compris ; après consommation-copilot-cli (cadré le 2026-11-13) —
   `docs/projects/cout-par-activite.md`.
@@ -399,7 +397,7 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 ### Coût en tokens
 
 - [ ] [décision] (0.14.0) La consommation de tokens mesurée aussi pour les autres
-  outils IA (Copilot CLI, Cursor, Codex, Gemini) —
+  outils IA (Cursor, Codex, Gemini ; Copilot CLI couvert le 2026-11-15) —
   `docs/intentions/consommation-autres-outils.md`.
 
 ### Catalogue et profils (casse une compatibilité : avant la publication npm)

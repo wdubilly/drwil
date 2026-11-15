@@ -4089,6 +4089,20 @@
       "needsBuild": true
     },
     {
+      "id": "tests-qua-304",
+      "name": "tests de QUA-304, filtrés par son ID (un contrôle par règle, QUA-033)",
+      "run": "node --test --test-name-pattern=\"^QUA-304 \" packages/drwil/test/serve.test.mjs",
+      "needsBuild": true,
+      "ciJob": "checks",
+      "paths": [
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
       "id": "tests-qua-303",
       "name": "tests de QUA-303, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node outils/tests-par-fichier.mjs QUA-303 packages/drwil/test/coverage-merge.test.mjs",

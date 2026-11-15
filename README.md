@@ -799,7 +799,7 @@ can read directly. The names are the same whatever the project language.
 | `/drwil-adopt` | Make the kit live on an existing project after `init` |
 | `/drwil-audit` | Audit risks and technical debt |
 | `/drwil-value` | Discover the next high-value product features |
-| `/drwil-usage` | Measure a workstream's tokens from Claude Code's session logs and record its closing line |
+| `/drwil-usage` | Measure a workstream's tokens from the session logs of Claude Code and Copilot CLI (another AI tool: estimated by hand) and record its closing line |
 | `/drwil-progress` | Generate a static HTML progress dashboard |
 | `/drwil-release` | Tag and publish a GitHub release, or a candidate pre-release with its acceptance sheet, then promote it once a human approved it (optional module) |
 
@@ -948,7 +948,8 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
    and `node .githooks/close.mjs` adds the proof link to its journal entry,
    removes its index entry and deletes the item itself,
    its token consumption is recorded (`.drwil/usage.jsonl`, read from
-   Claude Code's session logs), its untreated limits become intents, the
+   the session logs of Claude Code and Copilot CLI; another AI tool:
+   estimated by hand), its untreated limits become intents, the
    README, changelog and
    architecture map are updated when the work changes them, the pull
    request is opened and put in automatic merge

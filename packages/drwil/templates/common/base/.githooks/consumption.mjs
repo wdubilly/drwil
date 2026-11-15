@@ -1,21 +1,36 @@
 #!/usr/bin/env node
-// Token consumption per workstream, with nothing to type (QUA-042). Source: Claude Code's session logs
+// Token consumption per workstream, with nothing to type (QUA-042). Sources: Claude Code's session logs
 // (~/.claude/projects/<project path, non-alphanumeric characters as "-">/*.jsonl), where each agent
-// answer carries its tokens, model, timestamp and the git branch of the moment; one branch per brief
-// (`workstream/<brief>`, and `scoping/<brief>` or `cadrage/<brief>` for its scoping) attributes it.
-// The logs hold the whole conversation: only the consumption fields are read, never a message content
-// is shown or written. Never blocking: without a readable log, it says so and exits 0.
-// Usage: node .githooks/consumption.mjs [--since YYYY-MM-DD (UTC)] [--json] [--logs <folder>]
+// answer carries its tokens, model, timestamp and the git branch of the moment, and Copilot CLI's
+// (~/.copilot/session-state/<session>/events.jsonl, every project mixed: only the calls made in the
+// project count); one branch per brief (`workstream/<brief>`, and `scoping/<brief>` or `cadrage/<brief>`
+// for its scoping) attributes it, the two tools' parts summed. The logs hold the whole conversation:
+// only the consumption fields are read, never a message content is shown or written. Never blocking:
+// without a readable log, it says so and exits 0.
+// Usage: node .githooks/consumption.mjs [--since YYYY-MM-DD (UTC)] [--json] [--logs <folder>] [--copilot-logs <folder>]
 //        node .githooks/consumption.mjs --record <brief> (at closing: one line in .drwil/usage.jsonl)
 //        node .githooks/consumption.mjs --recorded (the recorded workstreams compared, no log needed)
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { activeTime, aggregate, group, logsFolder, PAUSE_MS, readLog, WEIGHTS } from "./consumption-log.mjs";
+import { activeTime, aggregate, copilotFolder, group, logsFolder, PAUSE_MS, readCopilotLog, readLog, WEIGHTS } from "./consumption-log.mjs";
 import { format, formatRecorded, readable, usageLine } from "./consumption-format.mjs";
-import { TEXTS, USAGE } from "./consumption-texts.mjs";
+import { TEXTS, TOOLS, USAGE } from "./consumption-texts.mjs";
 
-export { PAUSE_MS, WEIGHTS, activeTime, aggregate, group, format, formatRecorded, logsFolder, readLog, usageLine };
+export {
+  PAUSE_MS,
+  WEIGHTS,
+  activeTime,
+  aggregate,
+  copilotFolder,
+  group,
+  format,
+  formatRecorded,
+  logsFolder,
+  readCopilotLog,
+  readLog,
+  usageLine,
+};
 
 const jsonlFiles = (folder) =>
   readdirSync(folder).flatMap((name) => {
@@ -24,6 +39,40 @@ const jsonlFiles = (folder) =>
     return name.endsWith(".jsonl") ? [path] : [];
   });
 
+/**
+ * Copilot CLI's calls made in the project. A session log that never writes the project's path (as JSON
+ * escapes it) cannot hold one of its calls: it is not parsed, its unreadable lines are not counted.
+ */
+function copilotAnswers(folder, root) {
+  const answers = [];
+  let unreadable = 0;
+  const path = JSON.stringify(resolve(root)).slice(1, -1);
+  for (const name of existsSync(folder) ? readdirSync(folder) : []) {
+    const file = join(folder, name, "events.jsonl");
+    const text = existsSync(file) ? readFileSync(file, "utf8") : "";
+    if (!text.includes(path)) continue;
+    const r = readCopilotLog(text, root);
+    answers.push(...r.answers);
+    unreadable += r.unreadable;
+  }
+  return { answers, unreadable };
+}
+
+/** aggregate, each row with its part per tool (`tools`: { tool: row }); keys never shared between tools. */
+export function aggregateTools(answers, opt = {}) {
+  const parts = Object.keys(TOOLS).map((tool) => [
+    tool,
+    aggregate(
+      answers.filter((a) => a.tool === tool),
+      opt,
+    ),
+  ]);
+  return aggregate(answers, opt).map((row) => ({
+    ...row,
+    tools: Object.fromEntries(parts.flatMap(([tool, rows]) => rows.filter((r) => r.workstream === row.workstream).map((r) => [tool, r]))),
+  }));
+}
+
 /** Reads the arguments and the logs, prints or records; returns the exit code. */
 export function main(args, { env = process.env, root = process.cwd(), log = console.log, err = console.error, now = new Date() } = {}) {
   let lang = "fr";
@@ -31,11 +80,12 @@ export function main(args, { env = process.env, root = process.cwd(), log = cons
     lang = JSON.parse(readFileSync(join(root, ".drwil", "ia-first.json"), "utf8"))?.lang === "en" ? "en" : "fr";
   } catch {}
   const T = TEXTS[lang];
-  const opt = { json: false, since: null, logs: null, record: null, recorded: false };
+  const opt = { json: false, since: null, logs: null, copilotLogs: null, record: null, recorded: false };
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--json") opt.json = true;
     else if (args[i] === "--since") opt.since = Date.parse(args[++i]);
     else if (args[i] === "--logs") opt.logs = args[++i];
+    else if (args[i] === "--copilot-logs") opt.copilotLogs = args[++i];
     else if (args[i] === "--record") opt.record = args[++i] ?? "";
     else if (args[i] === "--recorded") opt.recorded = true;
   }
@@ -54,22 +104,25 @@ export function main(args, { env = process.env, root = process.cwd(), log = cons
     return 2;
   }
   const folder = opt.logs ?? logsFolder(root, env);
-  // Without a log, nothing is measured: never "0 token" — but never blocking either.
-  if (!existsSync(folder)) {
-    err(T.noLogs(folder));
-    return 0;
-  }
+  const copilotLogs = opt.copilotLogs ?? copilotFolder(env);
   const answers = [];
   let unreadable = 0;
-  for (const f of jsonlFiles(folder)) {
-    const r = readLog(readFileSync(f, "utf8"));
-    answers.push(...r.answers);
+  // Tagged per tool, the key prefixed with it: two tools' calls are never taken for one another.
+  const add = (tool, r) => {
+    for (const a of r.answers) answers.push({ ...a, key: `${tool}:${a.key}`, tool });
     unreadable += r.unreadable;
+  };
+  if (existsSync(folder)) for (const f of jsonlFiles(folder)) add("claude-code", readLog(readFileSync(f, "utf8")));
+  add("copilot-cli", copilotAnswers(copilotLogs, root));
+  // Without a log, nothing is measured: never "0 token" — but never blocking either.
+  if (!existsSync(folder) && !answers.length && !unreadable) {
+    err(T.noLogs(folder, copilotLogs));
+    return 0;
   }
-  const rows = aggregate(answers, { since: opt.since, T }).filter((r) => opt.record === null || r.workstream === opt.record);
+  const rows = aggregateTools(answers, { since: opt.since, T }).filter((r) => opt.record === null || r.workstream === opt.record);
   if (unreadable && !opt.json) err(T.unreadable(unreadable));
   if (!rows.length) {
-    err(T.noAnswer(folder));
+    err(T.noAnswer(folder, copilotLogs));
     return 0;
   }
   if (opt.record !== null) {
@@ -88,7 +141,8 @@ export function main(args, { env = process.env, root = process.cwd(), log = cons
     }
     mkdirSync(join(root, ".drwil"), { recursive: true });
     appendFileSync(path, `${JSON.stringify(usageLine(rows[0], now.toISOString().slice(0, 10)))}\n`);
-    log(T.recorded(opt.record, rows[0].weighted, readable(rows[0].cacheReadPerRequest, lang === "fr")));
+    const parts = Object.entries(rows[0].tools).map(([tool, r]) => [TOOLS[tool].name, r.weighted]);
+    log(T.recorded(opt.record, rows[0].weighted, readable(rows[0].cacheReadPerRequest, lang === "fr"), parts));
     return 0;
   }
   log(opt.json ? JSON.stringify({ version: 1, unreadable, workstreams: rows }, null, 2) : format(rows, T));

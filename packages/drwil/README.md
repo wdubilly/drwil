@@ -245,8 +245,8 @@ SCOPING ──start──▶ BUILD ──▶ EVIDENCE ──▶ VERIFY ──▶
    contract, that contract's checks, the verified commit and the
    fingerprint of the covered files) and the item itself is deleted;
    without that proof, the closing is refused. Its token consumption is
-   recorded (`.drwil/usage.jsonl`, read from
-   Claude Code's session logs);
+   recorded (`.drwil/usage.jsonl`, read from the session logs of
+   Claude Code and Copilot CLI; another AI tool: estimated by hand);
    its untreated limits become intents; the README, the `CHANGELOG.md`
    « Unreleased » section and the map `docs/architecture.md` are updated
    when the work changes them; the pull request is opened, then back to

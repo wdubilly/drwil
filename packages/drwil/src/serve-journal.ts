@@ -1,6 +1,7 @@
 // Historique d'un projet pour `drwil serve`. Journal d'événements : un fichier par projet, dans le cache de
 // l'utilisateur (QUA-274). Consommation par chantier (`.drwil/usage.jsonl`) : les champs retenus sont une
-// liste fermée, une colonne ajoutée au fichier n'atteint jamais l'API (QUA-271).
+// liste fermée, une colonne ajoutée au fichier n'atteint jamais l'API (QUA-271) ; sa répartition par outil ne
+// sort que le nom de l'outil et ses totaux (QUA-304).
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -100,9 +101,23 @@ function usageRows(usage: string): Totals[] {
     });
 }
 
+const TOOL_TOTALS = ["tokens", "output", "cache_read", "requests"] as const;
+type ToolTotals = Record<(typeof TOOL_TOTALS)[number], number>;
+const SOURCES: Record<string, string> = { "claude-code-logs": "claude-code", "copilot-cli-logs": "copilot-cli" };
+// Un nom d'outil est un identifiant court : tout autre texte (un nom de personne écrit à la main) reste « inconnu ».
+const TOOL_NAME = /^[a-z][a-z0-9-]{0,31}$/;
+
+/** Parts d'une ligne par outil : `tools` s'il y est, sinon l'outil de sa `source`, sinon « unknown ». */
+function toolParts(row: Totals & { tools?: unknown; source?: unknown }): [string, Record<string, unknown>][] {
+  const tools = row.tools && typeof row.tools === "object" && !Array.isArray(row.tools) ? Object.entries(row.tools) : [];
+  const parts = tools.filter((p): p is [string, Record<string, unknown>] => !!p[1] && typeof p[1] === "object");
+  if (parts.length) return parts.map(([name, p]) => [TOOL_NAME.test(name) ? name : "unknown", p]);
+  return [[(typeof row.source === "string" && SOURCES[row.source]) || "unknown", row]];
+}
+
 /** Agrège par chantier ; un chantier compte pour la première version publiée à sa date ou après (`tagLines` : tag, date). */
 export function summarizeUsage(usage: string, tagLines: string) {
-  const byName = new Map<string, Totals & { models: Set<string> }>();
+  const byName = new Map<string, Totals & { models: Set<string>; tools: Map<string, ToolTotals> }>();
   for (const r of usageRows(usage)) {
     const w = byName.get(r.workstream) ?? {
       workstream: r.workstream,
@@ -114,8 +129,14 @@ export function summarizeUsage(usage: string, tagLines: string) {
       date: r.date,
       increments: 0,
       models: new Set<string>(),
+      tools: new Map<string, ToolTotals>(),
     };
     for (const key of TOTALS) w[key] += Number(r[key]) || 0;
+    for (const [tool, part] of toolParts(r)) {
+      const t = w.tools.get(tool) ?? { tokens: 0, output: 0, cache_read: 0, requests: 0 };
+      for (const key of TOOL_TOTALS) t[key] += Number(part[key]) || 0;
+      w.tools.set(tool, t);
+    }
     if (typeof r.model === "string" && r.model) w.models.add(r.model);
     if (r.date > w.date) w.date = r.date;
     w.increments++;
@@ -129,6 +150,7 @@ export function summarizeUsage(usage: string, tagLines: string) {
   const workstreams = [...byName.values()].map((w) => ({
     ...w,
     models: [...w.models],
+    tools: [...w.tools].map(([tool, t]) => ({ tool, ...t })).sort((a, b) => b.tokens - a.tokens || a.tool.localeCompare(b.tool)),
     version: w.date ? (tags.find((t) => t.date >= w.date)?.tag ?? null) : null,
   }));
   return { workstreams: workstreams.sort((a, b) => b.date.localeCompare(a.date)), tags };

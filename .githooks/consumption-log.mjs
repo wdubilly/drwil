@@ -1,6 +1,6 @@
 // Reading the session logs and aggregating them per workstream (split from consumption.mjs, which re-exports it).
 import { homedir } from "node:os";
-import { join, resolve } from "node:path";
+import { join, resolve, sep } from "node:path";
 import { TEXTS } from "./consumption-texts.mjs";
 
 /** Pause beyond which time is no longer counted as active. */
@@ -49,6 +49,55 @@ export function readLog(text) {
         cacheRead: usage.cache_read_input_tokens ?? 0,
         cacheWrite: usage.cache_creation_input_tokens ?? 0,
       },
+    });
+  }
+  return { answers, unreadable };
+}
+
+/** Copilot CLI's sessions folder: one `<session id>/events.jsonl` per session, all projects mixed. */
+export function copilotFolder(env = process.env) {
+  return join(env.COPILOT_HOME ?? join(homedir(), ".copilot"), "session-state");
+}
+
+/**
+ * Model calls of a Copilot CLI session log (events.jsonl), same shape as readLog: one
+ * `session.usage_record` event per call (a sub-agent's calls included, in its parent's log). The
+ * branch and the project come from the last `session.start` or `session.context_changed` event; only
+ * the calls made in `root` (or below it) are kept. Its inputTokens includes the cache read and
+ * written (the tool's own totals at shutdown subtract them): the uncached input is the difference.
+ */
+export function readCopilotLog(text, root = null) {
+  const answers = [];
+  let unreadable = 0;
+  let where = null;
+  let branch = null;
+  const r = root === null ? null : resolve(root);
+  for (const line of text.split("\n")) {
+    if (!line.trim()) continue;
+    let j;
+    try {
+      j = JSON.parse(line);
+    } catch {
+      unreadable++;
+      continue;
+    }
+    const ctx = j?.type === "session.start" ? j.data?.context : j?.type === "session.context_changed" ? j.data : null;
+    if (ctx) {
+      where = ctx.gitRoot ?? ctx.cwd ?? null;
+      branch = ctx.branch || null;
+      continue;
+    }
+    const u = j?.data?.usage;
+    if (j?.type !== "session.usage_record" || !u || !j.timestamp) continue;
+    if (r !== null && (where === null || (resolve(where) !== r && !resolve(where).startsWith(r + sep)))) continue;
+    const cacheRead = u.cacheReadTokens ?? 0;
+    const cacheWrite = u.cacheWriteTokens ?? 0;
+    answers.push({
+      key: u.accounting?.usageId ?? u.apiCallId ?? j.id,
+      time: Date.parse(j.timestamp),
+      branch,
+      model: u.model ?? "unknown",
+      usage: { input: Math.max(0, (u.inputTokens ?? 0) - cacheRead - cacheWrite), output: u.outputTokens ?? 0, cacheRead, cacheWrite },
     });
   }
   return { answers, unreadable };
