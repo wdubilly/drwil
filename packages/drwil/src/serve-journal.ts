@@ -1,7 +1,7 @@
-// Historique d'un projet pour `drwil serve`. Journal d'événements : un fichier par projet, dans le cache de
-// l'utilisateur (QUA-274). Consommation par chantier (`.drwil/usage.jsonl`) : les champs retenus sont une
-// liste fermée, une colonne ajoutée au fichier n'atteint jamais l'API (QUA-271) ; sa répartition par outil ne
-// sort que le nom de l'outil et ses totaux (QUA-304).
+// Historique d'un projet pour `drwil serve`. Journal d'événements : un fichier par projet, dans le cache de l'utilisateur
+// (QUA-274). Consommation par chantier (`.drwil/usage.jsonl`) : les champs retenus sont une liste fermée, une colonne ajoutée
+// au fichier n'atteint jamais l'API (QUA-271) ; sa répartition par outil ne sort que le nom de l'outil et ses totaux (QUA-304),
+// sa répartition par activité que ses quatre parts nommées et leurs totaux (QUA-308).
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -101,54 +101,62 @@ function usageRows(usage: string): Totals[] {
     });
 }
 
-const TOOL_TOTALS = ["tokens", "output", "cache_read", "requests"] as const;
-type ToolTotals = Record<(typeof TOOL_TOTALS)[number], number>;
 const SOURCES: Record<string, string> = { "claude-code-logs": "claude-code", "copilot-cli-logs": "copilot-cli" };
 // Un nom d'outil est un identifiant court : tout autre texte (un nom de personne écrit à la main) reste « inconnu ».
 const TOOL_NAME = /^[a-z][a-z0-9-]{0,31}$/;
+type Parts = [string, Record<string, unknown>][];
+type Sums = Map<string, Record<string, number> & { tokens: number }>;
 
 /** Parts d'une ligne par outil : `tools` s'il y est, sinon l'outil de sa `source`, sinon « unknown ». */
-function toolParts(row: Totals & { tools?: unknown; source?: unknown }): [string, Record<string, unknown>][] {
+function toolParts(row: Totals & { tools?: unknown; source?: unknown }): Parts {
   const tools = row.tools && typeof row.tools === "object" && !Array.isArray(row.tools) ? Object.entries(row.tools) : [];
   const parts = tools.filter((p): p is [string, Record<string, unknown>] => !!p[1] && typeof p[1] === "object");
   if (parts.length) return parts.map(([name, p]) => [TOOL_NAME.test(name) ? name : "unknown", p]);
   return [[(typeof row.source === "string" && SOURCES[row.source]) || "unknown", row]];
 }
 
+const ACTIVITIES = ["production", "verification", "governance", "unattributed"];
+/** Parts d'une ligne par activité (les quatre, chacune un objet) ; null : non répartie, comptée « non attribuée » (QUA-308). */
+function activityParts(row: Totals & { activities?: unknown }): Parts | null {
+  const a = (row.activities ?? {}) as Record<string, unknown>;
+  return ACTIVITIES.every((k) => a[k] && typeof a[k] === "object") ? ACTIVITIES.map((k) => [k, a[k] as Record<string, unknown>]) : null;
+}
+
+/** Ajoute à `sums` (par nom de part) les champs `keys` de chaque part ; une valeur non numérique compte 0. */
+function addParts(sums: Sums, parts: Parts, keys: string[]) {
+  for (const [name, part] of parts) {
+    const t = sums.get(name) ?? { tokens: 0, ...Object.fromEntries(keys.map((k) => [k, 0])) };
+    for (const k of keys) t[k] += Number(part[k]) || 0;
+    sums.set(name, t);
+  }
+}
+
 /** Agrège par chantier ; un chantier compte pour la première version publiée à sa date ou après (`tagLines` : tag, date). */
 export function summarizeUsage(usage: string, tagLines: string) {
-  const byName = new Map<string, Totals & { models: Set<string>; tools: Map<string, ToolTotals> }>();
+  const byName = new Map<string, Totals & { models: Set<string>; tools: Sums; activities: Sums }>();
   for (const r of usageRows(usage)) {
     const w = byName.get(r.workstream) ?? {
+      ...(Object.fromEntries(TOTALS.map((k) => [k, 0])) as Record<(typeof TOTALS)[number], number>),
       workstream: r.workstream,
-      tokens: 0,
-      output: 0,
-      cache_read: 0,
-      requests: 0,
-      duration_min: 0,
       date: r.date,
       increments: 0,
       models: new Set<string>(),
-      tools: new Map<string, ToolTotals>(),
+      tools: new Map(),
+      activities: new Map(),
     };
     for (const key of TOTALS) w[key] += Number(r[key]) || 0;
-    for (const [tool, part] of toolParts(r)) {
-      const t = w.tools.get(tool) ?? { tokens: 0, output: 0, cache_read: 0, requests: 0 };
-      for (const key of TOOL_TOTALS) t[key] += Number(part[key]) || 0;
-      w.tools.set(tool, t);
-    }
+    addParts(w.tools, toolParts(r), ["tokens", "output", "cache_read", "requests"]);
+    addParts(w.activities, activityParts(r) ?? [["unattributed", r]], ["tokens", "requests"]);
     if (typeof r.model === "string" && r.model) w.models.add(r.model);
     if (r.date > w.date) w.date = r.date;
     w.increments++;
     byName.set(r.workstream, w);
   }
-  const tags = tagLines
-    .split("\n")
-    .filter(Boolean)
-    .map((l) => l.split("\x1f"))
-    .map(([tag, date]) => ({ tag, date }));
+  const tags = tagLines.split("\n").flatMap((l) => (l ? [{ tag: l.split("\x1f")[0], date: l.split("\x1f")[1] }] : []));
+  // Un chantier est réparti si une de ses lignes l'est : seule une ligne répartie donne la part « production ».
   const workstreams = [...byName.values()].map((w) => ({
     ...w,
+    activities: w.activities.has("production") ? Object.fromEntries(ACTIVITIES.map((k) => [k, w.activities.get(k)])) : null,
     models: [...w.models],
     tools: [...w.tools].map(([tool, t]) => ({ tool, ...t })).sort((a, b) => b.tokens - a.tokens || a.tool.localeCompare(b.tool)),
     version: w.date ? (tags.find((t) => t.date >= w.date)?.tag ?? null) : null,

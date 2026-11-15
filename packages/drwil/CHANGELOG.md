@@ -8,6 +8,16 @@ release renames this section to its version.
 
 ### Added
 
+- A workstream's consumption is split by activity: `node .githooks/consumption.mjs`
+  assigns each request (Claude Code and Copilot CLI) to production (`BUILD`),
+  verification (`EVIDENCE`, `VERIFY`) or governance (scoping, `CLOSING`, a
+  `BUILD` after a reopening) from the governance state's history of
+  transitions, which it now keeps; a request whose activity is unknown is
+  said « unattributed », never guessed. `--record` adds the split to the
+  closing line (`activities`), the existing fields unchanged; the report
+  counts the split workstreams out of the 10 expected before a review, then
+  gives each activity's mean share. `drwil serve` shows each workstream's
+  split; an older line is said « not split ».
 - Copilot CLI's consumption is measured like Claude Code's:
   `node .githooks/consumption.mjs` also reads Copilot CLI's local session
   logs (`~/.copilot/session-state`, only the calls made in the project) and

@@ -63,7 +63,7 @@ export function copilotFolder(env = process.env) {
  * Model calls of a Copilot CLI session log (events.jsonl), same shape as readLog: one
  * `session.usage_record` event per call (a sub-agent's calls included, in its parent's log). The
  * branch and the project come from the last `session.start` or `session.context_changed` event; only
- * the calls made in `root` (or below it) are kept. Its inputTokens includes the cache read and
+ * the calls made in `root` (or below it) are kept; a call without a timestamp has `time: null`. Its inputTokens includes the cache read and
  * written (the tool's own totals at shutdown subtract them): the uncached input is the difference.
  */
 export function readCopilotLog(text, root = null) {
@@ -88,13 +88,17 @@ export function readCopilotLog(text, root = null) {
       continue;
     }
     const u = j?.data?.usage;
-    if (j?.type !== "session.usage_record" || !u || !j.timestamp) continue;
+    // Without any key, a call read twice could not be told apart: never counted (QUA-042). Without an instant, it is
+    // counted, its activity unknown (QUA-309).
+    const key = u?.accounting?.usageId ?? u?.apiCallId ?? j?.id;
+    if (j?.type !== "session.usage_record" || !u || key === undefined) continue;
     if (r !== null && (where === null || (resolve(where) !== r && !resolve(where).startsWith(r + sep)))) continue;
     const cacheRead = u.cacheReadTokens ?? 0;
     const cacheWrite = u.cacheWriteTokens ?? 0;
+    const time = Date.parse(j.timestamp);
     answers.push({
-      key: u.accounting?.usageId ?? u.apiCallId ?? j.id,
-      time: Date.parse(j.timestamp),
+      key,
+      time: Number.isNaN(time) ? null : time,
       branch,
       model: u.model ?? "unknown",
       usage: { input: Math.max(0, (u.inputTokens ?? 0) - cacheRead - cacheWrite), output: u.outputTokens ?? 0, cacheRead, cacheWrite },
@@ -114,7 +118,7 @@ export function group(branch, T = TEXTS.en) {
 
 /** Active time: sum of the gaps between successive answers, without the pauses longer than PAUSE_MS. */
 export function activeTime(times) {
-  const t = [...times].sort((a, b) => a - b);
+  const t = times.filter(Number.isFinite).sort((a, b) => a - b);
   let total = 0;
   for (let i = 1; i < t.length; i++) if (t[i] - t[i - 1] <= PAUSE_MS) total += t[i] - t[i - 1];
   return total;
@@ -130,7 +134,7 @@ export function aggregate(answers, { since = null, T = TEXTS.en } = {}) {
   const seen = new Set();
   const groups = new Map();
   for (const r of answers) {
-    if (since !== null && r.time < since) continue;
+    if (since !== null && !(Number.isFinite(r.time) && r.time >= since)) continue;
     if (seen.has(r.key)) continue;
     seen.add(r.key);
     const name = group(r.branch, T);

@@ -26,6 +26,10 @@ export const TEXTS = {
     branch: (b) => `(branche ${b})`,
     recordedColumns: ["chantier", "date", "requêtes", "cache lu", "cache lu/req"],
     noRecorded: `consommation : aucune ligne dans ${USAGE} — rien à comparer`,
+    parts: { production: "production", verification: "vérification", governance: "gouvernance", unattributed: "non attribuée" },
+    splitOf: (b, parts) => `répartition de « ${b} » : ${parts.join(" ; ")}`,
+    splitCount: (n, e) => `chantiers répartis dans ${USAGE} : ${n} sur les ${e} attendus avant le bilan`,
+    splitMean: (n, parts) => `chantiers répartis dans ${USAGE} : ${n} — part moyenne : ${parts.join(" ; ")}`,
   },
   en: {
     columns: ["workstream", "requests", "input", "output", "cache read", "cache write", "cache read/req", "weighted", "time", "models"],
@@ -44,5 +48,9 @@ export const TEXTS = {
     branch: (b) => `(branch ${b})`,
     recordedColumns: ["workstream", "date", "requests", "cache read", "cache read/req"],
     noRecorded: `consumption: no line in ${USAGE} — nothing to compare`,
+    parts: { production: "production", verification: "verification", governance: "governance", unattributed: "unattributed" },
+    splitOf: (b, parts) => `split of "${b}": ${parts.join("; ")}`,
+    splitCount: (n, e) => `workstreams split in ${USAGE}: ${n} of the ${e} expected before the review`,
+    splitMean: (n, parts) => `workstreams split in ${USAGE}: ${n} — mean share: ${parts.join("; ")}`,
   },
 };

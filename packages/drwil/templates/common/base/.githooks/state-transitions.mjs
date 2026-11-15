@@ -8,6 +8,7 @@ import { activeElsewhere, createBranch, git } from "./worktree.mjs";
 import { ACTIVITIES, readState, texts, transitionAllowed, validateState, NEUTRAL_STATE } from "./state-validate.mjs";
 import { requiresHuman, verifyEvidence } from "./state-evidence.mjs";
 import { mainCiGate } from "./pr-watch-main.mjs";
+import { withEntry } from "./state-history.mjs";
 import { fill } from "./state-texts.mjs";
 import { move as moveAll, start as startAll, writeState } from "./state.mjs";
 
@@ -71,6 +72,7 @@ export function start(root, brief, { human = false, request, queue = [], now = n
   const missing = missingCriteria(root, path);
   if (missing === "blocking") return { code: 1, message: fill(T.startNoCriteria, path) };
   const state = { version: 1, activity: "BUILD", active_brief: path, active_request: request ?? null, since: now };
+  state.history = withEntry([], "BUILD", now); // a new workstream, a new history (QUA-305)
   // The automatic merge is the default (merge-auto.mjs): neither `auto_merge` nor `queue_merge` is written any more,
   // a legacy one is only read.
   if (rest.length) Object.assign(state, { queue: rest });
@@ -120,6 +122,8 @@ export function prepareTransition(read, to, { brief, request, now }, root) {
     state = { ...read.state, activity: to, active_request: request ?? read.state.active_request, since: now };
     for (const key of ["merge_cancelled", "queue_draft"]) delete state[key];
   }
+  // EXPECTATION starts a new request: the previous workstream's history stays behind (QUA-305).
+  state.history = withEntry(to === "EXPECTATION" ? [] : read.state.history, to, now);
   const problems = validateState(state, root);
   return problems.length ? { error: problems.join(" ; ") } : { state };
 }

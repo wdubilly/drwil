@@ -392,6 +392,7 @@ test("préparer : ouvrir une attente exige une fiche existante", () => {
     active_brief: FICHE,
     active_request: null,
     since: MAINTENANT,
+    history: [{ activity: "EXPECTATION", at: MAINTENANT }],
   });
   assert.match(prepareTransition(neutre(), "EXPECTATION", { now: MAINTENANT }, racine).error, /--brief/);
   assert.match(
@@ -408,7 +409,11 @@ test("préparer : transition interdite refusée, --brief réservé à l'ouvertur
   const suite = prepareTransition(enCours, "EVIDENCE", { request: "Lot 2", now: MAINTENANT }, racine).state;
   assert.equal(suite.active_brief, FICHE, "l'attente suit");
   assert.equal(suite.active_request, "Lot 2");
-  assert.deepEqual(prepareTransition(enCours, "SCOPING", { now: MAINTENANT }, racine).state, { ...NEUTRAL_STATE, since: MAINTENANT });
+  assert.deepEqual(prepareTransition(enCours, "SCOPING", { now: MAINTENANT }, racine).state, {
+    ...NEUTRAL_STATE,
+    since: MAINTENANT,
+    history: [{ activity: "SCOPING", at: MAINTENANT }],
+  });
 });
 
 test("humain requis (mode humain) : ouvrir et lancer la réalisation, pas clore ; rien en mode agent", () => {
@@ -1101,6 +1106,7 @@ test("lancer : un geste humain passe directement en BUILD ; refusé à l'agent e
     active_brief: FICHE,
     active_request: null,
     since: MAINTENANT,
+    history: [{ activity: "BUILD", at: MAINTENANT }],
   });
   assert.match(start(racine, FICHE, { human: true }).message, /activité BUILD/, "pas de relance en pleine réalisation");
 });
@@ -1565,7 +1571,7 @@ test("QUA-037 : après clôture la file reste, l'agent lance seul sa tête ; une
   });
   const p = prepareTransition(readState(racine), "SCOPING", { now: MAINTENANT }, racine);
   // État ancien avec `queue_merge` : valide, lu, mais plus recopié (QUA-188).
-  assert.deepEqual(p.state, { ...NEUTRAL_STATE, since: MAINTENANT, queue: [B, A] });
+  assert.deepEqual(p.state, { ...NEUTRAL_STATE, since: MAINTENANT, queue: [B, A], history: [{ activity: "SCOPING", at: MAINTENANT }] });
   ecrireEtat(racine, p.state);
   assert.match(start(racine, C).message, /décision humaine/, "fiche hors file");
   prouver(racine);
@@ -1578,6 +1584,7 @@ test("QUA-037 : après clôture la file reste, l'agent lance seul sa tête ; une
     active_request: null,
     since: MAINTENANT,
     queue: [A],
+    history: [{ activity: "BUILD", at: MAINTENANT }],
   });
   assert.match(start(racine, B).message, /activité BUILD/, "pas de relance en pleine réalisation");
   const abandon = depotFile();
@@ -1927,7 +1934,14 @@ test("QUA-116 : depuis CLOSING, PR ouverte, la réouverture annule d'abord la fu
   // BUILD sur la fiche, fusion autorisée et file gardées.
   assert.deepEqual(
     readState(racine).state,
-    actif("BUILD", { since: MAINTENANT, auto_merge: true, queue: ["docs/projects/suivante.md"], queue_merge: true, reopened: { pr: 42 } }),
+    actif("BUILD", {
+      since: MAINTENANT,
+      auto_merge: true,
+      queue: ["docs/projects/suivante.md"],
+      queue_merge: true,
+      reopened: { pr: 42 },
+      history: [{ activity: "BUILD", at: MAINTENANT, reopened: true }],
+    }),
   );
   const texte = context(readState(racine), racine);
   assert.match(texte, /Chantier rouvert après sa clôture \(QUA-116\), PR #42 ouverte : corriger le défaut sur cette branche/);
@@ -3018,4 +3032,77 @@ test("QUA-040 : changelog né sur la branche ou sans section « Unreleased », b
   assert.doesNotMatch(neuf.verifier().message, /Unreleased/, "né sur la branche avec sa ligne");
   neuf.git("branch", "-q", "-m", "master", "ancienne");
   assert.doesNotMatch(neuf.verifier().message, /Unreleased/, "sans branche principale, rien à comparer");
+});
+
+// --- Historique des transitions du chantier en cours (QUA-305) ---
+
+test("QUA-305 : le lancement ouvre l'historique, chaque transition y ajoute son activité et son instant, le retour en SCOPING compris", async () => {
+  const { racine } = depotCadre();
+  assert.equal(start(racine, FICHE, { human: true, now: "2026-11-15T09:00:00Z" }).code, 0);
+  assert.deepEqual(readState(racine).state.history, [{ activity: "BUILD", at: "2026-11-15T09:00:00Z" }]);
+  const etapes = [
+    ["EVIDENCE", "2026-11-15T10:00:00Z"],
+    ["BUILD", "2026-11-15T10:30:00Z"],
+    ["EVIDENCE", "2026-11-15T11:00:00Z"],
+    ["VERIFY", "2026-11-15T11:10:00Z"],
+  ];
+  for (const [to, now] of etapes) assert.equal((await move(racine, { to }, { tty: false, now })).code, 0, to);
+  // CLOSING demande une preuve de verify : la transition préparée suffit à montrer l'entrée ajoutée.
+  const cloture = prepareTransition(readState(racine), "CLOSING", { now: "2026-11-15T11:20:00Z" }, racine);
+  assert.deepEqual(cloture.state.history.at(-1), { activity: "CLOSING", at: "2026-11-15T11:20:00Z" });
+  assert.equal((await move(racine, { to: "SCOPING" }, { tty: false, now: "2026-11-15T12:00:00Z" })).code, 0);
+  const lu = readState(racine);
+  assert.deepEqual(lu.problems, []);
+  assert.equal(lu.state.activity, "SCOPING");
+  assert.deepEqual(lu.state.history, [
+    { activity: "BUILD", at: "2026-11-15T09:00:00Z" },
+    ...etapes.map(([activity, at]) => ({ activity, at })),
+    { activity: "SCOPING", at: "2026-11-15T12:00:00Z" },
+  ]);
+  // Le chantier suivant repart d'un historique neuf.
+  assert.equal(start(racine, FICHE, { human: true, now: "2026-11-16T09:00:00Z" }).code, 0);
+  assert.deepEqual(readState(racine).state.history, [{ activity: "BUILD", at: "2026-11-16T09:00:00Z" }]);
+});
+
+test("QUA-305 : un état antérieur sans historique reste valide ; sa transition suivante en ouvre un, jamais reconstruit", async () => {
+  const racine = depot({ state: actif("BUILD") });
+  const lu = readState(racine);
+  assert.deepEqual(lu.problems, []);
+  assert.equal(lu.state.history, undefined);
+  assert.equal((await move(racine, { to: "EVIDENCE" }, { tty: false, now: MAINTENANT })).code, 0);
+  assert.deepEqual(readState(racine).state.history, [{ activity: "EVIDENCE", at: MAINTENANT }]);
+});
+
+test("QUA-305 : la réouverture ajoute à l'historique une entrée BUILD marquée", () => {
+  const { racine } = depotClos();
+  const historique = [
+    { activity: "BUILD", at: "2026-10-09T10:00:00Z" },
+    { activity: "CLOSING", at: "2026-10-09T11:00:00Z" },
+  ];
+  writeState(racine, { ...readState(racine).state, history: historique });
+  const { gh } = ghSimule(racine, PR_OUVERTE);
+  assert.equal(reopen(racine, { gh, now: MAINTENANT }).code, 0);
+  assert.deepEqual(readState(racine).state.history, [...historique, { activity: "BUILD", at: MAINTENANT, reopened: true }]);
+});
+
+test("QUA-305 : un historique mal formé rend l'état invalide, dit dans la langue du projet", () => {
+  const racine = depot();
+  const ok = [
+    { activity: "BUILD", at: "2026-10-09T10:00:00Z" },
+    { activity: "BUILD", at: "2026-10-09T11:00:00Z", reopened: true },
+  ];
+  assert.deepEqual(validateState(actif("BUILD", { history: ok }), racine), []);
+  assert.deepEqual(validateState({ ...NEUTRAL_STATE, history: ok }, racine), [], "gardé au retour en SCOPING");
+  for (const mauvais of [
+    "BUILD",
+    [{ activity: "CODAGE", at: "2026-10-09T10:00:00Z" }],
+    [{ activity: "BUILD", at: "hier" }],
+    [{ activity: "BUILD" }],
+    [{ activity: "BUILD", at: "2026-10-09T10:00:00Z", reopened: false }],
+    [{ activity: "BUILD", at: "2026-10-09T10:00:00Z", message: "contenu" }],
+    [null],
+  ]) {
+    assert.match(validateState(actif("BUILD", { history: mauvais }), racine).join(" ; "), /« history »/, JSON.stringify(mauvais));
+  }
+  assert.match(validateState(actif("BUILD", { history: "x" }), depot({ lang: "en" })).join(" ; "), /"history" must be a list/);
 });

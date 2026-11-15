@@ -2965,3 +2965,63 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/serve.test.mjs`
 **Origine** : consommation-copilot-cli — « `drwil serve` montre, pour chaque chantier, la répartition de la consommation par outil (Claude Code, Copilot CLI) ; une ligne ancienne sans outil nommé reste comptée et s'affiche « outil inconnu » ; seuls le nom de l'outil et ses totaux atteignent l'API, jamais une autre colonne du fichier »
 **Raison** : Un chantier commencé sous Claude Code et repris sous Copilot CLI coûte la somme des deux : sans la part de chacun, la comparaison entre outils, demandée par le demandeur, est impossible.
+
+## QUA-305 — L'état de gouvernance garde l'horodatage de chaque transition du chantier en cours
+**Règle** : Livré à tout projet. L'état de gouvernance porte le champ `history` : une entrée par transition du chantier en cours, `{ activity, at, reopened? }` (activité atteinte, instant ISO 8601, `reopened: true` pour la seule entrée de BUILD posée par une réouverture, QUA-116), et rien d'autre. Le lancement ouvre un historique neuf (entrée BUILD) ; chaque transition (`move`, réouverture) y ajoute la sienne, le retour en SCOPING compris, qui le garde jusqu'au lancement suivant ; EXPECTATION en ouvre un neuf. Il n'est écrit que par les commandes de l'état, jamais à la main, ne vit que dans le fichier d'état (non suivi) et n'est jamais reconstruit ni deviné : un état écrit avant lui, sans `history`, reste valide, et sa transition suivante en ouvre un à partir d'elle ; la reprise sur un clone neuf (`state.mjs resume`) part sans lui. Un historique mal formé (pas une liste, activité inconnue, instant absent ou hors ISO 8601, `reopened` autre que `true`, autre clé) rend l'état invalide, dit dans la langue du projet (QUA-013).
+**Périmètre** : `.githooks/state-history.mjs` (`withEntry`, `historyProblem`), `.githooks/state-transitions.mjs` (`start`, `prepareTransition`), `.githooks/state-reopen.mjs` (`reopen`), `.githooks/state-validate.mjs` (`validateState`) ; livré dans le gabarit.
+**Source de vérité** : `.githooks/state-history.mjs`.
+**Preuve** : tests des hooks : lancement, allers-retours BUILD / EVIDENCE, VERIFY, CLOSING préparé et retour en SCOPING, chaque entrée à son instant, historique neuf au lancement suivant ; état sans historique valide, sa transition suivante en ouvre un ; réouverture sur un vrai dépôt git temporaire, `gh` simulé, entrée BUILD marquée ; formes refusées, message en français et en anglais.
+**Contrôle** : `tests-qua-305`
+**Tests** : `.githooks/state.test.mjs`
+**Origine** : cout-par-activite — « L'état de gouvernance garde l'horodatage de chaque transition du chantier en cours (activité, instant, réouverture marquée), du lancement jusqu'au retour en SCOPING ; un état antérieur sans cet historique reste valide »
+**Raison** : `.drwil/usage.jsonl` n'a qu'un total par chantier : sans l'instant de chaque transition, les requêtes ne peuvent être réparties entre production, vérification et gouvernance (décision D1 du demandeur, le 2026-11-13).
+
+## QUA-306 — Les requêtes d'un chantier se répartissent par l'activité de l'état à leur instant
+**Règle** : Livré à tout projet. `node .githooks/consumption.mjs` répartit les requêtes de chaque chantier (branches d'une fiche) en quatre parts, tokens pondérés et requêtes : production = BUILD ; vérification = EVIDENCE et VERIFY ; gouvernance = toute requête d'une branche de cadrage (`scoping/`, `cadrage/`), SCOPING, CLOSING et tout BUILD qui suit une réouverture (QUA-116) ; l'activité d'une requête est celle de la dernière transition de l'historique de l'état (QUA-305) à son instant ou avant. Une requête sans activité connue — avant la première transition, sans historique, état d'un autre chantier ou invalide, instant absent — va dans la part « non attribuée », dite, jamais devinée. Une requête est comptée une fois, `--since` s'applique aux parts comme aux totaux ; une branche qui n'est pas celle d'une fiche n'est pas répartie. Le relevé donne une ligne de répartition par chantier, `--json` le champ `activities`, dans la langue du projet ; seuls les champs de consommation sont lus (QUA-042).
+**Périmètre** : `.githooks/consumption-split.mjs` (`partOf`, `split`, `briefHistory`), `.githooks/consumption.mjs` (`main`), `.githooks/consumption-format.mjs` (`formatSplit`) ; livré dans le gabarit.
+**Source de vérité** : `.githooks/consumption-split.mjs`.
+**Preuve** : tests des hooks : historique fictif avec allers-retours, CLOSING, réouverture puis EVIDENCE et BUILD, requête avant le lancement, cadrage, requête doublée ; état sans historique, d'un autre chantier, absent ou invalide ; `--since` ; branche hors fiche ; français et anglais, aucun contenu de message.
+**Contrôle** : `tests-qua-306`
+**Tests** : `.githooks/consumption.test.mjs`
+**Origine** : cout-par-activite — « `node .githooks/consumption.mjs` répartit les requêtes du chantier par l'activité de l'état à leur instant : production = BUILD ; vérification = EVIDENCE et VERIFY ; gouvernance = SCOPING (branche de cadrage comprise), CLOSING et tout BUILD qui suit une réouverture ; une requête sans activité connue (historique absent, clone neuf) va dans une part « non attribuée », dite, jamais devinée »
+**Raison** : Avant toute optimisation, savoir ce que la consommation finance : production, vérification ou gouvernance (décision D1 du demandeur, le 2026-11-13).
+
+## QUA-307 — La ligne consignée d'un chantier porte sa répartition par activité, sans changer ses champs existants
+**Règle** : Livré à tout projet. `--record <fiche>` ajoute à la ligne de `.drwil/usage.jsonl` (QUA-042) le champ `activities` : `{ production, verification, governance, unattributed }`, chacun `{ tokens, requests }` (tokens pondérés et requêtes de la part, QUA-306), après les champs existants, dont ni le nom, ni la valeur, ni l'ordre ne changent ; le message de consignation donne la répartition. Le tableau de bord statique lit les lignes anciennes et nouvelles sans erreur ni vue neuve.
+**Périmètre** : `.githooks/consumption-format.mjs` (`usageLine`), `.githooks/consumption.mjs` (`--record`), tableau de bord optionnel (lecture seule) ; livré dans le gabarit.
+**Source de vérité** : `.githooks/consumption-format.mjs` (`usageLine`).
+**Preuve** : tests des hooks : ligne consignée avec ses champs existants dans leur ordre et `activities` en dernier ; tableau de bord généré sur une ligne ancienne et une ligne répartie à deux outils.
+**Contrôle** : `tests-qua-307`
+**Tests** : `.githooks/consumption.test.mjs`, `.githooks/dashboard.test.mjs`
+**Origine** : cout-par-activite — « `--record <fiche>` écrit la répartition en nouveaux champs de la ligne de `.drwil/usage.jsonl` (tokens pondérés et requêtes par part), sans changer les champs existants ; le tableau de bord lit les lignes anciennes et nouvelles sans erreur »
+**Raison** : La répartition est un champ de la ligne, rétrocompatible avec ses lecteurs (décision D2 du demandeur, le 2026-11-13).
+
+## QUA-308 — `drwil serve` montre la consommation de chaque chantier répartie par activité
+**Règle** : Livré à tout projet par la CLI du paquet. La route de consommation de `drwil serve` donne, pour chaque chantier, `activities` : ses quatre parts (production, vérification, gouvernance, non attribuée), tokens et requêtes, sommées sur ses lignes réparties de `.drwil/usage.jsonl` (QUA-307) ; une ligne non répartie d'un chantier réparti compte en « non attribuée » ; un chantier sans aucune ligne répartie a `activities: null` et la page le dit « non répartie par activité (ligne antérieure) », sans erreur. Seuls les quatre noms de parts et leurs totaux atteignent l'API, jamais une autre clé de la ligne (QUA-271). La page montre ces parts sous chaque chantier, en français et en anglais. Le tableau de bord statique n'est pas concerné.
+**Périmètre** : `drwil serve`, vue Consommation.
+**Source de vérité** : `packages/drwil/src/serve-journal.ts` (`summarizeUsage`), `packages/drwil/serve/page.html`.
+**Preuve** : tests du paquet : ligne répartie et ligne ancienne d'un même chantier, chantiers non répartis (sans champ, champ hors forme, parts inconnues) à `null`, aucune autre clé dans la réponse ; libellés de la page dans les deux langues.
+**Contrôle** : `tests-qua-308`
+**Tests** : `packages/drwil/test/serve.test.mjs`
+**Origine** : cout-par-activite — « `drwil serve` montre, pour chaque chantier, la répartition production / vérification / gouvernance / non attribuée (agrégation `packages/drwil/src/serve-journal.ts`, page `serve/page.html`) ; une ligne ancienne, sans répartition, s'affiche sans erreur et dit qu'elle n'est pas répartie »
+**Raison** : La répartition se lit là où se lit déjà la répartition par outil (décision D5 du demandeur, le 2026-11-15).
+
+## QUA-309 — Sous Copilot CLI, la consommation se répartit de même ; un appel sans horodatage est non attribué
+**Règle** : Livré à tout projet. Les appels de Copilot CLI lus dans ses journaux (QUA-042) se répartissent comme ceux de Claude Code (QUA-306), les deux outils dans les mêmes parts. Un appel sans horodatage (`timestamp` absent ou illisible) est compté dans les totaux, en part « non attribuée », hors du temps actif et hors d'une période `--since` ; un appel sans aucune clé (`usageId`, `apiCallId`, `id`) n'est jamais compté, faute de pouvoir le dédoublonner. La recette le dit.
+**Périmètre** : `.githooks/consumption-log.mjs` (`readCopilotLog`, `activeTime`, `aggregate`), `.githooks/consumption-split.mjs` ; recette de consommation ; livré dans le gabarit.
+**Source de vérité** : `.githooks/consumption-log.mjs` (`readCopilotLog`).
+**Preuve** : tests des hooks : session de Copilot CLI fictive, appels de BUILD, EVIDENCE et CLOSING et un appel sans horodatage, ligne consignée et ses parts ; temps actif ; `--since` ; appel sans clé ignoré.
+**Contrôle** : `tests-qua-309`
+**Tests** : `.githooks/consumption.test.mjs`
+**Origine** : cout-par-activite — « Sous Copilot CLI, la même répartition est faite à partir des journaux lus par `docs/projects/journal.md` ; un champ d'horodatage absent de ces journaux donne la part « non attribuée », dite dans la recette »
+**Raison** : Un chantier peut être mené sous Copilot CLI (décision D4 du demandeur, le 2026-11-13) : sa consommation se répartit aussi, sans jamais deviner l'instant d'un appel.
+
+## QUA-310 — Le relevé compte les chantiers répartis vers le bilan des 10, puis donne la part moyenne de chaque activité
+**Règle** : Livré à tout projet. Le relevé de `node .githooks/consumption.mjs` et `--recorded` disent combien de chantiers de `.drwil/usage.jsonl` sont répartis (ligne dont `activities` porte les quatre parts et au moins une requête attribuée) sur les 10 attendus avant le bilan ; à partir de 10, la part moyenne de chaque activité (moyenne, en %, de la part des tokens pondérés de chaque chantier) ; `--json` le donne dans `split` (`count`, `expected`, `mean`). Aucun seuil, jamais un refus ni un code de sortie autre que celui du relevé ; une ligne ancienne ou illisible n'est pas comptée.
+**Périmètre** : `.githooks/consumption-split.mjs` (`recordedSplit`), `.githooks/consumption-format.mjs` (`formatSplitCount`), `.githooks/consumption.mjs` ; livré dans le gabarit.
+**Source de vérité** : `.githooks/consumption-split.mjs` (`recordedSplit`).
+**Preuve** : tests des hooks : lignes anciennes, illisibles, hors forme et entièrement non attribuées non comptées ; 1 puis 10 chantiers répartis, part moyenne ; `--recorded`, `--json`, français et anglais, sortie en succès.
+**Contrôle** : `tests-qua-310`
+**Tests** : `.githooks/consumption.test.mjs`
+**Origine** : cout-par-activite — « `node .githooks/consumption.mjs` dit combien de chantiers de `.drwil/usage.jsonl` sont répartis, sur les 10 attendus avant le bilan, et à partir de 10 donne la part moyenne de chaque activité ; aucun seuil, jamais un refus »
+**Raison** : Mesurer d'abord, sur 10 chantiers, avant toute optimisation ; le bilan les décidera (décision D3 du demandeur, le 2026-11-13).

@@ -484,6 +484,53 @@ test("QUA-304 : la consommation de chaque chantier est répartie par outil ; une
   assert.equal(textes.en["tool-copilot-cli"], "Copilot CLI");
 });
 
+test("QUA-308 : la consommation de chaque chantier est répartie par activité ; une ligne ancienne s'affiche « non répartie » ; seuls les parts et leurs totaux sortent", async () => {
+  const ligne = (o) => JSON.stringify(o);
+  const activites = (p, v, g, n) => ({
+    production: { tokens: p, requests: 1, note: "Jeanne" },
+    verification: { tokens: v, requests: 2 },
+    governance: { tokens: g, requests: "oups" },
+    unattributed: { tokens: n, requests: 0 },
+  });
+  const p = await projet({
+    ".drwil/usage.jsonl": [
+      ligne({ workstream: "a", tokens: 100, requests: 4, date: "2026-01-01", activities: activites(50, 20, 25, 5) }),
+      ligne({ workstream: "a", tokens: 7, requests: 2, date: "2026-01-02" }),
+      ligne({ workstream: "b", tokens: 9, requests: 1, date: "2026-01-03", source: "claude-code-logs" }),
+      ligne({ workstream: "c", tokens: 3, date: "2026-01-04", activities: "oui" }),
+      ligne({ workstream: "d", tokens: 3, date: "2026-01-05", activities: { "Jeanne Dupont": { tokens: 3 } } }),
+    ].join("\n"),
+  });
+  const s = await demarrer(p);
+  const corps = await (await fetch(`${s.url}api/usage`)).text();
+  const parNom = Object.fromEntries(JSON.parse(corps).workstreams.map((w) => [w.workstream, w.activities]));
+  // Une ligne non répartie d'un chantier réparti compte en « non attribuée » : le total reste juste.
+  assert.deepEqual(parNom.a, {
+    production: { tokens: 50, requests: 1 },
+    verification: { tokens: 20, requests: 2 },
+    governance: { tokens: 25, requests: 0 },
+    unattributed: { tokens: 12, requests: 2 },
+  });
+  for (const nom of ["b", "c", "d"]) assert.equal(parNom[nom], null, `${nom} : non répartie`);
+  for (const interdit of ["Jeanne", "note"]) assert.ok(!corps.includes(interdit), interdit);
+  assert.equal(s.erreurs(), "");
+  // La page montre les parts, et « non répartie » pour une ligne ancienne, en français et en anglais.
+  assert.match(scriptDeLaPage, /w\.activities/);
+  assert.equal(textes.fr.byActivity, "par activité");
+  assert.equal(textes.en.byActivity, "per activity");
+  assert.deepEqual(
+    ["production", "verification", "governance", "unattributed"].map((k) => [textes.fr[`act-${k}`], textes.en[`act-${k}`]]),
+    [
+      ["production", "production"],
+      ["vérification", "verification"],
+      ["gouvernance", "governance"],
+      ["non attribuée", "unattributed"],
+    ],
+  );
+  assert.equal(textes.fr.notSplit, "non répartie par activité (ligne antérieure)");
+  assert.equal(textes.en.notSplit, "not split by activity (older line)");
+});
+
 test("QUA-271 : le filtre retire les clés nominatives à toute profondeur et masque secrets et courriels", () => {
   // Une fausse clé, assemblée pour que le contrôle des secrets (SEC-007) ne la prenne pas pour une vraie.
   const entete = ["RSA", "PRIVATE", "KEY-----"].join(" ");

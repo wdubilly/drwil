@@ -46,6 +46,7 @@ files:
   - .githooks/state-evidence.mjs
   - .githooks/state-transitions.mjs
   - .githooks/state-validate.mjs
+  - .githooks/state-history.mjs
   - .githooks/state-messages.mjs
   - .githooks/state-messages-en.mjs
   - .githooks/state-messages-fr.mjs
@@ -81,6 +82,7 @@ files:
   - .githooks/consumption-format.mjs
   - .githooks/consumption-log.mjs
   - .githooks/consumption-texts.mjs
+  - .githooks/consumption-split.mjs
   - .githooks/worktree-texts.mjs
   - .githooks/doc-coherence-fixes.mjs
   - .githooks/doc-coherence-texts.mjs
