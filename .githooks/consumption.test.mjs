@@ -18,6 +18,7 @@ import {
   readLog,
   usageLine,
 } from "./consumption.mjs";
+import { partOf, recordedSplit } from "./consumption-split.mjs";
 import { TEXTS as STATE_TEXTS } from "./state-context-texts.mjs";
 
 const SCRIPT = fileURLToPath(new URL("./consumption.mjs", import.meta.url));
@@ -790,4 +791,32 @@ test("QUA-310 : le compte des chantiers répartis vers le bilan des 10, puis la 
     en.lancer([]).out,
     /^workstreams split in \.drwil\/usage\.jsonl: 10 — mean share: production 47 %; verification 30 %; governance 22 %; unattributed 1 %$/m,
   );
+});
+
+test("QUA-306 : une activité hors des quatre parts (EXPECTATION) ou un historique vide ne sont jamais devinés", () => {
+  const a = { branch: "workstream/a", time: Date.parse("2026-10-16T10:05:00Z") };
+  assert.equal(partOf(a, [{ activity: "EXPECTATION", at: "2026-10-16T10:00:00Z" }]), "unattributed");
+  assert.equal(partOf(a, []), "unattributed");
+  assert.equal(partOf({ ...a, branch: null }, HISTORIQUE), "production");
+  assert.equal(partOf({ ...a, branch: "cadrage/a", time: null }, null), "governance");
+});
+
+test("QUA-310 : un chantier réparti sans aucun token pondéré est compté, sans peser sur la part moyenne", () => {
+  const ligne = (tokens) =>
+    JSON.stringify({
+      workstream: "w",
+      activities: {
+        production: { tokens, requests: 1 },
+        verification: { tokens: 0, requests: 0 },
+        governance: { tokens: 0, requests: 0 },
+        unattributed: { tokens: 0, requests: 0 },
+      },
+    });
+  assert.deepEqual(recordedSplit(Array(10).fill(ligne(0)).join("\n")), { count: 10, expected: 10, mean: null });
+  assert.deepEqual(recordedSplit([...Array(9).fill(ligne(0)), ligne(5)].join("\n")).mean, {
+    production: 100,
+    verification: 0,
+    governance: 0,
+    unattributed: 0,
+  });
 });

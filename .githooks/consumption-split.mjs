@@ -23,8 +23,7 @@ export const briefBranch = (branch) => typeof branch === "string" && BRIEF_BRANC
 export function briefHistory(root, brief) {
   const { state } = readState(root);
   const active = state.active_brief;
-  if (typeof active !== "string" || basename(active, ".md") !== brief || !Array.isArray(state.history)) return null;
-  return state.history.length ? state.history : null;
+  return typeof active === "string" && basename(active, ".md") === brief && Array.isArray(state.history) ? state.history : null;
 }
 
 /**
@@ -32,7 +31,7 @@ export function briefHistory(root, brief) {
  * after a reopening (QUA-116) is governance. Before the first transition, without history or instant: unattributed.
  */
 export function partOf(answer, history) {
-  if (SCOPING_BRANCH.test(answer.branch ?? "")) return "governance";
+  if (SCOPING_BRANCH.test(String(answer.branch))) return "governance";
   if (!history || !Number.isFinite(answer.time)) return "unattributed";
   let part = "unattributed";
   let reopened = false;
