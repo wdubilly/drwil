@@ -1,7 +1,7 @@
 # Preuve de clôture — cout-par-activite
 
 **Clos le** : 2026-11-15
-**Commit vérifié** : `50af937abd` — verdict `drwil verify` : PASS
+**Commit vérifié** : `0e268cbeaf` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:427f4866c7ac8743`, acceptés par l'humain au lancement le 2026-11-15
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
