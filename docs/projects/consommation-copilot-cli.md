@@ -28,8 +28,11 @@ files:
   - .claude/skills/track-consumption-per-increment/SKILL.md
   - packages/drwil/templates/common/base/.githooks/state-context-texts.mjs
   - .githooks/state-context-texts.mjs
-  - .githooks/state.test.mjs
   - docs/intentions/consommation-autres-outils.md
+  - README.md
+  - packages/drwil/README.md
+  - packages/drwil/templates/common/base/docs/recipes/working-with-branches.md
+  - docs/recipes/working-with-branches.md
 -->
 
 ## 1. Besoin
@@ -83,6 +86,9 @@ comme celle de Claude Code.
 - 2026-11-15 : les trois limites hors cadre relevées à la fin de BUILD (compétence drwil-usage, rappel CLOSING,
   intention des autres outils) sont traitées dans ce chantier (« Traiter maintenant » au sondage `drwil-limite`) ;
   le bloc scope s'élargit à ces fichiers — demande du demandeur.
+- 2026-11-15 : une quatrième limite, quatre textes lus par l'utilisateur (`README.md`, `packages/drwil/README.md`,
+  recette `docs/recipes/working-with-branches.md` et son gabarit) qui disent la consommation lue des seuls journaux de Claude Code,
+  est traitée dans ce chantier (« Traiter maintenant » au sondage `drwil-limite`) ; documentation seule — demande du demandeur.
 - 2026-11-14 : la répartition par outil s'affiche dans `drwil serve` (agrégation `packages/drwil/src/serve-journal.ts`, page
   `serve/page.html`) — demande du demandeur. Le tableau de bord statique (`packages/drwil/templates/common/optional/dashboard/dashboard.mjs`) n'est pas touché.
 
