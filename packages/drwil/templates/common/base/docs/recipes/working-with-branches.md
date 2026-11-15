@@ -166,9 +166,10 @@ that folder only):
 - Record the workstream's consumption, in the closing commit (done by
   `node .githooks/close.mjs`; by hand:
   `node .githooks/consumption.mjs --record <brief>`), which appends its line to
-  `.drwil/usage.jsonl` (if present) (tokens, models, active time, read from Claude
-  Code's session logs; never twice for the same workstream). Another AI
-  tool: estimate by hand (`docs/recipes/track-consumption-per-increment.md`).
+  `.drwil/usage.jsonl` (if present) (tokens, models, active time, read from the
+  session logs of Claude Code and Copilot CLI; never twice for the same
+  workstream). Another AI tool: estimate by hand
+  (`docs/recipes/track-consumption-per-increment.md`).
 - Close the intent loop, in the closing commit: a limit within the scope is
   handled; one answered « Record as intent » to the `drwil-limite` poll (end of
   BUILD) becomes an intent brief (`docs/intentions/`, never a workstream brief;
