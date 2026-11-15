@@ -3,6 +3,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { BRIEF_DIRS, config, MODEL_RE } from "./briefs.mjs";
+import { historyProblem } from "./state-history.mjs";
 import { fill, STATE_MESSAGES } from "./state-texts.mjs";
 
 export const ACTIVITIES = ["SCOPING", "EXPECTATION", "REQUEST", "BUILD", "EVIDENCE", "VERIFY", "CLOSING"];
@@ -33,6 +34,7 @@ export const NEUTRAL_STATE = Object.freeze({ version: 1, activity: "SCOPING", ac
 // scoping_merge (QUA-188): legacy mark of the end-of-scoping automatic merge for `{ branch }`, SCOPING only; no longer
 // written, still read like auto_merge.
 // limits (QUA-253): the human's answers to the limits poll, `[{ intent, choice: "now" | "note" }]`, from BUILD to CLOSING.
+// history (QUA-305): the workstream's transitions, `[{ activity, at, reopened? }]`, from its start to the next one.
 const FIELDS = new Set([
   ...Object.keys(NEUTRAL_STATE),
   "auto_merge",
@@ -45,6 +47,7 @@ const FIELDS = new Set([
   "merge_cancelled",
   "scoping_merge",
   "limits",
+  "history",
 ]);
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 export const texts = (root) => STATE_MESSAGES[config(root).lang === "en" ? "en" : "fr"];
@@ -85,6 +88,8 @@ export function validateState(state, root) {
   else if (s !== undefined && state.activity !== "SCOPING") problems.push(T.scopingMergeActivity);
   if (state.limits !== undefined && !(validLimits(state.limits) && ["BUILD", "EVIDENCE", "VERIFY", "CLOSING"].includes(state.activity)))
     problems.push(T.limitsType);
+  const history = historyProblem(state.history, ACTIVITIES, config(root).lang);
+  if (history) problems.push(history);
   if (state.active_request !== null && typeof state.active_request !== "string") problems.push(T.request);
   if (state.auto_merge !== undefined && typeof state.auto_merge !== "boolean") problems.push(T.autoMergeType);
   else if (state.auto_merge === true && state.activity === "SCOPING") problems.push(T.autoMergeScoping);

@@ -133,5 +133,12 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-13) : cadrage terminé.
-- **Prochaine étape** : [humain] `/drwil-start`, après la fusion du chantier consommation-copilot-cli (voir `docs/projects/journal.md`).
+- **Dernier état** (2026-11-15) : lot 1 fait. `.githooks/state-history.mjs` (`withEntry`, `historyProblem`) ; champ `history`
+  de l'état, `[{ activity, at, reopened? }]` : ouvert au lancement (`start`, entrée BUILD), une entrée ajoutée par
+  `prepareTransition` (retour en SCOPING compris, qui le garde jusqu'au lancement suivant ; EXPECTATION en ouvre un neuf)
+  et par la réouverture (`reopened: true`) ; un état sans `history` reste valide et sa transition suivante en ouvre un
+  (les requêtes d'avant restent sans activité) ; `state.mjs resume` part sans lui. Contrat QUA-305, contrôle
+  `tests-qua-305` ; carte et bloc scope de `docs/projects/kit-mechanics.md` (gabarit et dépôt) citent le module.
+- **Prochaine étape** : [IA] lot 2 — .githooks/consumption-split.mjs (neuf) lit `history` (première entrée = lancement ;
+  requêtes avant elle ou sans historique : « non attribuée ») ; une entrée `reopened: true` ouvre une période de
+  gouvernance jusqu'au retour en SCOPING ; `.githooks/state-transitions.mjs` est à 198 lignes (QUA-001 : 200 au plus).

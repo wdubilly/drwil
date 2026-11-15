@@ -8,6 +8,7 @@ import { glabRun } from "./close-branches.mjs";
 import { changeForge } from "./close-checks.mjs";
 import { normalizeMr } from "./merge-auto-forge.mjs";
 import { readState, writeState } from "./state.mjs";
+import { withEntry } from "./state-history.mjs";
 import { fill } from "./state-texts.mjs";
 import { texts } from "./state-validate.mjs";
 
@@ -128,7 +129,8 @@ export function reopen(root, { gh = ghRun, glab = glabRun, forge = changeForge(r
     }
   }
   const { merge_cancelled: _, ...kept } = state;
-  writeState(root, { ...kept, activity: "BUILD", since: now, reopened: { pr: pr.number } });
+  const history = withEntry(state.history, "BUILD", now, { reopened: true });
+  writeState(root, { ...kept, activity: "BUILD", since: now, reopened: { pr: pr.number }, history });
   const sha = restoredFiles.length ? git("rev-parse", "--short", "HEAD") : "";
   const restored = text === null ? "" : `\n${fill(T.reopenRestored, brief, sha)}`;
   const restoredCited = cited.length ? `\n${fill(T.reopenRestoredCited, cited.length, cited.join(", "), sha)}` : "";

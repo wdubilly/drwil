@@ -92,6 +92,7 @@ files:
   - .githooks/state-evidence.mjs
   - .githooks/state-transitions.mjs
   - .githooks/state-validate.mjs
+  - .githooks/state-history.mjs
   - .githooks/state-messages.mjs
   - .githooks/state-messages-en.mjs
   - .githooks/state-messages-fr.mjs
