@@ -40,7 +40,7 @@ commits et la section « Reprise » de la fiche.
 
 - Le sous-agent des contrôles longs (`drwil-checks`, QUA-129, QUA-130, QUA-221) : il garde le contexte de la session propre, hors de cette décision.
 - La file parallèle en worktrees (QUA-147, QUA-148), qui demande un sous-agent par worktree : à reprendre à part si le demandeur veut la retirer.
-- La mesure de consommation (`docs/projects/consommation-copilot-cli.md`).
+- La mesure de consommation (`docs/projects/journal.md`).
 
 ## 3. Contraintes
 

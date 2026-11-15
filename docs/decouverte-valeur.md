@@ -24,7 +24,7 @@ Les trois chantiers du jour : 5,00 M / 119 min (GitLab), 3,17 M / 100 min
 (refus de lancement), 1,30 M / 43 min (marques [IA]), soit 9,47 M et 262 min.
 Trou de mesure : aucune ligne entre le 2026-11-09 et le 2026-11-11, période
 de chantiers menés sous Copilot CLI (commit `8b6bab0`, co-auteur Copilot) ;
-la mesure de Copilot CLI est désormais cadrée (`docs/projects/consommation-copilot-cli.md`).
+la mesure de Copilot CLI est désormais faite (chantier clos le 2026-11-15, `docs/projects/journal.md`).
 
 ## Les frictions de la file du jour, vérifiées dans le dépôt
 
@@ -116,8 +116,8 @@ fabrique (après le catalogue), validation commerciale.
   QUA-081), OPT-3 (critères et preuves durables), OPT-5 (cohérence de la
   documentation à la clôture), OPT-6 (note de recette conservée) — tous au
   journal.
-- **Cadré, pas encore fait** : OPT-1 (consommation de Copilot CLI) devient
-  la fiche P0 `docs/projects/consommation-copilot-cli.md`.
+- **Cadré, puis fait** : OPT-1 (consommation de Copilot CLI), chantier clos le
+  2026-11-15 (`docs/projects/journal.md`).
 - **Toujours valable** : la barrière de fusion (ex-OPT-4, ici OPT-8), plus
   pressante avec la fusion par défaut ; la vue de relecture et l'affichage
   des transitions (ex-OPT-7 et OPT-8, ici OPT-9) ; la publication npm

@@ -66,7 +66,7 @@ finance la gouvernance et la fiabilité. On mesure d'abord, sur 10 chantiers, av
   (agrégation `packages/drwil/src/serve-journal.ts`, page `serve/page.html`) ; une ligne ancienne, sans répartition,
   s'affiche sans erreur et dit qu'elle n'est pas répartie — test dans `packages/drwil/test/serve.test.mjs`, contrat à créer
 - Sous Copilot CLI, la même répartition est faite à partir des journaux lus par
-  `docs/projects/consommation-copilot-cli.md` ; un champ d'horodatage absent de ces journaux donne la part « non
+  `docs/projects/journal.md` ; un champ d'horodatage absent de ces journaux donne la part « non
   attribuée », dite dans la recette — contrat à créer
 - `node .githooks/consumption.mjs` dit combien de chantiers de `.drwil/usage.jsonl` sont répartis, sur les 10 attendus
   avant le bilan, et à partir de 10 donne la part moyenne de chaque activité ; aucun seuil, jamais un refus — contrat à créer
@@ -94,8 +94,8 @@ finance la gouvernance et la fiabilité. On mesure d'abord, sur 10 chantiers, av
 
 ## 3. Contraintes
 
-- **Dépend de `docs/projects/consommation-copilot-cli.md`** (lecteur des journaux de Copilot CLI) : placée juste
-  après elle dans l'index, lancée après sa fusion.
+- **Dépend du chantier consommation-copilot-cli** (lecteur des journaux de Copilot CLI, clos le 2026-11-15, voir
+  `docs/projects/journal.md`) : placée juste après lui dans l'index, lancée après sa fusion.
 - Reproduire d'abord : test de `.githooks/consumption.mjs` sur des journaux et un historique de transitions fictifs, en échec
   contre le code actuel.
 - `.githooks/state-transitions.mjs` (200 lignes) est plein : l'historique va dans .githooks/state-history.mjs (neuf) ; la
@@ -112,10 +112,10 @@ finance la gouvernance et la fiabilité. On mesure d'abord, sur 10 chantiers, av
 - D2 (2026-11-13) : la répartition s'écrit en nouveaux champs de la ligne de `.drwil/usage.jsonl`, rétrocompatible
   avec le tableau de bord — réponse du demandeur (question 2).
 - D3 (2026-11-13) : mesure seule, bilan après 10 chantiers mesurés, pas de seuil — réponse du demandeur (question 3).
-- D4 (2026-11-13) : Copilot CLI inclus dans ce chantier, après `docs/projects/consommation-copilot-cli.md` — réponse du
+- D4 (2026-11-13) : Copilot CLI inclus dans ce chantier, après `docs/projects/journal.md` — réponse du
   demandeur (question 4).
 - D5 (2026-11-15) : la répartition s'affiche dans `drwil serve` (comme la répartition par outil de
-  `docs/projects/consommation-copilot-cli.md`) ; le tableau de bord statique n'est pas touché — demande du demandeur.
+  `docs/projects/journal.md`) ; le tableau de bord statique n'est pas touché — demande du demandeur.
 
 ## 5. Points à trancher
 
@@ -134,4 +134,4 @@ Aucun.
 ## 7. Reprise
 
 - **Dernier état** (2026-11-13) : cadrage terminé.
-- **Prochaine étape** : [humain] `/drwil-start`, après la fusion de `docs/projects/consommation-copilot-cli.md`.
+- **Prochaine étape** : [humain] `/drwil-start`, après la fusion du chantier consommation-copilot-cli (voir `docs/projects/journal.md`).

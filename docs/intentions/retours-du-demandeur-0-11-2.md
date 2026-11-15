@@ -5,7 +5,7 @@
 ## Existant
 
 - Le sondage `drwil-merge` (« Automatic merge » / « Manual merge ») était lu par le module `state-merge`, supprimé le 2026-11-13 (la fusion automatique est devenue le comportement par défaut, sans sondage) ; le skill `start-a-workstream` le décrit.
-- Le suivi de consommation (`drwil-usage`, `.drwil/usage.jsonl`) ne lit que les sessions de Claude Code.
+- Le suivi de consommation (`drwil-usage`, `.drwil/usage.jsonl`) lit les sessions de Claude Code et de Copilot CLI (depuis le 2026-11-15) ; les autres outils s'estiment à la main.
 - Le skill `start-a-workstream` lance un sous-agent par lot (Claude Code et Copilot CLI).
 - `drwil init` écrit des lignes d'index et de lots que l'on voit en `[humain]` là où un `[IA]` est attendu (`packages/drwil/src/guarantees-briefs.ts` produit des lignes `[humain]`).
 - La priorité d'une fiche est une simple convention (`[P0]` à `[P3]`), sans analyse.
@@ -15,8 +15,8 @@
 ### 1. Mesurer la consommation sur Copilot
 
 Aujourd'hui seul Claude Code est mesuré. Trouver comment recueillir (ou centraliser) la consommation de Copilot CLI et la faire remonter dans `.drwil/usage.jsonl` et le tableau de bord.
-- Tranché, voir la fiche : Source des données Copilot (journaux de session locaux, `session_usage`, autre) et unité comparable aux tokens de Claude Code.
-- Tranché, voir la fiche : Centralisation : un fichier par dépôt (comme aujourd'hui) ou une remontée vers un lieu commun.
+- Décidé le 2026-11-12 : journaux de session locaux de Copilot CLI, en jetons comme Claude Code ; un fichier par dépôt (`.drwil/usage.jsonl`).
+- Fait : chantier « la consommation de Copilot CLI est mesurée comme celle de Claude Code », clos le 2026-11-15 (voir `docs/projects/journal.md`) ; plus rien à cadrer ici.
 
 ### 2. Analyser l'urgence avant de prioriser une fiche
 
