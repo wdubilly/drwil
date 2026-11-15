@@ -24,6 +24,12 @@ files:
   - docs/projects/pending.md
   - docs/projects/journal.md
   - packages/drwil/CHANGELOG.md
+  - packages/drwil/templates/common/tools/claude/.claude/skills/track-consumption-per-increment/SKILL.md
+  - .claude/skills/track-consumption-per-increment/SKILL.md
+  - packages/drwil/templates/common/base/.githooks/state-context-texts.mjs
+  - .githooks/state-context-texts.mjs
+  - .githooks/state.test.mjs
+  - docs/intentions/consommation-autres-outils.md
 -->
 
 ## 1. Besoin
@@ -51,6 +57,7 @@ comme celle de Claude Code.
 - `.githooks/consumption-log.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 - `.githooks/consumption-format.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 - `.githooks/consumption-texts.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `.githooks/state-context-texts.mjs` — texte du rappel CLOSING (QUA-113) : Claude Code et Copilot CLI lus, les autres outils estimés à la main (validé par le demandeur le 2026-11-15)
 
 ## 2. Hors périmètre
 
@@ -73,6 +80,9 @@ comme celle de Claude Code.
   nomme chaque outil ; le bloc scope couvre gabarits (motif, un lecteur Copilot dans un
   fichier neuf compris) et copies installées de `consumption*.mjs` (la copie d'un fichier neuf s'ajoute par un commit
   de cadrage séparé) — demande du demandeur.
+- 2026-11-15 : les trois limites hors cadre relevées à la fin de BUILD (compétence drwil-usage, rappel CLOSING,
+  intention des autres outils) sont traitées dans ce chantier (« Traiter maintenant » au sondage `drwil-limite`) ;
+  le bloc scope s'élargit à ces fichiers — demande du demandeur.
 - 2026-11-14 : la répartition par outil s'affiche dans `drwil serve` (agrégation `packages/drwil/src/serve-journal.ts`, page
   `serve/page.html`) — demande du demandeur. Le tableau de bord statique (`packages/drwil/templates/common/optional/dashboard/dashboard.mjs`) n'est pas touché.
 
