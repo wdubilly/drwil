@@ -81,6 +81,9 @@ finance la gouvernance et la fiabilité. On mesure d'abord, sur 10 chantiers, av
 - `.githooks/state-transitions.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 - `.githooks/state-validate.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 - `.githooks/state-reopen.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `QUA-042` — ancien critère : un appel de Copilot CLI sans horodatage était ignoré — raison : un appel de Copilot CLI sans horodatage est compté (part « non attribuée », hors temps actif et hors --since) ; un appel sans aucune clé (usageId, apiCallId, id) n'est jamais compté (validé par le demandeur le 2026-11-15)
+- `.githooks/state.mjs` — non modifié, cité par la contrainte sur la reprise (validé par le demandeur le 2026-11-15)
+- `.githooks/dashboard.mjs` — non modifié, cité au hors périmètre (validé par le demandeur le 2026-11-15)
 
 ## 2. Hors périmètre
 
