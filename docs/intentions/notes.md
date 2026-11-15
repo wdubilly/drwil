@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — notes rangées le 2026-11-13 (rangement du backlog).
+**Statut** : ouverte en permanence — notes rangées le 2026-11-15 (rangement du backlog).
 
 ## Besoin
 
@@ -36,3 +36,6 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 - 2026-11-13 — glossary --journal <fiche> ne trouve que la section de la preuve de clôture, pas l'entrée datée du chantier (ex. ci-multi-os-a-la-release : entrée du 2026-11-08 présente dans docs/projects/journal.md, jugée absente à tort) ; l'entrée datée devrait citer la fiche ou la recherche la retrouver
 - 2026-11-13 — (plus tard) `drwil serve`, suite de la première version : sondages cliquables derrière un jeton, journal des actions, couche OIDC optionnelle (compatible Keycloak, sans fournisseur embarqué) ; attestation et verdict de recette restent au terminal (reprise de l'intention `drwil-serve`, retirée au ménage du 2026-11-13).
 - 2026-11-13 — (plus tard) `drwil serve` : un chat web intégré, intention distincte à ouvrir (reprise de l'intention `drwil-serve`, retirée au ménage du 2026-11-13).
+- 2026-11-15 — close.mjs --fix fait toute la clôture (fiche supprimée, preuve, consommation) puis close.mjs refuse à tort (« empreinte … aujourd'hui — », fiche absente) ; --fix écrit aussi des renvois faux (« après la fusion de docs/projects/journal.md ») — vu au chantier consommation-copilot-cli le 2026-11-15
+- 2026-11-15 — L'avertissement du lancement (QUA-137) prend une simple mention d'un hook dans la fiche (hors périmètre, contrainte) pour une modification et annonce une clôture refusée : il force à déclarer une puce « Contrats modifiés » pour un fichier non modifié — vu au chantier cout-par-activite le 2026-11-15 (state.mjs, dashboard.mjs)
+- 2026-11-15 — Fusion automatique perdue : PR de cadrage #441 programmée et vérifiée par merge-auto, CI verte, puis autoMergeRequest vide et PR ouverte (CLEAN) ; relancer merge-auto l'a fusionnée — cause inconnue, à reproduire (2026-11-15)
