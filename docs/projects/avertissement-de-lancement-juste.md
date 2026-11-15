@@ -54,9 +54,9 @@ Cause, lue dans le code le 2026-11-15 — la lecture « simples mentions » n'es
 
 ## Contrats modifiés
 
-- `QUA-137` — ancien critère : « le message nomme chaque fichier existant de `.githooks/` cité par le bloc `scope` de la fiche (chemin du gabarit compris ; un fichier de test comme son module) » — raison : un fichier de test est nommé tel quel, avec sa puce à son nom ; une mention hors du bloc `scope` n'exige rien, et le message le dit (à valider par le demandeur)
-- `.githooks/state-hooks.mjs` — test nommé tel quel, message « le bloc scope cite » (à valider par le demandeur)
-- `.githooks/state.test.mjs` — le test du lancement attend le nom du fichier de test au lieu de son module (à valider par le demandeur)
+- `QUA-137` — ancien critère : « le message nomme chaque fichier existant de `.githooks/` cité par le bloc `scope` de la fiche (chemin du gabarit compris ; un fichier de test comme son module) » — raison : un fichier de test est nommé tel quel, avec sa puce à son nom ; une mention hors du bloc `scope` n'exige rien, et le message le dit (validé par le demandeur le 2026-11-15)
+- `.githooks/state-hooks.mjs` — test nommé tel quel, message « le bloc scope cite » (validé par le demandeur le 2026-11-15)
+- `.githooks/state.test.mjs` — le test du lancement attend le nom du fichier de test au lieu de son module (validé par le demandeur le 2026-11-15)
 
 ## 2. Hors périmètre
 
@@ -74,7 +74,7 @@ Cause, lue dans le code le 2026-11-15 — la lecture « simples mentions » n'es
 
 ## 4. Décisions
 
-- 2026-11-15 (choix de cadrage, le plus sûr, à confirmer à la relecture) : corriger le message, garder la règle de
+- 2026-11-15 (choix de cadrage, le plus sûr, validé par le demandeur) : corriger le message, garder la règle de
   clôture.
 
 ## 5. Points à trancher
@@ -90,5 +90,5 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-15) : cadrage terminé, contenu à valider par le demandeur.
+- **Dernier état** (2026-11-15) : cadrage terminé, contenu validé par le demandeur le 2026-11-15.
 - **Prochaine étape** : [humain] `/drwil-start`.

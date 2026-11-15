@@ -80,14 +80,14 @@ a acceptés au lancement (empreinte sha256:…, aujourd'hui —) ». Causes, lue
 
 ## Contrats modifiés
 
-- `QUA-076` — ancien critère : « une référence morte — vers la fiche du chantier qui se clôt, elle est réorientée vers le journal » ; `--fix` n'était pas distingué de la clôture — raison : `--fix` n'écrit que les corrections ; la réorientation n'est proposée que pour un simple renvoi, toute autre phrase est à réécrire à la main (à valider par le demandeur)
-- `QUA-048` — ancien critère : « les mêmes signaux sont donnés par `--check` » sans les critères modifiés depuis l'acceptation, et une clôture relancée n'était pas reconnue — raison : `--check` signale des critères modifiés ; une clôture déjà faite est dite, sans refus ni seconde écriture (à valider par le demandeur)
-- `QUA-309` — origine recopiée d'une phrase réorientée à tort (« journaux lus par `docs/projects/journal.md` ») — raison : la phrase d'origine citait la fiche du lecteur de Copilot CLI ; écrire « journaux lus par le lecteur de Copilot CLI (QUA-042) » (à valider par le demandeur)
-- `.githooks/close.mjs` — `--fix` sans mécanique, signal des critères modifiés, clôture faite reconnue (à valider par le demandeur)
-- `.githooks/close-texts.mjs` — message de proposition et message « clôture déjà faite » (à valider par le demandeur)
-- `.githooks/close-mechanics.mjs` — rien de réécrit ni de consigné une seconde fois sur une clôture faite (à valider par le demandeur)
-- `.githooks/doc-coherence.mjs` — réorientation limitée aux simples renvois (à valider par le demandeur)
-- `.githooks/doc-coherence-texts.mjs` — message « à réécrire à la main » d'un renvoi dans une phrase (à valider par le demandeur)
+- `QUA-076` — ancien critère : « une référence morte — vers la fiche du chantier qui se clôt, elle est réorientée vers le journal » ; `--fix` n'était pas distingué de la clôture — raison : `--fix` n'écrit que les corrections ; la réorientation n'est proposée que pour un simple renvoi, toute autre phrase est à réécrire à la main (validé par le demandeur le 2026-11-15)
+- `QUA-048` — ancien critère : « les mêmes signaux sont donnés par `--check` » sans les critères modifiés depuis l'acceptation, et une clôture relancée n'était pas reconnue — raison : `--check` signale des critères modifiés ; une clôture déjà faite est dite, sans refus ni seconde écriture (validé par le demandeur le 2026-11-15)
+- `QUA-309` — origine recopiée d'une phrase réorientée à tort (« journaux lus par `docs/projects/journal.md` ») — raison : la phrase d'origine citait la fiche du lecteur de Copilot CLI ; écrire « journaux lus par le lecteur de Copilot CLI (QUA-042) » (validé par le demandeur le 2026-11-15)
+- `.githooks/close.mjs` — `--fix` sans mécanique, signal des critères modifiés, clôture faite reconnue (validé par le demandeur le 2026-11-15)
+- `.githooks/close-texts.mjs` — message de proposition et message « clôture déjà faite » (validé par le demandeur le 2026-11-15)
+- `.githooks/close-mechanics.mjs` — rien de réécrit ni de consigné une seconde fois sur une clôture faite (validé par le demandeur le 2026-11-15)
+- `.githooks/doc-coherence.mjs` — réorientation limitée aux simples renvois (validé par le demandeur le 2026-11-15)
+- `.githooks/doc-coherence-texts.mjs` — message « à réécrire à la main » d'un renvoi dans une phrase (validé par le demandeur le 2026-11-15)
 
 ## 2. Hors périmètre
 
@@ -108,7 +108,7 @@ a acceptés au lancement (empreinte sha256:…, aujourd'hui —) ». Causes, lue
 
 ## 4. Décisions
 
-- 2026-11-15 (choix de cadrage, le plus sûr, à confirmer à la relecture) : les deux voies sont prises — `--fix`
+- 2026-11-15 (choix de cadrage, le plus sûr, validé par le demandeur) : les deux voies sont prises — `--fix`
   n'applique que les corrections, et une clôture déjà faite est reconnue ; un renvoi qui n'est pas un simple renvoi
   est signalé, jamais réécrit par la machine.
 
@@ -129,5 +129,5 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-15) : cadrage terminé, contenu à valider par le demandeur.
+- **Dernier état** (2026-11-15) : cadrage terminé, contenu validé par le demandeur le 2026-11-15.
 - **Prochaine étape** : [humain] `/drwil-start`.

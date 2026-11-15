@@ -65,10 +65,10 @@ Quelle que soit la cause, une fusion attendue qui n'est plus programmée doit se
 
 ## Contrats modifiés
 
-- `QUA-100` — ancien critère : « dit « verte », « fusionnée » ou « rouge » » sans rien dire de la fusion automatique — raison : une PR verte non fusionnée dit si sa fusion automatique n'est pas (ou plus) programmée, avec la commande `merge-auto` à relancer, sans jamais la relancer (à valider par le demandeur)
-- `.githooks/pr-watch.mjs` — message « fusion automatique non programmée » ou « plus programmée », arrêt de l'attente quand elle cesse (à valider par le demandeur)
-- `.githooks/pr-watch-main.mjs` — reçoit la lecture de l'historique de la PR si `.githooks/pr-watch.mjs` dépasse son plafond (à valider par le demandeur)
-- `.githooks/merge-auto-forge.mjs` — `look` lit `autoMergeRequest` (GitLab : `merge_when_pipeline_succeeds`) (à valider par le demandeur)
+- `QUA-100` — ancien critère : « dit « verte », « fusionnée » ou « rouge » » sans rien dire de la fusion automatique — raison : une PR verte non fusionnée dit si sa fusion automatique n'est pas (ou plus) programmée, avec la commande `merge-auto` à relancer, sans jamais la relancer (validé par le demandeur le 2026-11-15)
+- `.githooks/pr-watch.mjs` — message « fusion automatique non programmée » ou « plus programmée », arrêt de l'attente quand elle cesse (validé par le demandeur le 2026-11-15)
+- `.githooks/pr-watch-main.mjs` — reçoit la lecture de l'historique de la PR si `.githooks/pr-watch.mjs` dépasse son plafond (validé par le demandeur le 2026-11-15)
+- `.githooks/merge-auto-forge.mjs` — `look` lit `autoMergeRequest` (GitLab : `merge_when_pipeline_succeeds`) (validé par le demandeur le 2026-11-15)
 
 ## 2. Hors périmètre
 
@@ -91,7 +91,7 @@ Quelle que soit la cause, une fusion attendue qui n'est plus programmée doit se
 
 ## 4. Décisions
 
-- 2026-11-15 (choix de cadrage, le plus sûr, à confirmer à la relecture) : dire et proposer la commande, jamais
+- 2026-11-15 (choix de cadrage, le plus sûr, validé par le demandeur) : dire et proposer la commande, jamais
   relancer `merge-auto` d'office.
 
 ## 5. Points à trancher
@@ -107,5 +107,5 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-15) : cadrage terminé, contenu à valider par le demandeur.
+- **Dernier état** (2026-11-15) : cadrage terminé, contenu validé par le demandeur le 2026-11-15.
 - **Prochaine étape** : [humain] `/drwil-start`, après la fusion de `docs/projects/attente-de-fusion-courte.md`.
