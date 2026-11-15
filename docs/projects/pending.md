@@ -399,7 +399,7 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 ### Coût en tokens
 
 - [ ] [décision] (0.14.0) La consommation de tokens mesurée aussi pour les autres
-  outils IA (Copilot CLI, Cursor, Codex, Gemini) —
+  outils IA (Cursor, Codex, Gemini ; Copilot CLI couvert le 2026-11-15) —
   `docs/intentions/consommation-autres-outils.md`.
 
 ### Catalogue et profils (casse une compatibilité : avant la publication npm)

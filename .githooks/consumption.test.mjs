@@ -18,6 +18,7 @@ import {
   readLog,
   usageLine,
 } from "./consumption.mjs";
+import { TEXTS as STATE_TEXTS } from "./state-context-texts.mjs";
 
 const SCRIPT = fileURLToPath(new URL("./consumption.mjs", import.meta.url));
 let dossiers = [];
@@ -554,4 +555,9 @@ test("QUA-042 : --recorded compare les chantiers consignés par leur cache lu mo
   const errs = [];
   main(["--recorded"], { root: dossier(), err: (l) => errs.push(l) });
   assert.match(errs[0], /aucune ligne dans \.drwil\/usage\.jsonl/);
+});
+
+test("QUA-042 : le rappel CLOSING nomme les deux outils lus (Claude Code, Copilot CLI), les autres estimés à la main, en anglais aussi", () => {
+  assert.match(STATE_TEXTS.fr.rules.CLOSING, /journaux de Claude Code et de Copilot CLI ; autre outil : estimer à la main/);
+  assert.match(STATE_TEXTS.en.rules.CLOSING, /Claude Code and Copilot CLI logs; another tool: estimate by hand/);
 });
