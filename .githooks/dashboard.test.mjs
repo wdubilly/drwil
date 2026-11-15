@@ -240,5 +240,6 @@ test("QUA-307 : le tableau de bord lit les lignes anciennes et les lignes répar
   });
   assert.match(html, /<code>ancien<\/code><\/td><td>10<\/td><td>2<\/td><td>m1</);
   assert.match(html, /<code>reparti<\/code><\/td><td>30<\/td><td>4<\/td><td>m2</);
-  assert.doesNotMatch(html, /production|governance|gouvernance/);
+  // Le dossier temporaire du projet est affiché par la page ; en CI, son chemin contient « gouvernance ».
+  assert.doesNotMatch(html.replaceAll(dossiers.at(-1), ""), /production|governance|gouvernance/);
 });
