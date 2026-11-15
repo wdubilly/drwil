@@ -160,9 +160,6 @@ d'un outil) la dit dans son statut.
 
 ### Mesure
 
-- [ ] [IA] [P0] (0.11.2) Le coût d'un chantier se répartit entre production, vérification et gouvernance, mesuré
-  sur 10 chantiers, Copilot CLI compris ; après consommation-copilot-cli (cadré le 2026-11-13) —
-  `docs/projects/cout-par-activite.md`.
 
 ### Vitesse
 
