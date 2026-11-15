@@ -61,6 +61,7 @@ comme celle de Claude Code.
 - `.githooks/consumption-format.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 - `.githooks/consumption-texts.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 - `.githooks/state-context-texts.mjs` — texte du rappel CLOSING (QUA-113) : Claude Code et Copilot CLI lus, les autres outils estimés à la main (validé par le demandeur le 2026-11-15)
+- `QUA-042` — consommation lue aussi des journaux de Copilot CLI, `source` nommant l'outil, `tools` pour un chantier à deux outils (validé par le demandeur le 2026-11-15)
 
 ## 2. Hors périmètre
 
