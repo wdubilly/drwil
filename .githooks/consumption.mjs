@@ -5,7 +5,8 @@
 // (~/.copilot/session-state/<session>/events.jsonl, every project mixed: only the calls made in the
 // project count); one branch per brief (`workstream/<brief>`, and `scoping/<brief>` or `cadrage/<brief>`
 // for its scoping) attributes it, the two tools' parts summed. The logs hold the whole conversation:
-// only the consumption fields are read, never a message content is shown or written. Never blocking:
+// only the consumption fields are read, never a message content is shown or written. Each workstream's requests
+// are split by the governance activity of their instant (consumption-split.mjs, QUA-306). Never blocking:
 // without a readable log, it says so and exits 0.
 // Usage: node .githooks/consumption.mjs [--since YYYY-MM-DD (UTC)] [--json] [--logs <folder>] [--copilot-logs <folder>]
 //        node .githooks/consumption.mjs --record <brief> (at closing: one line in .drwil/usage.jsonl)
@@ -14,7 +15,8 @@ import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, realp
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { activeTime, aggregate, copilotFolder, group, logsFolder, PAUSE_MS, readCopilotLog, readLog, WEIGHTS } from "./consumption-log.mjs";
-import { format, formatRecorded, readable, usageLine } from "./consumption-format.mjs";
+import { format, formatRecorded, formatSplit, formatSplitCount, readable, usageLine } from "./consumption-format.mjs";
+import { briefBranch, briefHistory, recordedSplit, split } from "./consumption-split.mjs";
 import { TEXTS, TOOLS, USAGE } from "./consumption-texts.mjs";
 
 export {
@@ -89,10 +91,12 @@ export function main(args, { env = process.env, root = process.cwd(), log = cons
     else if (args[i] === "--record") opt.record = args[++i] ?? "";
     else if (args[i] === "--recorded") opt.recorded = true;
   }
+  const usagePath = join(root, USAGE);
+  const usage = () => (existsSync(usagePath) ? readFileSync(usagePath, "utf8") : "");
   if (opt.recorded) {
-    const path = join(root, USAGE);
-    const out = formatRecorded(existsSync(path) ? readFileSync(path, "utf8") : "", T);
+    const out = formatRecorded(usage(), T);
     (out ? log : err)(out ?? T.noRecorded);
+    if (out) log(formatSplitCount(recordedSplit(usage()), T));
     return 0;
   }
   if (Number.isNaN(opt.since)) {
@@ -120,14 +124,18 @@ export function main(args, { env = process.env, root = process.cwd(), log = cons
     return 0;
   }
   const rows = aggregateTools(answers, { since: opt.since, T }).filter((r) => opt.record === null || r.workstream === opt.record);
+  // Only a brief's branches are split; the history is only that of the state's workstream (QUA-306).
+  for (const row of rows) {
+    const own = answers.filter((a) => group(a.branch, T) === row.workstream);
+    if (own.some((a) => briefBranch(a.branch))) row.activities = split(own, briefHistory(root, row.workstream), { since: opt.since });
+  }
   if (unreadable && !opt.json) err(T.unreadable(unreadable));
   if (!rows.length) {
     err(T.noAnswer(folder, copilotLogs));
     return 0;
   }
   if (opt.record !== null) {
-    const path = join(root, USAGE);
-    const lines = existsSync(path) ? readFileSync(path, "utf8").split("\n") : [];
+    const lines = usage().split("\n");
     const known = lines.some((l) => {
       try {
         return JSON.parse(l).workstream === opt.record;
@@ -140,12 +148,18 @@ export function main(args, { env = process.env, root = process.cwd(), log = cons
       return 0;
     }
     mkdirSync(join(root, ".drwil"), { recursive: true });
-    appendFileSync(path, `${JSON.stringify(usageLine(rows[0], now.toISOString().slice(0, 10)))}\n`);
+    appendFileSync(usagePath, `${JSON.stringify(usageLine(rows[0], now.toISOString().slice(0, 10)))}\n`);
     const parts = Object.entries(rows[0].tools).map(([tool, r]) => [TOOLS[tool].name, r.weighted]);
     log(T.recorded(opt.record, rows[0].weighted, readable(rows[0].cacheReadPerRequest, lang === "fr"), parts));
+    if (rows[0].activities) log(formatSplit(opt.record, rows[0].activities, T));
     return 0;
   }
-  log(opt.json ? JSON.stringify({ version: 1, unreadable, workstreams: rows }, null, 2) : format(rows, T));
+  const count = recordedSplit(usage());
+  if (opt.json) log(JSON.stringify({ version: 1, unreadable, workstreams: rows, split: count }, null, 2));
+  else {
+    const splits = rows.filter((r) => r.activities).map((r) => formatSplit(r.workstream, r.activities, T));
+    log([format(rows, T), "", ...splits, formatSplitCount(count, T)].join("\n"));
+  }
   return 0;
 }
 

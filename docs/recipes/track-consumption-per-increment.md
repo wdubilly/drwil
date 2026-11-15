@@ -31,10 +31,32 @@ node .githooks/consumption.mjs --recorded         # the recorded workstreams com
   `session.context_changed` (`cwd`, `gitRoot`, `branch`). Only the calls
   made in the project (or below it) count. `inputTokens` includes the cache
   read and written: the uncached input is the difference. No field is
-  missing (cache tokens and branch are there).
+  missing (cache tokens and branch are there); a call without a
+  `timestamp` would still be counted, in the « unattributed » part below,
+  and a call without any key (`usageId`, `apiCallId`, `id`) never.
 - A workstream led with both tools (started under one, resumed under the
   other): one line, the two consumptions summed, each tool named with its
   part; a call is never counted twice (each tool has its own keys).
+
+## Split by activity: production, verification, governance
+
+Each workstream's requests (both tools) are split by the governance
+activity at their instant, read in the state's `history` (the transitions of
+the active workstream, from its start):
+
+- production: `BUILD`;
+- verification: `EVIDENCE` and `VERIFY`;
+- governance: the scoping branch (`scoping/<brief>`), `SCOPING`,
+  `CLOSING`, and every `BUILD` after a reopening;
+- unattributed: a request whose activity is unknown — before the start,
+  without a history (a state written before it, a fresh clone, another
+  workstream's state), or without an instant. Said, never guessed.
+
+The report gives one split line per workstream (`activities` with
+`--json`), then how many workstreams of `.drwil/usage.jsonl` (if present)
+are split, out of the 10 expected before the review; from 10 on, the mean
+share of each activity. No threshold, never a refusal: the review of the 10
+decides.
 
 - Cache read per request: the context read again at each request (files
   read, tool outputs, a long session), the first cost of a workstream.
@@ -74,6 +96,13 @@ closing by `--record` (never twice for the same workstream):
 { "workstream": "add-csv-export", "tokens": 5200000, "…": "…", "source": "claude-code-logs+copilot-cli-logs", "tools": { "claude-code": { "tokens": 4200000, "requests": 64, "…": "…" }, "copilot-cli": { "tokens": 1000000, "requests": 20, "…": "…" } } }
 ```
 
+- `activities`: the split by activity, after the existing fields (which
+  it never changes), each part's weighted tokens and requests:
+
+```json
+{ "workstream": "add-csv-export", "…": "…", "activities": { "production": { "tokens": 2600000, "requests": 40 }, "verification": { "tokens": 900000, "requests": 12 }, "governance": { "tokens": 700000, "requests": 12 }, "unattributed": { "tokens": 0, "requests": 0 } } }
+```
+
 ## Another AI tool
 
 The script reads Claude Code's and Copilot CLI's logs. With another AI
@@ -85,7 +114,10 @@ estimate (an order of magnitude is enough) and fill `model` and
 
 `drwil serve` (Consumption view) shows each workstream's part per tool
 (Claude Code, Copilot CLI); a line without a named tool (older, or an
-estimate) still counts, as « unknown tool ».
+estimate) still counts, as « unknown tool ». It also shows each
+workstream's split by activity; a line without `activities` (older, or an
+estimate) is said « not split ». The dashboard reads both kinds of lines,
+without showing the split.
 
 
 `docs/recipes/view-progress.md` (optional module

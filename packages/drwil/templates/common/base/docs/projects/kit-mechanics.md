@@ -82,6 +82,7 @@ files:
   - .githooks/consumption-format.mjs
   - .githooks/consumption-log.mjs
   - .githooks/consumption-texts.mjs
+  - .githooks/consumption-split.mjs
   - .githooks/worktree-texts.mjs
   - .githooks/doc-coherence-fixes.mjs
   - .githooks/doc-coherence-texts.mjs

@@ -214,3 +214,31 @@ test("QUA-198 tendances : sous le seuil, sans relevé, et en anglais", () => {
   assert.match(en, /⚠ drift: mean 540 above the threshold 235/);
   assert.match(en, /\(no reading\)/);
 });
+
+test("QUA-307 : le tableau de bord lit les lignes anciennes et les lignes réparties par activité, sans erreur ni vue neuve", () => {
+  const html = generer({
+    ".drwil/usage.jsonl": [
+      JSON.stringify({ workstream: "ancien", tokens: 10, duration_min: 2, model: "m1" }),
+      JSON.stringify({
+        workstream: "reparti",
+        increment: "all",
+        tokens: 30,
+        requests: 3,
+        cache_read: 6,
+        duration_min: 4,
+        model: "m2",
+        source: "claude-code-logs+copilot-cli-logs",
+        tools: { "claude-code": { tokens: 20 }, "copilot-cli": { tokens: 10 } },
+        activities: {
+          production: { tokens: 15, requests: 1 },
+          verification: { tokens: 5, requests: 1 },
+          governance: { tokens: 10, requests: 1 },
+          unattributed: { tokens: 0, requests: 0 },
+        },
+      }),
+    ].join("\n"),
+  });
+  assert.match(html, /<code>ancien<\/code><\/td><td>10<\/td><td>2<\/td><td>m1</);
+  assert.match(html, /<code>reparti<\/code><\/td><td>30<\/td><td>4<\/td><td>m2</);
+  assert.doesNotMatch(html, /production|governance|gouvernance/);
+});

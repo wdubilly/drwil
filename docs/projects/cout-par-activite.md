@@ -139,6 +139,9 @@ Aucun.
   et par la réouverture (`reopened: true`) ; un état sans `history` reste valide et sa transition suivante en ouvre un
   (les requêtes d'avant restent sans activité) ; `state.mjs resume` part sans lui. Contrat QUA-305, contrôle
   `tests-qua-305` ; carte et bloc scope de `docs/projects/kit-mechanics.md` (gabarit et dépôt) citent le module.
-- **Prochaine étape** : [IA] lot 2 — .githooks/consumption-split.mjs (neuf) lit `history` (première entrée = lancement ;
-  requêtes avant elle ou sans historique : « non attribuée ») ; une entrée `reopened: true` ouvre une période de
-  gouvernance jusqu'au retour en SCOPING ; `.githooks/state-transitions.mjs` est à 198 lignes (QUA-001 : 200 au plus).
+- **Lot 2 fait** (2026-11-15) : `.githooks/consumption-split.mjs` (`partOf`, `split`, `briefHistory`, `recordedSplit`),
+  champ `activities` de la ligne, appel de Copilot CLI sans horodatage compté en « non attribuée », compte vers le
+  bilan des 10 ; `drwil serve` montre la répartition. Contrats QUA-306 à QUA-310, contrôles `tests-qua-306` à
+  `tests-qua-310`. Une entrée `reopened: true` rend gouvernance tout BUILD qui la suit ; EVIDENCE et VERIFY après
+  elle restent vérification (texte du critère).
+- **Prochaine étape** : vérifier (`drwil verify --agent`) puis clore.

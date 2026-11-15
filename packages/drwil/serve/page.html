@@ -120,7 +120,8 @@ const I18N = {
     "latest": "dernière", "pre": "pré-version", "tagOnly": "tag sans release publiée", "nextVersion": "prochaine version, pas encore publiée", "relMeta": "{0} {1} de code, {2} de doc · {3} chantier(s) · {4} tokens", "relWs": "Chantiers", "relPrs": "{0} fusionnées", "relChangelog": "Journal des changements", "relNoChangelog": "Pas de section dans le journal des changements.",
     "trendCi": "Durée du job checks, hooks inchangés", "trendCache": "Cache lu par requête (tokens)", "trendOk": "moyenne {0}, seuil d'alerte {1}", "trendAlert": "dérive : moyenne {0} au-dessus du seuil {1}", "trendNone": "Aucun relevé.", "trendNote": "Indicateurs, jamais bloquants. En plein : les cinq derniers relevés, ceux de la moyenne.", "lastRuns": "Durées de la dernière CI",
     "auditStale": "scan vieux de {0} jours, à relancer", "indexTitle": "Chantiers en attente ({0})", "othersTitle": "Autres documents du dossier des fiches ({0})", "catalogTitle": "Au catalogue, non installés ({0})", "noStatus": "(pas de ligne Statut)", "noIndex": "Aucune case dans l'index.", "models": "modèles : {0}",
-    "byTool": "par outil", "tool-claude-code": "Claude Code", "tool-copilot-cli": "Copilot CLI", "tool-unknown": "outil inconnu"
+    "byTool": "par outil", "tool-claude-code": "Claude Code", "tool-copilot-cli": "Copilot CLI", "tool-unknown": "outil inconnu",
+    "byActivity": "par activité", "act-production": "production", "act-verification": "vérification", "act-governance": "gouvernance", "act-unattributed": "non attribuée", "notSplit": "non répartie par activité (ligne antérieure)"
   },
   "en": {
     "tab-ci": "Live CI", "tab-kb": "Board", "tab-tl": "Timeline", "tab-rel": "Releases", "tab-ct": "Contracts", "tab-us": "Consumption", "tab-me": "Measures", "tab-au": "Audits", "tab-briefs": "Briefs", "tab-int": "Intents", "tab-notes": "Notes",
@@ -142,7 +143,8 @@ const I18N = {
     "latest": "latest", "pre": "pre-release", "tagOnly": "tag without a published release", "nextVersion": "next version, not released yet", "relMeta": "{0} {1} code, {2} doc · {3} workstream(s) · {4} tokens", "relWs": "Workstreams", "relPrs": "Merged {0}", "relChangelog": "Changelog", "relNoChangelog": "No section in the changelog.",
     "trendCi": "Duration of the checks job, hooks unchanged", "trendCache": "Cache read per request (tokens)", "trendOk": "mean {0}, alert threshold {1}", "trendAlert": "drift: mean {0} above the threshold {1}", "trendNone": "No reading.", "trendNote": "Indicators, never blocking. Solid bars: the last five readings, those of the mean.", "lastRuns": "Latest CI durations",
     "auditStale": "scan {0} days old, time to re-run", "indexTitle": "Pending work ({0})", "othersTitle": "Other files in the briefs folder ({0})", "catalogTitle": "In the catalog, not installed ({0})", "noStatus": "(no Status line)", "noIndex": "No checkbox in the index.", "models": "models: {0}",
-    "byTool": "per tool", "tool-claude-code": "Claude Code", "tool-copilot-cli": "Copilot CLI", "tool-unknown": "unknown tool"
+    "byTool": "per tool", "tool-claude-code": "Claude Code", "tool-copilot-cli": "Copilot CLI", "tool-unknown": "unknown tool",
+    "byActivity": "per activity", "act-production": "production", "act-verification": "verification", "act-governance": "governance", "act-unattributed": "unattributed", "notSplit": "not split by activity (older line)"
   }
 };
 const $ = (s) => document.querySelector(s);
@@ -506,6 +508,7 @@ RENDER.us = () => {
       return `<div class="card can" data-key="${esc(w.workstream)}"><div class="row" style="border:0"><b>${esc(w.workstream)} <span class="mute">${open ? "▾" : "▸"}</span></b><span class="d"><b>${tok(w.tokens)}</b></span></div>${bar(w.tokens, max)}
         <div class="stats"><span class="mute">${esc(w.date)}</span><span class="mute">${esc(w.version ?? unreleased)}</span><span>${hm(w.duration_min)}</span><span>${w.requests} ${esc(t("requests"))}</span><span>${tok(w.output)} ${esc(t("output"))}</span><span>${tok(w.cache_read)} ${esc(t("cacheRead"))}</span>${w.models?.length ? `<span class="mute">${esc(t("models", w.models.join(", ")))}</span>` : ""}</div>
         ${w.tools?.length ? `<div class="stats"><span class="mute">${esc(t("byTool"))}</span>${w.tools.map((p) => `<span>${esc(TX[`tool-${p.tool}`] ?? p.tool)} ${tok(p.tokens)}</span>`).join("")}</div>` : ""}
+        <div class="stats">${w.activities ? `<span class="mute">${esc(t("byActivity"))}</span>${Object.entries(w.activities).map(([k, p]) => `<span>${esc(t(`act-${k}`))} ${tok(p.tokens)} · ${p.requests} ${esc(t("requests"))}</span>`).join("")}` : `<span class="mute">${esc(t("notSplit"))}</span>`}</div>
         ${open ? `<div class="doc">${wsDetail(wsCache[w.workstream])}</div>` : ""}</div>`;
     }).join("")}` : ""}`);
 };
