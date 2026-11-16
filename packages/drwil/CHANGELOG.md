@@ -8,6 +8,17 @@ release renames this section to its version.
 
 ### Added
 
+- A file derived from a file of the active brief's scope is admitted as if
+  it were listed, by the scope barrier (commit, push, CI), check-docs and
+  Claude Code's write guard, in four closed cases only: a test citing a
+  scoped module, a file of the `Périmètre` or `Tests` field of a contract
+  the brief cites, a new split of a scoped file that imports it, the
+  template source of a scoped copy (`scopeMirrors`). A rules file (hooks,
+  contracts registry, `.drwil/ia-first.json`, CI, the assistants'
+  instructions and settings) is never admitted, and its refusal says so.
+  Each admission is shown at the commit that uses it, whatever `scopeGate`;
+  `node .githooks/close.mjs` counts and lists them in the workstream's
+  journal entry, and `--check` announces them.
 - A workstream's consumption is split by activity: `node .githooks/consumption.mjs`
   assigns each request (Claude Code and Copilot CLI) to production (`BUILD`),
   verification (`EVIDENCE`, `VERIFY`) or governance (scoping, `CLOSING`, a

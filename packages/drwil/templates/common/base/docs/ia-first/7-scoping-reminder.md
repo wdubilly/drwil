@@ -42,6 +42,21 @@ the files this project touches.
   `from` also covers the same path under `to`, for the scope barrier, the
   check and the agent-side reminder: a brief names the source of a copy
   without listing the copy.
+- **Derived files** (`.githooks/scope-derived.mjs`): in BUILD, a file
+  derived from a file of the active brief's scope is admitted as if it were
+  listed, by the scope barrier, the check and the agent-side reminder, in
+  four closed cases only: (1) a test file whose text cites the path of a
+  module the scope names; (2) a file cited by the `**Périmètre**` or
+  `**Tests**` field of a contract the brief cites; (3) a file new on the
+  branch, in the folder of a scope file, named after it plus a dash, that
+  this file imports (its split); (4) the template source of a covered copy
+  (`scopeMirrors`). Never a rules file (contracts registry, hooks outside
+  their tests, `.drwil/ia-first.json`, CI, the assistants' instructions,
+  settings and hooks): it stays refused until listed, and the refusal says
+  so. Each admission is said at the commit that uses it, whatever
+  `scopeGate`; `node .githooks/close.mjs` counts and lists them in the
+  workstream's journal entry, `--check` announces them. Any other file
+  still has to be listed.
 - **Language of the public docs** (`docLang` setting, absent by default:
   the project language `lang`): the language of the map
   `docs/architecture.md`, the `README.md` and the changelog, for a project

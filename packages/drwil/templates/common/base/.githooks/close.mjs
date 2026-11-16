@@ -103,7 +103,8 @@ export function closingReport(root, brief, text = existsSync(join(root, brief)) 
     ...code,
     ...intentLeft(root, lang, brief, text).map((message) => ({ message })),
   ];
-  return { problems, warnings: [...twinIntents(root, cfg, lang), ...unreleasedMissing(root)] };
+  const admitted = journal.problem || !journal.admitted ? [] : [...journal.admitted];
+  return { problems, warnings: [...twinIntents(root, cfg, lang), ...unreleasedMissing(root)], admitted };
 }
 
 /** What would make the closing of `brief` fail, as messages. */
@@ -168,6 +169,7 @@ export function close(root, { brief, check = false, fix = false, env = process.e
     ...(problems.length ? [T.signals, ...problems.map((s) => `  ⚠ ${s}`)] : [T.clean]),
     ...(diff.length ? [T.proposed, ...diff] : []),
     ...(report.warnings.length ? [T.warnings, ...report.warnings.map((w) => `  ⚠ ${w}`)] : []),
+    ...(report.admitted.length ? [T.admitted(report.admitted)] : []),
     ...(ci ? [ci.line] : []),
     ...(check ? [...lateLines(root), route] : [T.rest]),
   ];

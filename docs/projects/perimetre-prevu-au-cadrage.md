@@ -150,19 +150,9 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-16) : lot 1 fait. `.githooks/scope-derived.mjs` (neuf, gabarit puis copie) porte la seule
-  définition : `derivation` (quatre cas), `isRulesFile` (`rulesFiles` + consignes et réglages des assistants),
-  `revisionContext` (barrière : HEAD et index au commit, parent et commit au rejeu) et `derivedInWorktree`
-  (`check-docs`, garde d'écriture). La barrière avertit à chaque admission (`ADMIS D'OFFICE — …`, tout réglage
-  `scopeGate`) et son refus d'un fichier de règles le dit ; `.githooks/scope.mjs` exporte `closedBriefTexts`, que
-  `check-docs` lit pour les fichiers dérivés d'une fiche supprimée (QUA-173). Contrats créés : `QUA-311`
-  (dérivation), `QUA-312` (fichiers de règles), `QUA-313` (avertissement au commit ; le compte de la clôture est
-  écrit dans sa règle mais pas encore prouvé) ; `QUA-016` et `QUA-173` réécrits (puces **Modifié**) ; contrôles
-  `tests-qua-311` à `tests-qua-313` déclarés. `docs/projects/kit-mechanics.md` (gabarit et dépôt) cite déjà le hook
-  neuf : sans lui, les tests `QUA-016` du kit refusaient le premier commit d'un projet installé.
-- **Prochaine étape** : [IA] lot 2 — `.githooks/close.mjs` et `--check` comptent et listent les fichiers de la branche
-  admis d'office (relire chaque commit de la branche avec `revisionContext` de `.githooks/scope-derived.mjs`,
-  fiche du trailer `Drwil-Brief`), ligne écrite dans l'entrée du journal (`.githooks/close-journal.mjs`, textes dans
-  `.githooks/close-texts.mjs`) ; ajouter `.githooks/close.test.mjs` au champ **Tests** et à la **Preuve** de `QUA-313`, et au
-  contrôle `tests-qua-313` ; rappel de cadrage (`docs/ia-first/7-scoping-reminder.md`) et modèle de fiche disent
-  les quatre cas ; carte d'architecture (hook neuf) ; ligne du changelog sous « Unreleased ».
+- **Dernier état** (2026-11-16) : lots 1 et 2 faits. Lot 2 : `branchAdmissions` de `.githooks/close-journal.mjs` rejoue
+  la branche comme la barrière (commits au trailer de la fiche) ; `journalPlan` écrit la ligne « Admis d'office »
+  après la preuve de clôture (réécrite, jamais doublée, absente sans admission) ; `node .githooks/close.mjs` et
+  `--check` l'annoncent. `QUA-313` complété (règle, Périmètre, Preuve, Tests) et `tests-qua-313` lit
+  `.githooks/close.test.mjs` ; rappel de cadrage, modèle de fiche, carte et changelog à jour.
+- **Prochaine étape** : [IA] vérifier et clore.

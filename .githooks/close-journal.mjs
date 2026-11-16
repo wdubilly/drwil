@@ -4,11 +4,42 @@ import { config } from "./briefs.mjs";
 import { journalTwice } from "./close-checks.mjs";
 import { texts } from "./close-texts.mjs";
 import { proofPath } from "./closure-proof.mjs";
+import { derivation, revisionContext } from "./scope-derived.mjs";
+import { OUT_OF_SCOPE, outsideBriefFiles } from "./scope-gate.mjs";
+import { git, reference } from "./scope-gate-merge.mjs";
+import { TRAILER } from "./scope-gate-texts.mjs";
+import { fnmatch } from "./scope.mjs";
 
 const CLOSED_BY = /^\s*-\s*\*\*(?:Clôturé par|Closed by)\*\*/i;
+const ADMITTED = /^- \*\*(?:Admis d'office|Admitted as derived)\*\*.*\n?/m;
+
+/**
+ * QUA-313 : fichiers de la branche admis d'office pour `brief`, `Map fichier -> { kind, from }`, rejoués comme la
+ * barrière (chaque commit au trailer de la fiche, fiche et registre lus dans son parent) ; null sans branche principale.
+ */
+export function branchAdmissions(root, brief, { env = process.env } = {}) {
+  const cfg = config(root);
+  const base = reference(root, env);
+  const commits = base && git(root, ["rev-list", "--no-merges", "--reverse", `${base}..HEAD`]);
+  if (typeof commits !== "string") return null;
+  const outOfScope = Array.isArray(cfg.outOfScope) ? cfg.outOfScope : OUT_OF_SCOPE;
+  const found = new Map();
+  for (const c of commits.split("\n").filter(Boolean)) {
+    const named = (git(root, ["log", "-1", `--format=%(trailers:key=${TRAILER},valueonly)`, c]) ?? "").split("\n").map((v) => v.trim());
+    if (named.filter(Boolean).at(-1) !== brief) continue;
+    const files = (git(root, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--no-renames", c]) ?? "").split("\n").filter(Boolean);
+    const ctx = revisionContext(root, { rev: c, briefRev: `${c}^`, brief, cfg, base });
+    for (const f of outsideBriefFiles(files, outOfScope)) {
+      if (found.has(f) || ctx.patterns.some((p) => fnmatch(f, p))) continue;
+      const d = derivation(f, ctx);
+      if (d) found.set(f, d);
+    }
+  }
+  return found;
+}
 
 // QUA-228 : préparer le renvoi sans inventer ni déplacer les décisions du journal.
-export function journalPlan(root, brief, text) {
+export function journalPlan(root, brief, text, { env } = {}) {
   const file = `${config(root).dirs?.projects ?? "docs/projects"}/journal.md`;
   const T = texts(root);
   try {
@@ -37,11 +68,16 @@ export function journalPlan(root, brief, text) {
     const matches = strong.length ? strong : weak;
     if (matches.length > 1) return { problem: T.journalAmbiguous(file, proof, matches.length) };
     const line = T.journalProof(proof);
-    if (!matches.length) return { file, text: `${before.trimEnd()}\n\n## ${name}\n\n${line}\n` };
+    // QUA-313 : la ligne des admissions suit la preuve, réécrite à chaque clôture (rouverte comprise), absente sans admission.
+    const admitted = branchAdmissions(root, brief, { env });
+    const extra = admitted?.size ? `${T.journalAdmitted([...admitted])}\n` : "";
+    if (!matches.length) return { file, text: `${before.trimEnd()}\n\n## ${name}\n\n${line}\n${extra}`, admitted };
     const at = matches[0];
-    if (parts[at].includes(`\`${proof}\``)) return { file, text: before };
-    parts[at] = `${parts[at].trimEnd()}\n\n${line}\n${at < parts.length - 1 ? "\n" : ""}`;
-    return { file, text: parts.join("") };
+    const entry = parts[at].replace(ADMITTED, "");
+    if (entry === parts[at] && !extra && entry.includes(`\`${proof}\``)) return { file, text: before, admitted };
+    const body = entry.includes(`\`${proof}\``) ? entry.trimEnd() : `${entry.trimEnd()}\n\n${line}`;
+    parts[at] = `${body}\n${extra}${at < parts.length - 1 ? "\n" : ""}`;
+    return { file, text: parts.join(""), admitted };
   } catch (e) {
     return { problem: T.journalRefused(`${file} : ${e.message}`) };
   }

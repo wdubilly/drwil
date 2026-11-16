@@ -1105,3 +1105,60 @@ test("QUA-262 : sans regard injecté, la clôture interroge gh (GitHub) ou glab 
     process.env.PATH = chemin;
   }
 });
+
+/** Branche du chantier avec un test admis d'office (cas 1) et un fichier cité, chacun commité sous le trailer de la fiche. */
+function depotAdmis(options) {
+  const racine = depot(options);
+  ecrire(racine, { "src/a.mjs": "export const a = 1;\n", "src/a.test.mjs": 'import { a } from "./a.mjs";\n' });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "lot 1", "-m", `Drwil-Brief: ${FICHE}`);
+  ecrire(racine, { "src/b.test.mjs": "rien\n" });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "hors chantier");
+  ecrireEvidence(racine);
+  return racine;
+}
+
+test("QUA-313 : la clôture compte et liste les fichiers de la branche admis d'office, dans l'entrée du journal ; --check les annonce sans rien écrire", () => {
+  const racine = depotAdmis();
+  const avant = "# Journal\n\n## exemple\n\nDécision.\n\n## Suivant\n\nÀ venir.\n";
+  ecrire(racine, { "docs/projects/journal.md": avant });
+  const vu = close(racine, { check: true });
+  assert.match(
+    vu.message,
+    /Admis d'office sur la branche, écrits dans l'entrée du journal : 1 — src\/a\.test\.mjs \(cas 1, de src\/a\.mjs\)/,
+  );
+  assert.equal(readFileSync(join(racine, "docs/projects/journal.md"), "utf8"), avant, "--check n'écrit rien");
+  const r = close(racine, { logs: journaux() });
+  assert.equal(r.code, 0, r.message);
+  assert.match(r.message, /Admis d'office sur la branche, écrits dans l'entrée du journal : 1 — src\/a\.test\.mjs/);
+  const journal = readFileSync(join(racine, "docs/projects/journal.md"), "utf8");
+  assert.match(
+    journal,
+    /Décision\.\n\n- \*\*Preuve de clôture\*\* : `docs\/preuves\/exemple\.md`\.\n- \*\*Admis d'office\*\* : 1 — `src\/a\.test\.mjs` \(cas 1, de `src\/a\.mjs`\)\.\n\n## Suivant/,
+  );
+  assert.doesNotMatch(journal, /b\.test\.mjs/, "un fichier d'un commit sans le trailer de la fiche n'est pas compté");
+  // Relancée (chantier rouvert) : la ligne est réécrite, jamais doublée.
+  assert.equal(close(racine, { logs: journaux() }).code, 0);
+  assert.equal(readFileSync(join(racine, "docs/projects/journal.md"), "utf8"), journal);
+});
+
+test("QUA-313 : sans admission, ni ligne au journal ni annonce ; en anglais, la ligne est traduite", () => {
+  const sans = depot();
+  const avant = "# Journal\n\n## exemple\n\nDécision.\n";
+  ecrire(sans, { "docs/projects/journal.md": avant });
+  const r = close(sans, { logs: journaux() });
+  assert.equal(r.code, 0, r.message);
+  assert.doesNotMatch(r.message, /Admis d'office/);
+  assert.doesNotMatch(readFileSync(join(sans, "docs/projects/journal.md"), "utf8"), /Admis d'office/);
+  const en = depotAdmis({ lang: "en" });
+  assert.match(
+    close(en, { check: true }).message,
+    /Admitted as derived on the branch, written in the journal entry: 1 — src\/a\.test\.mjs \(case 1, from src\/a\.mjs\)/,
+  );
+  assert.equal(close(en, { logs: journaux() }).code, 0);
+  assert.match(
+    readFileSync(join(en, "docs/projects/journal.md"), "utf8"),
+    /- \*\*Admitted as derived\*\*: 1 — `src\/a\.test\.mjs` \(case 1, from `src\/a\.mjs`\)\.\n$/,
+  );
+});

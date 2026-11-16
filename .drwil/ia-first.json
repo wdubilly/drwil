@@ -4224,7 +4224,7 @@
     {
       "id": "tests-qua-313",
       "name": "tests de QUA-313, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-313 .githooks/scope-gate.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-313 .githooks/scope-gate.test.mjs .githooks/close.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
