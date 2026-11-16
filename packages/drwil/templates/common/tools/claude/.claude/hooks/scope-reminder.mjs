@@ -9,7 +9,8 @@
 // - "warning": PostToolUse hook, a simple reminder after the write.
 // - "off": nothing.
 // Any unexpected input, or even an exception, gives "nothing" (the git hook stays the gate).
-// The grammar comes from .githooks/scope.mjs, the same as the commit-time check.
+// The grammar comes from .githooks/scope.mjs, the same as the commit-time check; a file derived from a
+// brief's scope (.githooks/scope-derived.mjs, never a rules file) is covered as if cited.
 import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -86,6 +87,19 @@ function relativePath(path, root) {
   }
 }
 
+/** True if `rel` derives from a brief's scope, the text about to be written included; module missing: false. */
+async function derived(root, rel, briefTexts, cfg, input) {
+  let mod;
+  try {
+    mod = await import(pathToFileURL(join(root, ".githooks", "scope-derived.mjs")).href);
+  } catch {
+    return false;
+  }
+  const edits = Array.isArray(input.edits) ? input.edits.map((e) => e?.new_string) : [];
+  const more = [input.content, input.new_string, ...edits].filter((t) => typeof t === "string").join("\n");
+  return mod.derivedInWorktree(root, [rel], briefTexts, cfg, { extra: (p) => (p === rel && more ? more : null) }).has(rel);
+}
+
 async function remind(input, root = ROOT) {
   let event;
   try {
@@ -110,6 +124,7 @@ async function remind(input, root = ROOT) {
   const briefTexts = briefs.map((f) => [relative(root, f), readFileSync(f, "utf8")]);
   const byBrief = scope.patternsByBrief(briefTexts, cfg);
   if (scope.briefsCovering(rel, byBrief).length) return "";
+  if (await derived(root, rel, briefTexts, cfg, event.tool_input)) return "";
 
   const T = TEXTS[cfg.lang === "en" ? "en" : "fr"];
   const blocking = (cfg.scopeReminder ?? "blocking") === "blocking";

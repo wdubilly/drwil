@@ -4192,6 +4192,48 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-311",
+      "name": "tests de QUA-311, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node outils/tests-par-fichier.mjs QUA-311 .githooks/scope-gate.test.mjs .githooks/scope.test.mjs .githooks/check-docs.test.mjs packages/drwil/test/claude-hooks.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/tests-par-fichier.mjs",
+        ".githooks/**",
+        "packages/drwil/test/claude-hooks.test.mjs",
+        "packages/drwil/templates/common/tools/claude/.claude/hooks/scope-reminder.mjs",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-312",
+      "name": "tests de QUA-312, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node outils/tests-par-fichier.mjs QUA-312 .githooks/scope-gate.test.mjs packages/drwil/test/claude-hooks.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/tests-par-fichier.mjs",
+        ".githooks/**",
+        "packages/drwil/test/claude-hooks.test.mjs",
+        "packages/drwil/templates/common/tools/claude/.claude/hooks/scope-reminder.mjs",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-313",
+      "name": "tests de QUA-313, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node outils/tests-par-fichier.mjs QUA-313 .githooks/scope-gate.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/tests-par-fichier.mjs",
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
       "id": "couverture-diff",
       "runAt": [
         "ci"

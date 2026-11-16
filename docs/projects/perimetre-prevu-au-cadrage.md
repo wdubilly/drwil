@@ -64,16 +64,16 @@ dite au commit et comptée à la clôture.
   couvert par le scope ; (2) un fichier cité aux champs `**Périmètre**` ou `**Tests**` d'un contrat que la fiche
   cite (critères ou « Contrats modifiés ») ; (3) un fichier neuf sur la branche, dans le dossier d'un fichier du
   scope, dont le nom commence par le nom de ce fichier suivi d'un tiret, et que ce fichier importe (sa découpe) ;
-  (4) la source de gabarit d'une copie citée (sens inverse de `scopeMirrors`) — contrat à créer
+  (4) la source de gabarit d'une copie citée (sens inverse de `scopeMirrors`) — `QUA-311`
 - Aucun fichier de règles n'est admis d'office : registre des contrats, fichiers de `rulesFiles`
   (`.githooks/detour-rules.mjs` : hooks hors tests, `.drwil/ia-first.json`, CI, et leurs sources de gabarit), consignes
   des assistants (`AGENTS.md` de toute couche, `CLAUDE.md`, `GEMINI.md`, `docs/ia-first.md`, `docs/ia-first/`),
   réglages et hooks des assistants (`.claude/`, `.gemini/`, .github/hooks/) ; un tel fichier hors du scope reste
-  refusé comme aujourd'hui, et le refus dit qu'il est un fichier de règles — contrat à créer
+  refusé comme aujourd'hui, et le refus dit qu'il est un fichier de règles — `QUA-312`
 - Chaque admission est dite au commit qui l'utilise (avertissement qui nomme le fichier, le cas et le fichier du
   scope dont il dérive, affiché quel que soit le réglage `scopeGate`, jamais un échec à lui seul) ; à la clôture,
   `node .githooks/close.mjs` compte les fichiers de la branche admis d'office et écrit leur nombre et leur liste dans
-  l'entrée du journal du chantier ; `--check` les annonce sans rien écrire — contrat à créer
+  l'entrée du journal du chantier ; `--check` les annonce sans rien écrire — `QUA-313`
 - Le rappel de cadrage reste vrai pour tout autre fichier : un fichier de code jamais cité ni dérivé est refusé — `QUA-016`
 - Après la clôture, jusqu'à la fusion, un fichier admis d'office par la fiche supprimée reste couvert comme ceux
   qu'elle citait ; un fichier jamais cité ni dérivé reste refusé — `QUA-173`
@@ -150,5 +150,19 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-13) : cadrage terminé.
-- **Prochaine étape** : [humain] `/drwil-start`.
+- **Dernier état** (2026-11-16) : lot 1 fait. `.githooks/scope-derived.mjs` (neuf, gabarit puis copie) porte la seule
+  définition : `derivation` (quatre cas), `isRulesFile` (`rulesFiles` + consignes et réglages des assistants),
+  `revisionContext` (barrière : HEAD et index au commit, parent et commit au rejeu) et `derivedInWorktree`
+  (`check-docs`, garde d'écriture). La barrière avertit à chaque admission (`ADMIS D'OFFICE — …`, tout réglage
+  `scopeGate`) et son refus d'un fichier de règles le dit ; `.githooks/scope.mjs` exporte `closedBriefTexts`, que
+  `check-docs` lit pour les fichiers dérivés d'une fiche supprimée (QUA-173). Contrats créés : `QUA-311`
+  (dérivation), `QUA-312` (fichiers de règles), `QUA-313` (avertissement au commit ; le compte de la clôture est
+  écrit dans sa règle mais pas encore prouvé) ; `QUA-016` et `QUA-173` réécrits (puces **Modifié**) ; contrôles
+  `tests-qua-311` à `tests-qua-313` déclarés. `docs/projects/kit-mechanics.md` (gabarit et dépôt) cite déjà le hook
+  neuf : sans lui, les tests `QUA-016` du kit refusaient le premier commit d'un projet installé.
+- **Prochaine étape** : [IA] lot 2 — `.githooks/close.mjs` et `--check` comptent et listent les fichiers de la branche
+  admis d'office (relire chaque commit de la branche avec `revisionContext` de `.githooks/scope-derived.mjs`,
+  fiche du trailer `Drwil-Brief`), ligne écrite dans l'entrée du journal (`.githooks/close-journal.mjs`, textes dans
+  `.githooks/close-texts.mjs`) ; ajouter `.githooks/close.test.mjs` au champ **Tests** et à la **Preuve** de `QUA-313`, et au
+  contrôle `tests-qua-313` ; rappel de cadrage (`docs/ia-first/7-scoping-reminder.md`) et modèle de fiche disent
+  les quatre cas ; carte d'architecture (hook neuf) ; ligne du changelog sous « Unreleased ».

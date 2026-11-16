@@ -425,3 +425,18 @@ test("QUA-158 : l'avis de taille existe en anglais", () => {
   assert.equal(r.status, 0, r.stdout);
   assert.match(r.stdout, /`src\/gros\.js` is 180 lines \(ceiling 200\) — list upfront/);
 });
+
+test("QUA-311 : rappel de cadrage : un test qui cite un module cadré est couvert d'office ; un fichier jamais cité ni dérivé reste signalé (QUA-016)", () => {
+  const r = verifier({
+    ".drwil/ia-first.json": JSON.stringify({ codePrefixes: ["src"] }),
+    "docs/projects/a.md": `# A\n\n**Statut** : cadré le 2026-01-01.\n\n<!-- scope\nfiles:\n  - src/a.js\n-->\n${reprise}`,
+    "src/a.js": "",
+    "src/a.test.js": 'import { a } from "./a.js";\n',
+    "src/hors.test.js": "// ne cite aucun module cadré\n",
+    "AGENTS.md": "Voir `src/a.js`.\n",
+  });
+  assert.equal(r.status, 0, r.stdout);
+  assert.doesNotMatch(r.stdout, /src\/a\.test\.js/);
+  assert.match(r.stdout, /⚠ `src\/hors\.test\.js` : fichier de code hors de toute fiche/);
+  assert.match(r.stdout, /1 avertissement\(s\) de cadrage \(QUA-016/);
+});

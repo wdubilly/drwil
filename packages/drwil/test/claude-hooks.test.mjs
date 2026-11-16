@@ -413,6 +413,61 @@ test("scope-reminder : refuse (blocking), rappelle (warning) ou se tait selon le
   assert.equal(run("scope-reminder.mjs", { tool_name: "Bash" }).status, 0);
 });
 
+/** Projet cadré sur src/couvert.ts, fiche qui cite QUA-900 (Périmètre : un module et un hook), hooks de dérivation copiés. */
+async function projetDerive() {
+  const { remind } = await load("scope-reminder.mjs");
+  const fiche = "<!-- scope\nfiles:\n  - src/couvert.ts\n-->\n\n## Critères d'acceptation\n\n- un critère — `QUA-900`\n";
+  const dir = projet(
+    { layers: ["src"], codePrefixes: [".githooks"] },
+    {
+      "docs/projects/chantier.md": fiche,
+      "docs/contracts.md": "## QUA-900 — x\n**Règle** : r.\n**Périmètre** : `src/perimetre.ts`, `.githooks/regle.mjs`\n",
+      "src/existant.test.ts": 'import { c } from "./couvert";\n',
+    },
+  );
+  mkdirSync(join(dir, ".githooks"), { recursive: true });
+  for (const f of [
+    "scope.mjs",
+    "scope-derived.mjs",
+    "briefs-criteria.mjs",
+    "contracts.mjs",
+    "contracts-validate.mjs",
+    "detour-rules.mjs",
+    "scope-gate-merge.mjs",
+  ])
+    copyFileSync(join(GITHOOKS, f), join(dir, ".githooks", f));
+  const ecrire = (path, tool_input = {}, tool_name = "Write") =>
+    remind(JSON.stringify({ tool_name, hook_event_name: "PreToolUse", tool_input: { file_path: join(dir, path), ...tool_input } }), dir);
+  const refuse = async (path, input) => JSON.parse((await ecrire(path, input)) || "{}").hookSpecificOutput?.permissionDecision === "deny";
+  return { dir, ecrire, refuse };
+}
+
+test("QUA-311 : scope-reminder : un fichier dérivé du cadrage est admis d'office, le texte à écrire compris", async () => {
+  const { dir, ecrire, refuse } = await projetDerive();
+  try {
+    assert.equal(
+      await ecrire("src/neuf.test.ts", { content: 'import { c } from "./couvert";\n' }),
+      "",
+      "texte à écrire qui cite le module",
+    );
+    assert.equal(await ecrire("src/existant.test.ts", { old_string: "x", new_string: "y" }, "Edit"), "", "fichier déjà écrit qui le cite");
+    assert.equal(await refuse("src/libre.test.ts", { content: "// rien\n" }), true, "test qui ne cite rien");
+    assert.equal(await ecrire("src/perimetre.ts", { content: "" }), "", "cité au Périmètre d'un contrat de la fiche");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("QUA-312 : scope-reminder : un fichier de règles cité au Périmètre d'un contrat de la fiche n'est jamais admis d'office", async () => {
+  const { dir, ecrire, refuse } = await projetDerive();
+  try {
+    assert.equal(await refuse(".githooks/regle.mjs", { content: "" }), true, "fichier de règles, jamais admis");
+    assert.equal(await ecrire("src/perimetre.ts", { content: "" }), "", "le module du même Périmètre l'est");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("id-glossary et reply-glossary : glosent les identifiants cités, une seule fois pour l'agent", async () => {
   const { contextFor } = await load("id-glossary.mjs");
   const { noteFor } = await load("reply-glossary.mjs");

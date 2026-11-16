@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { MARKERS_RE, STATUS_RE } from "./doc-coherence.mjs";
 import * as scope from "./scope.mjs";
+import { derivedInWorktree } from "./scope-derived.mjs";
 import { CEILINGS } from "./check-kit-size.mjs";
 import { briefMaturity, briefStatus, readyGaps } from "./state.mjs";
 import { execFileSync } from "node:child_process";
@@ -92,7 +93,12 @@ export function workstreamChecks({ root, cfg, T, lang }) {
       }
     }
     const byBrief = scope.patternsByBrief(briefTexts, cfg);
-    for (const c of scope.outsideBriefs(indexed, byBrief, cfg)) errors.push(T.outsideBriefs(c));
+    // A file derived from a brief's scope, or from a brief the branch closed (QUA-173), is covered as if cited.
+    const outside = scope.outsideBriefs(indexed, byBrief, cfg);
+    const derived = outside.length
+      ? derivedInWorktree(root, outside, [...briefTexts, ...scope.closedBriefTexts(root, cfg)], cfg)
+      : new Map();
+    for (const c of outside.filter((f) => !derived.has(f))) errors.push(T.outsideBriefs(c));
     return errors;
   }
 
