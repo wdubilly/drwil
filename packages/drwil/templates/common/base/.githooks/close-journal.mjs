@@ -25,9 +25,13 @@ export function branchAdmissions(root, brief, { env = process.env } = {}) {
   const outOfScope = Array.isArray(cfg.outOfScope) ? cfg.outOfScope : OUT_OF_SCOPE;
   const found = new Map();
   for (const c of commits.split("\n").filter(Boolean)) {
-    const named = (git(root, ["log", "-1", `--format=%(trailers:key=${TRAILER},valueonly)`, c]) ?? "").split("\n").map((v) => v.trim());
+    // Sans repli : un commit que rev-list vient de lister se lit ; un échec de git lève, et journalPlan refuse la
+    // clôture plutôt que d'écrire un compte faux (QUA-013), comme le rejeu de la barrière.
+    const named = git(root, ["log", "-1", `--format=%(trailers:key=${TRAILER},valueonly)`, c])
+      .split("\n")
+      .map((v) => v.trim());
     if (named.filter(Boolean).at(-1) !== brief) continue;
-    const files = (git(root, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--no-renames", c]) ?? "").split("\n").filter(Boolean);
+    const files = git(root, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--no-renames", c]).split("\n").filter(Boolean);
     const ctx = revisionContext(root, { rev: c, briefRev: `${c}^`, brief, cfg, base });
     for (const f of outsideBriefFiles(files, outOfScope)) {
       if (found.has(f) || ctx.patterns.some((p) => fnmatch(f, p))) continue;
