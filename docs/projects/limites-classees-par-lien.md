@@ -94,12 +94,12 @@ clôture compte les élargissements. La décision reste celle de l'humain, sans 
 - Une recommandation tirée de la catégorie, un ordre des réponses imposé par elle, ou une catégorie qui choisit à la
   place de l'humain.
 - Les limites dans le cadre (traitées sur le champ) et le détour (QUA-050) : inchangés.
-- Les fichiers admis d'office par la barrière (`docs/projects/perimetre-prevu-au-cadrage.md`) : déjà comptés par
+- Les fichiers admis d'office par la barrière (`docs/projects/journal.md`) : déjà comptés par
   elle ; cette fiche ajoute à la même ligne du journal les élargissements et les catégories.
 
 ## 3. Contraintes
 
-- Placée après `docs/projects/perimetre-prevu-au-cadrage.md`, dont elle étend le compte de la clôture.
+- Placée après `docs/projects/journal.md`, dont elle étend le compte de la clôture.
 - Reproduire d'abord : un test du hook où un sondage sans catégorie est accepté contre le code actuel.
 - Le compte se lit par Git (`git show <base>:<fiche>` puis la fiche courante, `readBlock` de `.githooks/scope.mjs`) ;
   base introuvable ou fiche absente de la base : le compte dit « non mesuré » et pourquoi, jamais zéro par défaut
