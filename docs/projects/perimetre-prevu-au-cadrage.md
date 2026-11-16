@@ -89,6 +89,7 @@ dite au commit et comptée à la clôture.
 - `.githooks/close.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 - `.githooks/close-journal.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 - `.githooks/close-texts.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `.githooks/check-docs.test.mjs` — gardé à sa version de la branche (QUA-113) : tests du rappel de cadrage sur les fichiers dérivés, dont ceux d'une fiche supprimée (QUA-311, QUA-173) (validé par le demandeur le 2026-11-16)
 
 ## 2. Hors périmètre
 
