@@ -1,7 +1,7 @@
 # Preuve de clôture — perimetre-prevu-au-cadrage
 
 **Clos le** : 2026-11-16
-**Commit vérifié** : `040de62d34` — verdict `drwil verify` : PASS
+**Commit vérifié** : `c1927e9fcb` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:49eff6d2ffcc5645`, acceptés par l'humain au lancement le 2026-11-16
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
