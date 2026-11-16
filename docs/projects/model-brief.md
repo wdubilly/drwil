@@ -38,6 +38,12 @@ propre s'y déclare) — check-docs avertit sinon ; élargir en cours de
 chantier coûte un commit séparé. Dans ce dépôt, un fichier du gabarit
 couvre sa copie (`scopeMirrors`). Un fichier de code à 180 lignes ou plus
 (le plafond est 200) sera découpé : lister les fichiers que sa découpe crée.
+Admis d'office sans être listés (quatre cas,
+`docs/ia-first/7-scoping-reminder.md`) : un test qui cite un module listé,
+un fichier du champ Périmètre ou Tests d'un contrat que la fiche cite, la
+découpe neuve d'un fichier listé qui l'importe, la source de gabarit d'une
+copie listée — jamais un fichier de règles (hooks, registre, consignes et
+réglages des assistants), qui reste à lister.
 Ajouter un fichier de code ou un hook touche aussi la carte d'architecture
 et `docs/projects/kit-mechanics.md` : les lister aussi.)
 

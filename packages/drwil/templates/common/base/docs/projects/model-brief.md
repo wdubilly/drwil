@@ -35,7 +35,12 @@ creates a contract (its own check is declared there) — check-docs warns
 otherwise; widening mid-workstream costs a separate commit. A generated
 copy is covered by its source when `scopeMirrors` declares it. A code file
 at 180 lines or more (the ceiling is 200) will be split: list the files its
-split creates. Adding a code file or a hook also touches the architecture
+split creates. Admitted without being listed (four cases,
+`docs/ia-first/7-scoping-reminder.md`): a test citing a listed module, a
+file of the Périmètre or Tests field of a contract the brief cites, the new
+split of a listed file that imports it, the template source of a listed
+copy — never a rules file (hooks, registry, the assistants' instructions
+and settings), which is still listed. Adding a code file or a hook also touches the architecture
 map and `docs/projects/kit-mechanics.md`: list them too.)
 
 ## 1. Need

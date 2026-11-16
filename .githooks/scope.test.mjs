@@ -9,9 +9,11 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { undeclaredHooks } from "./base-checks.mjs";
+import { derivedInWorktree } from "./scope-derived.mjs";
 import {
   briefsCovering,
   closedBriefPatterns,
+  closedBriefTexts,
   deliveredFiles,
   fnmatch,
   isCode,
@@ -211,6 +213,51 @@ test("QUA-173 : un fichier neuf listé par la fiche que la branche a supprimée 
   } finally {
     rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
+});
+
+/** Fiche qui cite src/neuf.js, supprimée à la clôture ; src/neuf.test.js en dérive, src/jamais.test.js non. */
+function verifierDeriveCloture() {
+  const { racine, git, ecrire } = depotLivre();
+  try {
+    ecrire("src/neuf.js", "n\n");
+    ecrire("src/neuf.test.js", 'import "./neuf.js";\n');
+    ecrire("src/jamais.test.js", "// ne cite rien\n");
+    ecrire("docs/projects/f.md", "<!-- scope\nfiles:\n  - src/neuf.js\n-->\n");
+    git("add", ".");
+    git("commit", "-q", "-m", "chantier");
+    git("rm", "-q", "docs/projects/f.md");
+    git("commit", "-q", "-m", "clôture");
+    const cfg = { codePrefixes: ["src"] };
+    const env = { DRWIL_BASE: "main" };
+    const fermees = closedBriefTexts(racine, cfg, env);
+    assert.deepEqual(
+      fermees.map(([f]) => f),
+      ["docs/projects/f.md"],
+    );
+    const hors = outsideBriefs(
+      ["src/neuf.js", "src/neuf.test.js", "src/jamais.test.js"],
+      new Map(),
+      cfg,
+      deliveredFiles(racine, env),
+      closedBriefPatterns(racine, cfg, env),
+    );
+    assert.deepEqual(hors, ["src/jamais.test.js", "src/neuf.test.js"]);
+    const derives = derivedInWorktree(racine, hors, fermees, cfg, { env });
+    assert.deepEqual([...derives.keys()], ["src/neuf.test.js"]);
+    assert.deepEqual(derives.get("src/neuf.test.js"), { kind: 1, from: "src/neuf.js", brief: "docs/projects/f.md" });
+    // Historique illisible : aucune fiche supprimée, rien n'est admis (QUA-013).
+    assert.equal(derivedInWorktree(racine, hors, closedBriefTexts(join(racine, "absent"), cfg, env), cfg, { env }).size, 0);
+  } finally {
+    rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+}
+
+test("QUA-173 : un fichier admis d'office par la fiche supprimée à la clôture reste couvert jusqu'à la fusion ; un fichier jamais cité ni dérivé reste refusé (QUA-016)", () => {
+  verifierDeriveCloture();
+});
+
+test("QUA-311 : check-docs lit les fichiers dérivés des fiches que la branche a supprimées (closedBriefTexts), jamais sur un historique illisible", () => {
+  verifierDeriveCloture();
 });
 
 test("QUA-173 : la déclaration QUA-113 « Contrats modifiés » de la fiche supprimée à la clôture déclare scope.mjs et son test, qui passent le rejeu", () => {

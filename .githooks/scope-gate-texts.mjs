@@ -2,13 +2,23 @@
 
 export const TRAILER = "Drwil-Brief";
 
+// The four cases of a derived file (scope-derived.mjs), and the mark of a rules file never admitted.
+const CASES = {
+  fr: ["", "test qui cite", "cité par le contrat", "découpe de", "source de gabarit de la copie"],
+  en: ["", "test citing", "cited by contract", "split of", "template source of the copy"],
+};
+const RULES = { fr: " — fichier de règles, jamais admis d'office", en: " — a rules file, never admitted as derived" };
+
 export const TEXTS = {
   fr: {
     activity: (a, n) =>
       `${n} fichier(s) hors fiches commité(s) en ${a} : seule l'activité BUILD l'autorise (node .githooks/state.mjs move …) ; une mise à jour du kit se commite par « npx drwil init », qui coupe sa branche`,
-    outsideScope: (f, brief) => `${f} : hors du cadrage de ${brief} (dans HEAD) — l'ajouter au bloc scope et commiter la fiche d'abord`,
+    outsideScope: (f, brief, rules) =>
+      `${f} : hors du cadrage de ${brief} (dans HEAD)${rules ? RULES.fr : ""} — l'ajouter au bloc scope et commiter la fiche d'abord`,
     noTrailer: (c, n) => `${c} : ${n} fichier(s) hors fiches sans trailer ${TRAILER}`,
-    outsideScopeCommit: (c, f, brief) => `${c} : ${f} hors du cadrage de ${brief} (dans le parent)`,
+    outsideScopeCommit: (c, f, brief, rules) => `${c} : ${f} hors du cadrage de ${brief} (dans le parent)${rules ? RULES.fr : ""}`,
+    admitted: (f, d, brief) =>
+      `ADMIS D'OFFICE — ${f} : ${CASES.fr[d.kind]} ${d.from} (cas ${d.kind}), dérivé du cadrage de ${brief} sans l'élargir — à citer dans le compte rendu`,
     widened: (brief, added, removed) =>
       `ATTENTION — le cadrage de ${brief} change${added.length ? ` ; chemins ajoutés : ${added.join(", ")}` : ""}${removed.length ? ` ; chemins retirés : ${removed.join(", ")}` : ""} — à citer, avec la raison, dans le compte rendu de fin de tâche (QUA-214)`,
     noReference: "aucune branche de référence (origin/HEAD, master, main, ou DRWIL_BASE)",
@@ -23,9 +33,12 @@ export const TEXTS = {
   en: {
     activity: (a, n) =>
       `${n} file(s) outside briefs committed in ${a}: only the BUILD activity allows it (node .githooks/state.mjs move …); a kit update is committed by "npx drwil init", which cuts its own branch`,
-    outsideScope: (f, brief) => `${f}: outside the scope of ${brief} (in HEAD) — add it to the scope block and commit the brief first`,
+    outsideScope: (f, brief, rules) =>
+      `${f}: outside the scope of ${brief} (in HEAD)${rules ? RULES.en : ""} — add it to the scope block and commit the brief first`,
     noTrailer: (c, n) => `${c}: ${n} file(s) outside briefs without a ${TRAILER} trailer`,
-    outsideScopeCommit: (c, f, brief) => `${c}: ${f} outside the scope of ${brief} (in the parent)`,
+    outsideScopeCommit: (c, f, brief, rules) => `${c}: ${f} outside the scope of ${brief} (in the parent)${rules ? RULES.en : ""}`,
+    admitted: (f, d, brief) =>
+      `ADMITTED AS DERIVED — ${f}: ${CASES.en[d.kind]} ${d.from} (case ${d.kind}), derived from the scope of ${brief} without widening it — to be quoted in the report`,
     widened: (brief, added, removed) =>
       `WARNING — the scope of ${brief} changes${added.length ? `; paths added: ${added.join(", ")}` : ""}${removed.length ? `; paths removed: ${removed.join(", ")}` : ""} — to be quoted, with the reason, in the end-of-task report (QUA-214)`,
     noReference: "no reference branch (origin/HEAD, master, main, or DRWIL_BASE)",

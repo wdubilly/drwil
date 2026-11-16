@@ -34,6 +34,10 @@ export const TEXTS = {
     journalProof: (f) => `- **Preuve de clôture** : \`${f}\`.`,
     journalAmbiguous: (j, f, n) => `${j} : ${n} entrées correspondent à \`${f}\` — identifier une seule entrée avant la clôture`,
     journalRefused: (r) => `clôture refusée : le journal ne peut pas être complété — ${r}`,
+    journalAdmitted: (list) =>
+      `- **Admis d'office** : ${list.length} — ${list.map(([f, d]) => `\`${f}\` (cas ${d.kind}, de \`${d.from}\`)`).join(", ")}.`,
+    admitted: (list) =>
+      `Admis d'office sur la branche, écrits dans l'entrée du journal : ${list.length} — ${list.map(([f, d]) => `${f} (cas ${d.kind}, de ${d.from})`).join(", ")}`,
   },
   en: {
     usage: "usage: node .githooks/close.mjs [--check] [--fix] [<brief path>] [--logs <folder>]",
@@ -66,6 +70,10 @@ export const TEXTS = {
     journalProof: (f) => `- **Closing proof**: \`${f}\`.`,
     journalAmbiguous: (j, f, n) => `${j}: ${n} entries match \`${f}\` — identify a single entry before closing`,
     journalRefused: (r) => `closing refused: the journal cannot be completed — ${r}`,
+    journalAdmitted: (list) =>
+      `- **Admitted as derived**: ${list.length} — ${list.map(([f, d]) => `\`${f}\` (case ${d.kind}, from \`${d.from}\`)`).join(", ")}.`,
+    admitted: (list) =>
+      `Admitted as derived on the branch, written in the journal entry: ${list.length} — ${list.map(([f, d]) => `${f} (case ${d.kind}, from ${d.from})`).join(", ")}`,
   },
 };
 

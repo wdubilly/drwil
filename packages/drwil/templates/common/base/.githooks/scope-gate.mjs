@@ -11,21 +11,22 @@
 //   parent. A commit is judged by its parent's rules: without a gate in the parent, it is not
 //   checked.
 // A kit update commit (trailer `Drwil-Kit-Update`, scope-gate-kit.mjs) is judged on its files outside the kit manifest only.
+// A file derived from the scope (scope-derived.mjs, never a rules file) is admitted as if cited; at commit time, said.
 // Severity: `scopeGate` setting (off | warning | blocking), warning if missing. A commit that changes the
 // scope block of the active brief always shows a warning, whatever the setting (QUA-213).
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { contractsAddedOnly, isHookTest, isRegistry, rulesFiles, weakenedTests } from "./detour.mjs";
-import { fnmatch, normalize, readBlock, withMirrors } from "./scope.mjs";
+import { fnmatch, normalize } from "./scope.mjs";
 import { governanceDisabled, readState } from "./state.mjs";
 import { LOT_TRAILER, lotStatus } from "./state-lots.mjs";
 import { git, reference, replaying, resolution, scopeChange } from "./scope-gate-merge.mjs";
 import { TRAILER, texts } from "./scope-gate-texts.mjs";
 import { KIT_ENV, KIT_TRAILER, nonKitFiles } from "./scope-gate-kit.mjs";
+import { derivation, isRulesFile, revisionContext } from "./scope-derived.mjs";
 
-// Attestations pass like briefs: a human proof already guarded by `drwil attest` (terminal
-// required, contract fingerprint), reviewed; subjecting them to the scope would force widening
-// every brief in order to close. The consumption log likewise: its line is written in CLOSING,
+// Attestations pass like briefs: a human proof already guarded by `drwil attest` (terminal required, contract
+// fingerprint), reviewed; subjecting them to the scope would force widening every brief in order to close. The consumption log likewise: its line is written in CLOSING,
 // for the closing commit (`consumption.mjs --record`). The closing proof likewise (QUA-084): the
 // closing writes it in CLOSING, for the closing commit, and refuses to close without it.
 // The scoping recipes' outputs (value discovery, risk audit — French and English names) are scoping
@@ -61,7 +62,7 @@ const covered = (f, patterns) => patterns.some((p) => fnmatch(f, p));
  * `weakened(f)`: names of the contract tests the staged test file `f` removes or weakens; a test file otherwise
  * is no rule.
  */
-export function checkIndex({ files, state, patterns, outOfScope, cfg, addedOnly = () => false, weakened = () => [] }) {
+export function checkIndex({ files, state, patterns, outOfScope, cfg, addedOnly = () => false, weakened = () => [], derive = () => null }) {
   const T = texts(cfg);
   // The registry is written in SCOPING, like a brief: a criterion cites a contract already in it, and a new contract
   // enters in the same commit as the brief that cites it. The guard stays the regression check of `verify` (QUA-023).
@@ -69,7 +70,9 @@ export function checkIndex({ files, state, patterns, outOfScope, cfg, addedOnly 
   const subject = outsideBriefFiles(files, outOfScope).filter((f) => !(scoping && isRegistry(f, cfg)));
   if (!subject.length) return [];
   if (state.activity !== "BUILD") return [T.activity(state.activity, subject.length)];
-  const problems = subject.filter((f) => !covered(f, patterns)).map((f) => T.outsideScope(f, state.active_brief));
+  const problems = subject
+    .filter((f) => !covered(f, patterns) && !derive(f))
+    .map((f) => T.outsideScope(f, state.active_brief, isRulesFile(f, cfg)));
   // QUA-050, QUA-117: an ordinary detour or reopening fix needs no one, nor does adding a contract; one
   // that changes the rules (an existing contract modified or removed among them) waits for the human's yes.
   const exception = state.detour ?? state.reopened;
@@ -85,12 +88,6 @@ export function checkIndex({ files, state, patterns, outOfScope, cfg, addedOnly 
         .map(([f, names]) => T.weakenedTest(f, names, Boolean(state.detour))),
     );
   return problems;
-}
-
-/** Patterns of the scope block of `brief` in revision `rev`, copies included; none if the brief does not exist there. */
-function patternsAt(root, rev, brief, cfg) {
-  const text = brief ? git(root, ["show", `${rev}:${brief}`]) : null;
-  return text === null ? [] : withMirrors(readBlock(text).patterns, cfg);
 }
 
 function checkBranch(root, base, { outOfScope, cfg }) {
@@ -122,8 +119,10 @@ function checkBranch(root, base, { outOfScope, cfg }) {
       if (rest.length) problems.push(T.noTrailer(short, rest.length));
       continue;
     }
-    const patterns = patternsAt(root, `${c}^`, brief, cfg);
-    for (const f of subject) if (!covered(f, patterns)) problems.push(T.outsideScopeCommit(short, f, brief));
+    // The brief, its scope and the registry in the parent; the derived file read in the commit judged, never the working tree.
+    const ctx = revisionContext(root, { rev: c, briefRev: `${c}^`, brief, cfg, base });
+    for (const f of subject)
+      if (!covered(f, ctx.patterns) && !derivation(f, ctx)) problems.push(T.outsideScopeCommit(short, f, brief, isRulesFile(f, cfg)));
   }
   return problems;
 }
@@ -136,17 +135,22 @@ export function checkScope(root, { cfg = {}, staged = null, env = process.env } 
   const level = LEVELS.has(cfg.scopeGate) ? cfg.scopeGate : "warning";
   // QUA-213: shown even with the gate off (QUA-019), never a failure by itself.
   const warnings = [];
+  const outOfScope = Array.isArray(cfg.outOfScope) ? cfg.outOfScope : OUT_OF_SCOPE;
+  const { state } = staged ? readState(root) : {};
+  // Scope, brief and registry in HEAD, the derived file as staged; each admission is said whatever the setting.
+  const ctx = staged && revisionContext(root, { rev: ":", briefRev: "HEAD", brief: state.active_brief, cfg, base: reference(root, env) });
+  const admitted = new Map();
+  const derive = (f) => (state?.activity === "BUILD" ? (admitted.has(f) ? admitted : admitted.set(f, derivation(f, ctx))).get(f) : null);
   if (staged) {
-    const { state } = readState(root);
     const change =
       state.active_brief && resolution(root, staged).includes(normalize(state.active_brief)) ? scopeChange(root, state.active_brief) : null;
     if (change) warnings.push(texts(cfg).widened(state.active_brief, change.added, change.removed));
+    for (const f of outsideBriefFiles(resolution(root, staged), outOfScope).filter((f) => !covered(f, ctx.patterns) && derive(f)))
+      warnings.push(texts(cfg).admitted(f, derive(f), state.active_brief));
   }
   if (level === "off") return { status: "not-applicable", problems: warnings, detail: "scopeGate: off" };
-  const outOfScope = Array.isArray(cfg.outOfScope) ? cfg.outOfScope : OUT_OF_SCOPE;
   let problems;
   if (staged) {
-    const { state } = readState(root);
     // The staged registry against HEAD's: `git show` fails (null) on a registry created or removed — a doubt.
     const addedOnly = (f) => isRegistry(f, cfg) && contractsAddedOnly(git(root, ["show", `HEAD:${f}`]), git(root, ["show", `:${f}`]));
     const weakened = (f) => weakenedTests(git(root, ["show", `HEAD:${f}`]), git(root, ["show", `:${f}`]));
@@ -155,11 +159,12 @@ export function checkScope(root, { cfg = {}, staged = null, env = process.env } 
     problems = checkIndex({
       files: env[KIT_ENV] ? nonKitFiles(root, "HEAD", null, files) : files,
       state,
-      patterns: patternsAt(root, "HEAD", state.active_brief, cfg),
+      patterns: ctx.patterns,
       outOfScope,
       cfg,
       addedOnly,
       weakened,
+      derive,
     });
   } else {
     const base = reference(root, env);

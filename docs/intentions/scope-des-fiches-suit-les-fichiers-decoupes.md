@@ -1,6 +1,6 @@
 # Intention : le scope d'une fiche suit les fichiers découpés et la carte d'architecture
 
-**Statut** : cadrée le 2026-11-13 — `docs/projects/perimetre-prevu-au-cadrage.md`.
+**Statut** : piste (b) livrée le 2026-11-16 — `docs/projects/journal.md` (entrée « Les fichiers dérivés du périmètre sont admis d'office »).
 **Revu le 2026-10-28** : cadrée le jour même en `docs/projects/journal.md` (piste retenue : alerter au cadrage et rappeler dans le modèle de fiche, barrière inchangée). Reste vivante : l'admission automatique des fichiers dérivés, à reprendre si les arrêts persistent.
 **Revu le 2026-11-13** : les arrêts persistent, la condition de reprise est remplie (OPT-6 du scan de valeur du
 2026-11-12, `docs/decouverte-valeur.md`) ; rangée en 0.11.2 sur décision du demandeur, élargie au périmètre prévu au
@@ -42,6 +42,18 @@ décision humaine et une relance de sous-agent.
 - Briques existantes : `readBlock` et `withMirrors` (`.githooks/scope.mjs`), le réglage `scopeMirrors`.
 - Lien : `docs/intentions/limites-classees-par-lien.md` compte les élargissements à la clôture ; celle-ci les évite au
   cadrage.
+
+## Livré le 2026-11-16
+
+- La barrière de périmètre, le rappel de cadrage de `check-docs` et la garde d'écriture de l'agent admettent d'office
+  un fichier dérivé du scope, dans quatre cas fermés : test qui cite un module cadré, fichier des champs Périmètre ou
+  Tests d'un contrat cité, découpe neuve importée, source de gabarit d'une copie citée (QUA-311) ; jamais un fichier
+  de règles (QUA-312). Chaque admission est dite au commit et comptée à la clôture, au journal (QUA-313).
+- Le modèle de fiche dit les quatre cas et rappelle toujours la carte d'architecture et `docs/projects/kit-mechanics.md`.
+- Écarté : le joker implicite sur un dossier (piste a) et l'héritage du scope sans les conditions de la découpe
+  (piste c). Restent à citer au cadrage : la carte, `docs/projects/kit-mechanics.md`, la découpe d'un hook (fichier
+  de règles). À reprendre si les élargissements comptés par `docs/projects/limites-classees-par-lien.md` restent
+  nombreux.
 
 ## Questions à trancher
 

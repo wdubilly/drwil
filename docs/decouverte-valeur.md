@@ -155,4 +155,4 @@ reproduire (aucune lecture de la forge faite pour ce scan).
 - OPT-4 : intention `docs/intentions/attestations-qui-tombent-pour-leur-objet.md`, cadrée le 2026-11-13 en
   `docs/projects/journal.md` (0.11.2).
 - OPT-6 : relance de `docs/intentions/scope-des-fiches-suit-les-fichiers-decoupes.md`, cadrée le 2026-11-13 en
-  `docs/projects/perimetre-prevu-au-cadrage.md` (0.11.2).
+  `docs/projects/journal.md` (0.11.2).

@@ -135,6 +135,7 @@ files:
   - .githooks/scope-gate-kit.mjs
   - .githooks/scope-gate-merge.mjs
   - .githooks/scope-gate-texts.mjs
+  - .githooks/scope-derived.mjs
   - .githooks/contracts-validate.mjs
   - .githooks/check-control-coverage-jobs.mjs
   - .githooks/glossary-labels.mjs

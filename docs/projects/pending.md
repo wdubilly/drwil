@@ -137,9 +137,6 @@ d'un outil) la dit dans son statut.
 
 ### Expérience au quotidien
 
-- [ ] [IA] [P0] (0.11.2) Les fichiers dérivés du périmètre (tests d'un module cité, `**Périmètre**` des contrats
-  touchés, découpe, copie de gabarit) sont admis d'office, jamais un fichier de règles, chaque admission comptée
-  (OPT-6 ; cadré le 2026-11-13) — `docs/projects/perimetre-prevu-au-cadrage.md`.
 - [ ] [IA] [P0] (0.11.2) La fusion d'une PR s'attend sans tourner à vide (lue dans la branche principale, GitHub et
   GitLab) et les retouches de cadrage se regroupent en une PR ; prêt, D1 à D3 tranchées (cadré le 2026-11-14) —
   `docs/projects/attente-de-fusion-courte.md`.

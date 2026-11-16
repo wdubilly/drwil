@@ -76,7 +76,7 @@ CI d'une PR de doc seule dure 1 min 40 s (PR #438). Deux causes (détail : inten
 - D1 (2026-11-14) : regroupement d'office des retouches de cadrage, fusion au besoin (lancement, demande, fin
   d'échange) — réponse du demandeur.
 - D2 (2026-11-14) : même détection par git sur GitHub et GitLab — réponse du demandeur.
-- D3 (2026-11-14) : thème Expérience au quotidien, en tête de file après `docs/projects/perimetre-prevu-au-cadrage.md`
+- D3 (2026-11-14) : thème Expérience au quotidien, en tête de file après `docs/projects/journal.md`
   — réponse du demandeur.
 
 ## 5. Points à trancher
