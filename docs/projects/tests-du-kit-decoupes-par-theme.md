@@ -103,4 +103,13 @@ Tranchées par le demandeur le 2026-11-11 (l'agent n'en a tranché aucune) :
   couvre (`packages/drwil/test/kit.test.mjs` est lui-même un test).
 - **Mesure avant** (2026-11-17, ce poste, `node --test` sur `packages/drwil/test/kit.test.mjs` seul) : 209 tests, 220,5 s (`duration_ms`
   220514), contre 68 s au profil du 2026-11-11 sur un autre poste : comparer avant et après sur le même poste.
-- **Suite** : lot 2, extraire les helpers partagés dans kit-commun.mjs, sans bouger de test.
+- **Lot 2 fait** (2026-11-17) : les helpers partagés sortent dans `packages/drwil/test/kit-commun.mjs` (aucun test
+  déplacé ; `packages/drwil/test/kit.test.mjs` passe en entier, 209 tests ; test de non-perte vert) : environnement `GIT_*` et `DRWIL_*`
+  retiré, dossiers temporaires et leurs hooks `after`/`afterEach` (valables pour le fichier qui importe le module), `quiet`,
+  `capture`, `envTest`, `checks`, `git`, `read`, lecture des consignes (`sectionsIaFirst`, `sectionIaFirst`, `consignes`,
+  `config`), `enAvertissement`, `executable`, `GABARIT`, `DEPOT`, `copierModule`, `projetVerify`, `contrat`, `cli`.
+  Les helpers d'un seul thème (`projetReprise`, `projetAtteste`, `empreinte`…) restent avec leurs tests et partent avec
+  eux au lot 3 ; un helper que deux thèmes partagent rejoint alors le module commun, jamais une copie. `node --test`
+  sans argument (le `npm test` du paquet) lit aussi le module commun comme un fichier de tests vide (0 test).
+- **Suite** : lot 3, déplacer les tests par thème dans `kit-<thème>.test.mjs`, un commit par thème, chaque fichier neuf
+  au bloc `scope` par un commit de cadrage séparé, test de non-perte vert à chaque commit.
