@@ -45,6 +45,17 @@ release renames this section to its version.
 
 ### Changed
 
+- `node .githooks/close.mjs --fix` now only writes the proposed corrections,
+  in `CLOSING` as elsewhere (no closing proof, no brief deleted, no index or
+  consumption touched), and says to run `node .githooks/close.mjs` next. A
+  closing run again after it was done says « closing already done » with
+  what was done, exit 0, rewriting nothing. `--check` (and the move from
+  `BUILD` to `EVIDENCE`) reports acceptance criteria changed since their
+  acceptance, with the closing's own refusal text. A citation of the closing
+  brief is redirected to the journal only in a plain pointer (in
+  parentheses, after « voir », « see » or « cf. », after a dash ending the
+  line); in any other sentence it is reported « to rewrite by hand », with
+  no correction proposed.
 - A refused attestation poll in Claude Code now names its cause (unexpected
   field, several questions, recommendation, summary different from the
   preparation, missing or expired preparation, unreadable answer, proof or

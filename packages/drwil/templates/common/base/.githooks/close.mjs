@@ -3,8 +3,7 @@
 // the brief, removes its index line and records the consumption; `--check` (any activity) only
 // reports, before the commit, what would make the closing fail. It never stages, commits, pushes nor
 // merges anything, and it never writes the state: journal decisions and limits stay the agent's.
-// The recognition and deletion of the merged local branches live in close-branches.mjs (QUA-048,
-// QUA-058, QUA-059), re-exported here.
+// The merged local branches are handled in close-branches.mjs (QUA-048, QUA-058, QUA-059), re-exported here.
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { join, posix } from "node:path";
@@ -13,6 +12,7 @@ import { undeclaredHooks } from "./base-checks.mjs";
 import { config } from "./briefs.mjs";
 import { bareNames, closingCi, criteriaToCreate, deadReferences, git, lookMr, referenceScope } from "./close-checks.mjs";
 import { mainBranch } from "./close-branches.mjs";
+import { acceptanceProblems, closingDone } from "./close-done.mjs";
 import { closingMechanics } from "./close-mechanics.mjs";
 import { limitProblems } from "./close-limits.mjs";
 import { journalPlan } from "./close-journal.mjs";
@@ -84,6 +84,7 @@ export function closingReport(root, brief, text = existsSync(join(root, brief)) 
   const plain = [
     ...(journal.problem ? [journal.problem] : []),
     ...criteriaToCreate(root, brief, text),
+    ...acceptanceProblems(root, brief, text),
     ...undeclaredHooks(root, text).lines,
     ...limitProblems(root, text),
     ...deadReferences(root, brief),
@@ -132,9 +133,9 @@ const lookChange = (forge) =>
   forge === "gitlab" ? lookMr(undefined, (a) => ghJson(a, spawnSync, "glab")) : look(undefined, (a) => ghJson(a));
 
 /**
- * `{ code, message, ciAcquired }`. Without `check`: the mechanics (CLOSING only) — brief deleted, index item
- * removed, consumption recorded — then the signals. With `check`: the signals only. With `fix`, the
- * corrections that need no judgement are written (and only then); otherwise they are proposed as a diff.
+ * `{ code, message, ciAcquired }`. Without `check` nor `fix`: the mechanics (CLOSING only), or the closing already
+ * done said, then the signals. With `check`: the signals only. With `fix` (QUA-076): only the corrections needing
+ * no judgement are written; otherwise they are proposed as a diff.
  */
 export function close(root, { brief, check = false, fix = false, env = process.env, logs, lookCi = lookChange } = {}) {
   const T = texts(root);
@@ -142,10 +143,14 @@ export function close(root, { brief, check = false, fix = false, env = process.e
   const path = brief ? posix.normalize(brief.replace(/\\/g, "/")) : state.active_brief;
   if (!path) return { code: 1, message: T.noBrief };
   const route = pathToClosing(root, state.activity);
-  if (!check && state.activity !== "CLOSING") return { code: 1, message: [T.notClosing(state.activity), route].filter(Boolean).join("\n") };
+  const mechanics = !check && !fix;
+  if (mechanics && state.activity !== "CLOSING")
+    return { code: 1, message: [T.notClosing(state.activity), route].filter(Boolean).join("\n") };
   const text = existsSync(join(root, path)) ? readFileSync(join(root, path), "utf8") : "";
   const done = [];
-  if (!check) {
+  const already = mechanics && closingDone(root, path);
+  if (already) return { code: 0, message: [T.alreadyDone(already.proof, path, already.index), T.rest].join("\n") };
+  if (mechanics) {
     // QUA-137 (undeclared hook) and QUA-264 (intent born without the human's choice): refused before anything is written.
     const hooks = undeclaredHooks(root, text);
     const before = [...(hooks.files.length ? hooks.lines : []), ...limitProblems(root, text)];
@@ -171,7 +176,7 @@ export function close(root, { brief, check = false, fix = false, env = process.e
     ...(report.warnings.length ? [T.warnings, ...report.warnings.map((w) => `  ⚠ ${w}`)] : []),
     ...(report.admitted.length ? [T.admitted(report.admitted)] : []),
     ...(ci ? [ci.line] : []),
-    ...(check ? [...lateLines(root), route] : [T.rest]),
+    ...(mechanics ? [T.rest] : [...lateLines(root), fix && state.activity === "CLOSING" ? T.thenClose : route]),
   ];
   return { code: problems.length ? 1 : 0, message: lines.filter(Boolean).join("\n"), ciAcquired: ci ? ci.acquired : null };
 }

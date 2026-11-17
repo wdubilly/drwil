@@ -23,7 +23,11 @@ export const TEXTS = {
     signals: "Avant le commit, ce qui ferait échouer la clôture :",
     byHand: "à corriger à la main (la case dépend de plusieurs fiches, ou la ligne n'a pas de marqueur)",
     clean: "Rien ne ferait échouer la clôture.",
-    proposed: "Corrections proposées, rien n'est écrit (`node .githooks/close.mjs --fix` les applique) :",
+    proposed:
+      "Corrections proposées, rien n'est écrit (`node .githooks/close.mjs --fix` les applique sans clore ; ensuite, `node .githooks/close.mjs` clôt) :",
+    thenClose: "Clôture à lancer ensuite : `node .githooks/close.mjs` (en CLOSING).",
+    alreadyDone: (proof, b, index) =>
+      `clôture déjà faite : preuve ${proof} écrite, fiche ${b} retirée, ligne d'index retirée de ${index} — rien n'est réécrit ni consigné une seconde fois`,
     applied: (n) => `corrections appliquées : ${n}`,
     warnings: "Avertissements (non bloquants) :",
     unreleased: (log, files) =>
@@ -60,7 +64,11 @@ export const TEXTS = {
     signals: "Before the commit, what would make the closing fail:",
     byHand: "to fix by hand (the box depends on several briefs, or the line has no marker)",
     clean: "Nothing would make the closing fail.",
-    proposed: "Proposed corrections, nothing is written (`node .githooks/close.mjs --fix` applies them):",
+    proposed:
+      "Proposed corrections, nothing is written (`node .githooks/close.mjs --fix` applies them without closing; then `node .githooks/close.mjs` closes):",
+    thenClose: "Closing to run next: `node .githooks/close.mjs` (in CLOSING).",
+    alreadyDone: (proof, b, index) =>
+      `closing already done: proof ${proof} written, brief ${b} removed, index line removed from ${index} — nothing is rewritten or recorded a second time`,
     applied: (n) => `corrections applied: ${n}`,
     warnings: "Warnings (non-blocking):",
     unreleased: (log, files) =>

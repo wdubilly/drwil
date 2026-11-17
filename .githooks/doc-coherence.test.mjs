@@ -120,6 +120,50 @@ test("QUA-076 : référence morte : la fiche qui se clôt est réorientée vers 
   );
 });
 
+test("QUA-076 : la fiche qui se clôt n'est réorientée que dans un simple renvoi ; dans une phrase, elle est à réécrire à la main", () => {
+  const racine = depot({
+    "docs/projects/ferme.md": EN_COURS,
+    "docs/projects/journal.md": "# Journal\n",
+    "docs/recipes/a.md": [
+      "Entre parenthèses (`docs/projects/ferme.md`) ici.",
+      "Renvoi (cf. `docs/projects/ferme.md`).",
+      "see `docs/projects/ferme.md` for details.",
+      "Tiret en fin — `docs/projects/ferme.md`.",
+      "À lancer après `docs/projects/ferme.md`.",
+      "Même code que `docs/projects/ferme.md` — et la suite.",
+      "Journaux lus par `docs/projects/ferme.md` ; un champ absent.",
+    ].join("\n"),
+  });
+  const mortes = deadReferences(racine, {}, "fr", "docs/projects/ferme.md");
+  assert.deepEqual(
+    mortes.map((m) => [m.place, Boolean(m.edit)]),
+    [
+      ["docs/recipes/a.md:1", true],
+      ["docs/recipes/a.md:2", true],
+      ["docs/recipes/a.md:3", true],
+      ["docs/recipes/a.md:4", true],
+      ["docs/recipes/a.md:5", false],
+      ["docs/recipes/a.md:6", false],
+      ["docs/recipes/a.md:7", false],
+    ],
+  );
+  assert.match(
+    mortes[4].message,
+    /a\.md:5 cite docs\/projects\/ferme\.md, qui sera supprimée, dans une phrase qui ne serait plus juste réorientée vers le journal : à réécrire à la main/,
+  );
+  assert.match(deadReferences(racine, {}, "en", "docs/projects/ferme.md")[4].message, /to rewrite by hand/);
+  assert.deepEqual(
+    proposals(racine, mortes).map((p) => p.to),
+    [
+      "Entre parenthèses (`docs/projects/journal.md`) ici.",
+      "Renvoi (cf. `docs/projects/journal.md`).",
+      "see `docs/projects/journal.md` for details.",
+      "Tiret en fin — `docs/projects/journal.md`.",
+    ],
+    "aucune correction proposée pour une phrase",
+  );
+});
+
 test("QUA-076 : corrections : fusionnées par ligne, écrites seulement par applyProposals, jamais sur une ligne qui a changé", () => {
   const racine = depot({
     "docs/projects/finie.md": FINIE,
