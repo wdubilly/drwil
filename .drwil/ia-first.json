@@ -257,7 +257,7 @@
     {
       "id": "tests-qua-013",
       "name": "tests de QUA-013, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-013 packages/drwil/test/kit.test.mjs packages/drwil/test/kit-ci.test.mjs .githooks/run-checks.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-013 packages/drwil/test/kit-ci.test.mjs packages/drwil/test/kit-verify.test.mjs .githooks/run-checks.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
@@ -334,7 +334,7 @@
     {
       "id": "tests-qua-022",
       "name": "tests de QUA-022, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-022 packages/drwil/test/kit.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-022 packages/drwil/test/kit-verify.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
@@ -349,7 +349,7 @@
     {
       "id": "tests-qua-023",
       "name": "tests de QUA-023, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-023 packages/drwil/test/kit.test.mjs .githooks/state.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-023 packages/drwil/test/kit-verify.test.mjs .githooks/state.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
@@ -2073,7 +2073,7 @@
     {
       "id": "tests-qua-136",
       "name": "tests de QUA-136, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-136 .githooks/engine.test.mjs .githooks/run-checks.test.mjs packages/drwil/test/kit.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-136 .githooks/engine.test.mjs .githooks/run-checks.test.mjs packages/drwil/test/kit-verify.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
@@ -3338,7 +3338,7 @@
     {
       "id": "tests-qua-260",
       "name": "tests de QUA-260, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-260 packages/drwil/test/kit.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-260 packages/drwil/test/kit-verify.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
@@ -3354,7 +3354,7 @@
     {
       "id": "tests-qua-261",
       "name": "tests de QUA-261, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-261 .githooks/engine.test.mjs .githooks/run-checks.test.mjs packages/drwil/test/kit.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-261 .githooks/engine.test.mjs .githooks/run-checks.test.mjs packages/drwil/test/kit-verify.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
@@ -4018,7 +4018,7 @@
     {
       "id": "tests-qua-298",
       "name": "tests de QUA-298, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-298 .githooks/contracts.test.mjs packages/drwil/test/kit.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-298 .githooks/contracts.test.mjs packages/drwil/test/kit-verify.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",

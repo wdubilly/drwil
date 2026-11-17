@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync, statSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { init } from "../dist/index.js";
 import { createHash } from "node:crypto";
 
@@ -152,3 +152,24 @@ export const cli = (dir, ...args) =>
   });
 
 export const empreinte = (contenu) => createHash("sha256").update(contenu).digest("hex");
+
+// QUA-140 : le verdict « ok » consigné pour `ko` est faux exprès : un contrôle rejoué rendrait FAIL, un contrôle repris rend PASS.
+export async function projetReprise(contrats, { verdicts = { ok: { status: "ok" }, ko: { status: "ok" } }, cfg: modifier } = {}) {
+  const dir = await projetVerify(contrats);
+  if (modifier) {
+    const cfg = config(dir);
+    modifier(cfg);
+    writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg));
+  }
+  git(dir, "init", "-q");
+  git(dir, "add", "-A");
+  git(dir, "commit", "-qm", "x");
+  const moteur = await import(pathToFileURL(join(dir, ".githooks", "engine.mjs")).href);
+  mkdirSync(join(dir, ".drwil/evidence"), { recursive: true });
+  const ranAt = "2026-10-25T10:00:00.000Z";
+  writeFileSync(
+    join(dir, ".drwil/evidence/run-checks-verdicts.json"),
+    JSON.stringify({ ranAt, fingerprint: moteur.treeFingerprint(dir), checks: verdicts }),
+  );
+  return dir;
+}

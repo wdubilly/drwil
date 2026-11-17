@@ -37,7 +37,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/run-checks.mjs` (moteur `.githooks/engine.mjs`) et son historique d'exécution, `packages/drwil/src/closure.ts` pour les critères.
 **Preuve** : tests : un contrôle non exécuté est dit tel, jamais « ok », dans chaque sortie de `drwil verify` (humaine, `--agent`, JSON), sans attestation possible à sa place, et un verdict « non exécuté » consigné par `run-checks` est rejoué, jamais repris comme un succès.
 **Contrôle** : `ci-coverage`, `tests-qua-013`
-**Tests** : `packages/drwil/test/kit.test.mjs`, `packages/drwil/test/kit-ci.test.mjs`, `.githooks/run-checks.test.mjs`
+**Tests** : `packages/drwil/test/kit-ci.test.mjs`, `packages/drwil/test/kit-verify.test.mjs`, `.githooks/run-checks.test.mjs`
 **Raison** : Empêcher l'affirmation sans exécution.
 
 ## SEC-006 — Pas de dépendance vulnérable connue
@@ -129,7 +129,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/criteria.ts` (`evaluateCriteria`, `contractChanges`).
 **Preuve** : `drwil verify` et son évidence, lue par la clôture.
 **Contrôle** : `tests-qua-022`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-verify.test.mjs`
 **Origine** : capitaliser les non-régressions — « Un critère dont le contrat n'existe pas ou n'a pas de contrôle rejouable est refusé à la clôture ; un critère nouveau crée ou modifie son contrat dans la branche »
 **Raison** : La preuve d'un critère doit survivre au chantier, pour être rejouée par les suivants.
 
@@ -139,7 +139,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/criteria.ts` (`judgeBrief`, `showOrigins`), `.githooks/briefs.mjs` (`declaredContracts`), `.githooks/state.mjs` (clôture).
 **Preuve** : `drwil verify` et son évidence, lue par la clôture.
 **Contrôle** : `tests-qua-023`
-**Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/state.test.mjs`
+**Tests** : `packages/drwil/test/kit-verify.test.mjs`, `.githooks/state.test.mjs`
 **Origine** : capitaliser les non-régressions — « Un contrat modifié sans déclaration dans « Contrats modifiés » est refusé ; quand un contrôle échoue, verify affiche le chantier d'origine qu'il protège »
 **Raison** : Assouplir un contrat en silence efface la non-régression qu'il portait ; le changer reste possible, mais décidé.
 
@@ -1315,7 +1315,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/engine.mjs` (`checks`).
 **Preuve** : test du moteur (durée entière en synchrone et en parallèle, absente pour un contrôle non exécuté) ; test de `run-checks` (durée au détail, liste du plus lent au plus rapide en fin de fichier, trois plus lents au résumé, en français et en anglais ; classement complet dans la sortie en CI seulement) ; test de `drwil verify --evidence` (durée de chaque contrôle dans la preuve).
 **Contrôle** : `tests-qua-136`
-**Tests** : `.githooks/engine.test.mjs`, `.githooks/run-checks.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/engine.test.mjs`, `.githooks/run-checks.test.mjs`, `packages/drwil/test/kit-verify.test.mjs`
 **Origine** : duree-par-controle — « Chaque contrôle joué par `run-checks` ou par `drwil verify` a sa durée consignée dans le détail de la passe et dans la preuve de `verify` (`verify-*.json`) »
 **Raison** : Un `verify --evidence` a pris environ 4 min 30 et six passes 25 à 30 min d'un chantier de 45 min, sans qu'on puisse dire lesquels des 121 contrôles coûtent le plus : la mesure précède le choix de ce qu'il faut accélérer.
 
@@ -2524,7 +2524,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/verdict.ts` (`verdictLabel`, `ciPending`).
 **Preuve** : test du paquet par la CLI sur un projet temporaire : contrôle confié à la CI non joué et non compté passé, `GOVERNANCE: PASS (CI pending)` et la ligne qui le nomme en sortie humaine et `--agent`, `ciPending` et `label` en `--json` et dans la preuve `--evidence`, jamais « Work is verified » en `--agent`, `GOVERNANCE: FAIL` gardé quand un autre contrat échoue, `PASS` sans note sans contrôle confié à la CI.
 **Contrôle** : `tests-qua-260`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-verify.test.mjs`
 **Origine** : controle-lent-une-seule-fois-en-ci — « Avec au moins un contrôle confié à la CI et tout le reste vert, `verify` rend `GOVERNANCE: PASS (CI pending)` et nomme les contrôles en attente ; ce n'est jamais un `PASS` sans réserve »
 **Raison** : Un contrôle confié à la CI n'a pas tourné en local : un `PASS` sans réserve le compterait passé (QUA-013), alors que seule la CI de la PR ou MR le prouve.
 **Modifié** : 2026-11-07 — le verdict lui-même porte la réserve (preuve `--evidence`, `--json` par `label`, conduite `--agent` sans « Work is verified »), posée par `packages/drwil/src/verdict.ts` et non plus par la seule CLI ; décidé par le demandeur (chantier « contrôle lent une seule fois en CI », après le lot 1).
@@ -2534,7 +2534,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/engine-runat.mjs` (`runAtVerdict`, option `withCi`).
 **Preuve** : tests du moteur (contrôle confié à la CI joué avec l'option, réglage `["verify", "ci"]` toujours non exécuté au commit, réglage refusé toujours refusé), de `run-checks` de bout en bout (option dite dans le résumé, contrôle joué et son échec bloquant, verdict de l'option non repris sans elle, en anglais) et du paquet par la CLI (`verify --with-ci-checks` : échec remonté, ligne de l'option en sortie humaine et `--agent`, `withCiChecks` en `--json`).
 **Contrôle** : `tests-qua-261`
-**Tests** : `.githooks/engine.test.mjs`, `.githooks/run-checks.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/engine.test.mjs`, `.githooks/run-checks.test.mjs`, `packages/drwil/test/kit-verify.test.mjs`
 **Origine** : controle-lent-une-seule-fois-en-ci — « Une option de `verify` et de `run-checks` (nom à fixer au lot 1, par exemple `--with-ci-checks`) joue aussi en local les contrôles confiés à la CI, pour reproduire un échec ; la sortie dit que l'option est active »
 **Raison** : Un contrôle confié à la CI qui échoue doit pouvoir se reproduire en local sans changer la configuration, et sans qu'une passe locale soit prise pour la CI.
 ## QUA-262 — La clôture n'est acquise qu'une fois la CI de la PR ou MR verte sur les contrôles confiés à la CI
@@ -2906,7 +2906,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/contracts-validate.mjs` (`validateContracts`), `packages/drwil/src/verify.ts` (`verify`), `packages/drwil/src/closure.ts` (`judgeProofs`).
 **Preuve** : tests : champ Retiré lu (français et anglais), contrat retiré accepté sans preuve, champ mal formé refusé (sans date, sans raison), dans les deux langues ; verify sur un registre avec un contrat retiré : PASS sans lui, jamais listé ni attestable ; champ mal formé : ERROR ; preuve de clôture dont un critère est lié à un contrat retiré : PASS, critère nommé « retiré » dans les informations, un critère lié à un contrat absent du registre restant un échec.
 **Contrôle** : `tests-qua-298`
-**Tests** : `.githooks/contracts.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/contracts.test.mjs`, `packages/drwil/test/kit-verify.test.mjs`
 **Origine** : fusion-automatique-par-defaut — « Un contrat retiré reste au registre, marqué « **Retiré** : <date> — <raison> », sans preuve (ni Contrôle ni Manuel), citable par le journal, les preuves et les recettes, et n'est jamais compté PASS ni ATTESTED par `drwil verify` ; un champ Retiré sans date ou sans raison est refusé »
 **Raison** : Supprimer un contrat du registre rendait invalides ses citations dans le journal et les preuves ; le garder sans preuve était refusé : un retrait n'avait aucune forme acceptée (décidé par le demandeur le 2026-11-13).
 ## QUA-299 — L'inventaire des attestations désigne les `**Couvre**` trop larges, sans rien écrire
