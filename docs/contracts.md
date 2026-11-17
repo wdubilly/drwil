@@ -37,7 +37,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/run-checks.mjs` (moteur `.githooks/engine.mjs`) et son historique d'exécution, `packages/drwil/src/closure.ts` pour les critères.
 **Preuve** : tests : un contrôle non exécuté est dit tel, jamais « ok », dans chaque sortie de `drwil verify` (humaine, `--agent`, JSON), sans attestation possible à sa place, et un verdict « non exécuté » consigné par `run-checks` est rejoué, jamais repris comme un succès.
 **Contrôle** : `ci-coverage`, `tests-qua-013`
-**Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/run-checks.test.mjs`
+**Tests** : `packages/drwil/test/kit.test.mjs`, `packages/drwil/test/kit-ci.test.mjs`, `.githooks/run-checks.test.mjs`
 **Raison** : Empêcher l'affirmation sans exécution.
 
 ## SEC-006 — Pas de dépendance vulnérable connue
@@ -91,7 +91,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `docs/recipes/working-with-branches.md`.
 **Preuve** : `.githooks/run-checks.mjs` (hook uniquement, jamais en CI).
 **Contrôle** : `main-branch`, `tests-qua-017`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-ci.test.mjs`
 **Raison** : Un commit ou un push direct sur la branche principale contourne la revue (pull/merge request) et casse le lien fiche ↔ branche décrit par la recette.
 
 ## QUA-018 — Périmètre explicite : dépôt drwil vs livrable gabarit
@@ -346,7 +346,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/engine.mjs` (texte `noCi`), `packages/drwil/src/doctor.ts` (texte `noCi`).
 **Preuve** : tests du moteur et du paquet.
 **Contrôle** : `tests-qua-043`
-**Tests** : `.githooks/engine.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/engine.test.mjs`, `packages/drwil/test/kit-ci.test.mjs`
 **Origine** : un premier essai propre (0.6.2) — « Sans CI déclarée, le détail de QUA-013 (contrôle non exécuté n'est pas passé) dans verify et la ligne CI de doctor disent comment en sortir (npx drwil init --ci github ou --ci gitlab), en français et en anglais, prouvé par les tests ; le verdict reste ERROR »
 **Raison** : Constaté le 2026-10-17 sur le pilote `drwil_com` : le premier `verify` d'un projet neuf, tel que le donne le README, finit en `VERIFY ERROR` sans dire que c'est attendu ni comment en sortir.
 
@@ -2482,7 +2482,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/run-checks-verdicts.mjs` (`loadReuse`) et le job `checks` de chaque CI (dépôt et gabarit).
 **Preuve** : tests de `run-checks` (passe de la branche principale en CI sans reprise, verdicts restaurés dans une autre copie de travail repris pour les contrôles inchangés et rejoués sinon ; CI sans demande, sans verdict, verdicts illisibles, `--tout-rejouer` : tout rejoué) ; tests des workflows du dépôt et du gabarit GitHub (restauration sur une PR avant la passe, reprise demandée à cette seule passe, sauvegarde sur un push de la branche principale seulement ; preuve d'arbre lue par le seul push de la branche principale, avant la passe, dans le run de PR vert ; passe, installation et gitleaks sautés sur arbre prouvé ; artefact posé par une PR seulement, en dernière étape du job) et du gabarit GitLab (téléchargement hors de la branche principale, reprise demandée à cette seule passe, artefact effacé hors de la branche principale, aucun cache des verdicts : seule l'archive de gitleaks, vérifiée par sa somme à chaque passe, est cachée) ; test du paquet (CI installées par `init`, GitHub et GitLab).
 **Contrôle** : `tests-qua-250`
-**Tests** : `.githooks/run-checks.test.mjs`, `.github/scripts/workflows-yaml.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/run-checks.test.mjs`, `.github/scripts/workflows-yaml.test.mjs`, `packages/drwil/test/kit-ci.test.mjs`
 **Origine** : ci-rapide-pour-la-doc — « Sur une PR, la CI reprend le verdict de la dernière CI de la branche principale pour chaque contrôle dont l'empreinte (fichiers et commande) est identique ; elle rejoue les autres ; le push sur la branche principale rejoue tout et seul écrit ces verdicts »
 **Raison** : Une PR de documentation attendait 6 min 11 s dans le job `checks` (mesuré sur la PR #362) : la reprise contrôle par contrôle (QUA-141) évitait ce coût en local, pas en CI.
 **Modifié** : 2026-11-09 — la PR reprend aussi le verdict de sa propre passe précédente pour un contrôle lent (QUA-290, QUA-291) ; ancien critère : « la passe de la PR ne relit jamais un verdict qu'elle aurait pu écrire ; seul un push sur la branche principale sauvegarde ces verdicts ; aucun cache GitLab partagé » (la clause sur la branche principale et sur GitLab reste vraie pour tout le reste), décidé par le demandeur (chantier « les contrôles lents sont accélérés par la CI livrée », D3) — à valider par le demandeur.
@@ -2552,7 +2552,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml` (étape `pr`), `packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml` (`workflow: rules`).
 **Preuve** : tests du paquet sur un projet initialisé : GitHub, script de décision joué par bash avec un `gh` factice (push à PR ouverte sauté et dit ; sans PR, gh muet, PR, branche principale, tag : joué), chaque étape suivante sautée ou propre à la PR ou à la branche principale, pas de `if` de job ; GitLab, `workflow: rules` sans pipeline de MR, aucun job de MR, `run-checks` joué ; moteur livré : contrôle `["ci"]` joué avec la variable `CI`, non joué hors CI ; couverture CI (QUA-013) verte.
 **Contrôle** : `tests-qua-263`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-ci.test.mjs`
 **Origine** : controle-lent-une-seule-fois-en-ci — « Livrable : les CI du gabarit, GitHub et GitLab, ne jouent plus deux fois les contrôles sur le push d'une branche qui a une PR ou une MR ouverte, et jouent bien les contrôles `["ci"]` »
 **Raison** : La CI du gabarit tournait deux fois par push quand une PR était ouverte (événements `push` et `pull_request`) : un contrôle lent confié à la CI y aurait été joué deux fois.
 
@@ -2623,7 +2623,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/` (QUA-018).
 **Preuve** : test du paquet : deux projets d'essai installés par `init` (GitHub, GitLab) dont les CI portent chaque mécanisme et dont les quatre fichiers du moteur sont ceux du dépôt, octet pour octet. Ne prouve pas la durée gagnée chez l'adoptant, que seule sa forge mesure.
 **Contrôle** : `tests-qua-270`
-**Tests** : `packages/drwil/test/kit.test.mjs`, `packages/drwil/test/ci-shards.test.mjs`
+**Tests** : `packages/drwil/test/kit-ci.test.mjs`, `packages/drwil/test/ci-shards.test.mjs`
 **Origine** : ci-plus-rapide — « Un projet adopté reçoit ces gains : les CI du gabarit portent les mêmes mécanismes, et un projet d'essai installé depuis le paquet le prouve »
 **Raison** : Un projet adopté payait le même double passage de PR et le même 504 de gitleaks que ce dépôt : un gain qui ne se livre pas ne profite qu'à nous.
 **Modifié** : 2026-11-09 — la liste des mécanismes reçus s'allonge du découpage en tranches (QUA-288, QUA-289) et de la reprise d'une PR à l'autre (QUA-290, QUA-291), prouvée par des projets d'essai installés par `init` (GitHub, GitLab) avec un faux contrôle lent découpé ; ancien critère : « un projet installé reçoit les mécanismes de la CI rapide » — à valider par le demandeur.
