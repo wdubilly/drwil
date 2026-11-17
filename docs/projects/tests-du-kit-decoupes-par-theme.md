@@ -119,5 +119,28 @@ Tranchées par le demandeur le 2026-11-11 (l'agent n'en a tranché aucune) :
   CI livrée, ~17 s), `modules` (modules optionnels, release, paquet npm, ~10 s), `verify` (verdicts, critères, ~13 s),
   `verify-reprise` (parallèle, reprise des verdicts, `--failed`, ~12 s), `attestation` (~9 s). Les fichiers neufs
   entrent au bloc `scope` par le motif `packages/drwil/test/kit-*.test.mjs` (un commit de cadrage).
-- **Suite** : lot 3, déplacer les tests par thème dans `kit-<thème>.test.mjs`, un commit par thème, test de non-perte
-  vert à chaque commit.
+- **Lot 3 fait** (2026-11-17) : les 209 tests sont dans dix fichiers `kit-<thème>.test.mjs`, un commit par thème, test
+  de non-perte vert à chaque commit. Tests par fichier : consignes 37, fiches 13, hooks 24, installation 37,
+  mise-a-jour 18, ci 15, modules 16, verify 27, verify-reprise 11, attestation 11. Les helpers d'un seul thème sont
+  partis avec lui ; `empreinte` et `projetReprise`, partagés, ont rejoint `packages/drwil/test/kit-commun.mjs`.
+  `packages/drwil/test/kit.test.mjs` ne déclare plus aucun test : gardé vide (un commentaire), car des documents hors du
+  bloc `scope` le citent encore (intentions, fiches passées, `packages/drwil/README.md`) et check-docs refuserait un
+  chemin disparu ; `node --test` le compte comme un test vide qui passe.
+- **Citations déjà suivies au lot 3** (le strict nécessaire, sans quoi le commit est refusé) : chaque contrôle
+  `tests-<ID>` de la forme `outils/tests-par-fichier.mjs` et chaque champ **Tests** des contrats dont les tests ont
+  bougé citent le ou les fichiers `kit-<thème>.test.mjs` qui portent un test ouvert par l'ID ; `tests-qua-207`
+  (forme `node --test --test-name-pattern`, non vue au premier commit) passait sans jouer de test, il cite
+  `packages/drwil/test/kit-consignes.test.mjs` depuis le dernier commit du lot.
+- **Mesure après, par fichier** (2026-11-17 vers 23 h 55, en série, ce poste, charge 1 min de 3 à 9 : machine chargée,
+  à refaire au calme au lot 4) : attestation 7,9 s, ci 19,0 s, consignes 5,6 s, fiches 14,1 s, hooks 16,9 s,
+  installation 15,1 s, mise-a-jour 15,4 s, modules 14,1 s, verify-reprise 30,5 s, verify 38,6 s. Au moment de chaque
+  déplacement (charge 1 min entre parenthèses) : consignes 4,6 s (0,8), fiches 14,2 s (4,5), hooks 15,9 s (5,3),
+  installation 22,8 s (2,5), mise-a-jour 24,1 s (3,4), ci 28,2 s (4,8), modules 19,3 s (6,0), verify 49,6 s (10,9),
+  verify-reprise 16,6 s (8,6), attestation 13,4 s (9,8). Avant la découpe : 113,4 s pour le fichier entier (charge 2,4).
+- **Restes pour le lot 4** : les citations hors champ **Tests** de `docs/contracts.md` (**Source de vérité**,
+  **Périmètre**), les `paths` de `tests-qua-212`, `tests-qua-160` qui cite `packages/drwil/test/kit.test.mjs` sans
+  qu'aucun test QUA-160 n'y soit (déjà le cas avant la découpe), `docs/architecture.md`, et le sort de
+  `packages/drwil/test/kit.test.mjs` vide. Limite hors cadre : `.githooks/engine.test.mjs` (QUA-212) joue
+  `packages/drwil/test/kit.test.mjs` filtré par `^QUA-2` ; vide, ce fichier n'y prouve plus rien (à soumettre à
+  l'humain avant VERIFY).
+- **Suite** : lot 4, mettre à jour les citations restantes, mesurer après au calme, consigner avant et après au journal.
