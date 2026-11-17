@@ -144,4 +144,28 @@ Tranchées par le demandeur le 2026-11-11 (l'agent n'en a tranché aucune) :
   `packages/drwil/test/kit.test.mjs` vide. Limite hors cadre : `.githooks/engine.test.mjs` (QUA-212) joue
   `packages/drwil/test/kit.test.mjs` filtré par `^QUA-2` ; vide, ce fichier n'y prouve plus rien (à soumettre à
   l'humain avant VERIFY).
-- **Suite** : lot 4, mettre à jour les citations restantes, mesurer après au calme, consigner avant et après au journal.
+- **Lot 4 fait** (2026-11-18) : citations restantes suivies (QUA-072 **Source de vérité** sur
+  `packages/drwil/test/kit-consignes.test.mjs` ; **Périmètre** de QUA-150 et de QUA-212 sur les fichiers
+  `kit-<thème>.test.mjs` ; **Source de vérité** de QUA-212 sur `packages/drwil/test/kit-commun.mjs` ; `paths` de
+  `tests-qua-212` sur `packages/drwil/test/kit-*.test.mjs` et `packages/drwil/test/kit-commun.mjs` ; `tests-qua-160` ne
+  joue plus que `.githooks/state.test.mjs`, seul porteur d'un test QUA-160 ; carte `docs/architecture.md`). Aucun champ
+  **Couvre** ne citait `packages/drwil/test/kit.test.mjs` : aucune attestation ne tombe par ses fichiers couverts.
+  `packages/drwil/test/kit.test.mjs` reste, vide (un commentaire) : `packages/drwil/README.md`, des intentions et des
+  fiches passées, hors du bloc `scope`, le citent, et check-docs refuserait un chemin disparu.
+- **Limite traitée** (« Traiter maintenant ») : le test de QUA-212 joue les fichiers `kit-*.test.mjs` porteurs d'un test
+  QUA-2xx et exige d'en voir passer autant (19), et au moins un test du moteur (45). Il ne jouait déjà rien avant la
+  découpe : le `node --test` relancé héritait de `NODE_TEST_CONTEXT` et sautait ses fichiers ; retiré, le motif
+  `^(?!QUA-212)` rejouait sous node 26 le test lui-même, sans fin (exclusion désormais par `--test-skip-pattern`).
+- **Mesure finale** (2026-11-18 vers 0 h 26, ce poste, 8 cœurs, node 26, même `dist` ; avant = fichier du commit
+  `faf8ee04` et son module commun, joués à côté sous un autre nom ; charge 1 min entre parenthèses) : avant, fichier
+  entier 131,3 s (2,00). Après, chaque fichier seul, en série : attestation 8,3 s (1,66), ci 21,5 s (1,52), consignes
+  4,9 s (1,84), fiches 13,3 s (1,78), hooks 13,7 s (1,77), installation 16,2 s (1,73), mise-a-jour 16,6 s (1,88), modules
+  11,5 s (1,89), verify-reprise 14,3 s (2,53), verify 17,5 s (2,49) ; 138 s en tout, le plus long 21,5 s. Suite du paquet
+  (`node --test`, parallélisme par défaut) : avant 179,4 s (466 tests, 2,29), après 213,4 s (467 tests, dont le fichier
+  vide, 3,13 ; 14,3 en fin de passe) : jouée seule sur ce poste, la suite n'est pas plus courte, ses dix fichiers se
+  disputant les 8 cœurs ; le gain attendu est celui des tranches (chantier 4), qui répartissent ces fichiers.
+- **Plafond proposé** : 30 s par fichier de tests du kit, joué seul sur ce poste au calme (le plus long : 21,5 s) ;
+  critère `[humain]` à attester (QUA-013).
+- **Limite hors cadre trouvée** : le test de QUA-217 dans `.githooks/engine.test.mjs` a le même défaut (0,27 s pour
+  « toute la suite du moteur ») ; à soumettre à l'humain avant VERIFY.
+- **Suite** : sondage de la limite QUA-217, puis vérifier, attester le plafond, clore.

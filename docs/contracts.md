@@ -665,7 +665,7 @@ régression sauf si la fiche active déclare le changement (section
 ## QUA-072 — Les hooks et skills de Claude Code ne changent pas, prouvé sans session réelle
 **Règle** : Livré à tout projet. Le skill `/drwil-note` a la même forme que les autres skills `/drwil-*` (en-tête YAML `name` et `description` lisibles, corps qui nomme la commande), et les hooks de Claude Code existants (`.claude/hooks/prompt-hook.mjs` du sondage, `.claude/hooks/scope-reminder.mjs`), rejoués avec leurs entrées simulées, donnent la même sortie qu'avant ce chantier.
 **Périmètre** : `.claude/skills/drwil-note/SKILL.md`, `.claude/hooks/prompt-hook.mjs`, `.claude/hooks/scope-reminder.mjs` ; livrés dans le gabarit.
-**Source de vérité** : `packages/drwil/test/kit.test.mjs` (entrées simulées et sorties attendues des hooks).
+**Source de vérité** : `packages/drwil/test/kit-consignes.test.mjs` (entrées simulées et sorties attendues des hooks).
 **Preuve** : test du paquet qui installe un projet, lit la forme du skill et rejoue les hooks avec des entrées simulées ; aucune session réelle ni appel au modèle.
 **Contrôle** : `tests-qua-072`
 **Tests** : `packages/drwil/test/kit-consignes.test.mjs`
@@ -1452,7 +1452,7 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-150 — Les tests du dépôt qui mesurent une durée sont recensés, et chacun est rendu stable ou sa conservation justifiée
 **Règle** : Les tests du dépôt qui mesurent une durée (`performance.now`, `Date.now`, comparaison de durées, délai) sont recensés à l'entrée de journal du chantier « tests de timing stables » ; chacun y est rendu déterministe, passé en indicateur (ligne `[ia-first-warning]`, avertissement compté par `run-checks`) ou conservé avec sa justification. Un test de timing qu'une charge de machine peut faire échouer sans qu'aucun code ne soit en cause n'est pas une preuve : il se corrige ou se justifie.
-**Périmètre** : `packages/drwil/test/kit.test.mjs`, `.githooks/run-checks.test.mjs`, `.githooks/state.test.mjs`, `.githooks/engine.test.mjs`, `outils/banc.test.mjs`, `outils/banc-agents.test.mjs` ; l'entrée de journal du chantier.
+**Périmètre** : les fichiers `kit-<thème>.test.mjs` de `packages/drwil/test/` (nés de la découpe de `packages/drwil/test/kit.test.mjs`), `.githooks/run-checks.test.mjs`, `.githooks/state.test.mjs`, `.githooks/engine.test.mjs`, `outils/banc.test.mjs`, `outils/banc-agents.test.mjs` ; l'entrée de journal du chantier.
 **Source de vérité** : `docs/projects/journal.md` (entrée « Les tests de timing ne dépendent plus de la charge de la machine »).
 **Preuve** : attestation humaine : relecture du recensement et de chaque justification.
 **Manuel** : jugement humain : le recensement est complet et chaque test conservé l'est à bon droit.
@@ -2087,8 +2087,8 @@ régression sauf si la fiche active déclare le changement (section
 
 ## QUA-212 — Les tests du dépôt ne dépendent pas des variables `DRWIL_PUSH_*` du pre-push
 **Règle** : Le hook pre-push exporte `DRWIL_PUSH_REFS`, `DRWIL_PUSH_REMOTE`, `DRWIL_PUSH_TAGS_ONLY` et `DRWIL_PUSH_NO_BRANCH` aux contrôles qu'il lance. Aucun test du dépôt n'en dépend : un test qui joue le moteur ou `verify` dans son processus part d'un environnement sans elles, et celui qui les lit les pose lui-même par l'`env` de son lancement, jamais par l'héritage. Le jeu de tests lancé avec elles posées passe comme sans.
-**Périmètre** : `.githooks/engine.test.mjs` et `packages/drwil/test/kit.test.mjs`.
-**Source de vérité** : `.githooks/engine.test.mjs` (garde `beforeEach`), `packages/drwil/test/kit.test.mjs` (retrait de `process.env`).
+**Périmètre** : `.githooks/engine.test.mjs` et les fichiers `kit-<thème>.test.mjs` de `packages/drwil/test/`.
+**Source de vérité** : `.githooks/engine.test.mjs` (garde `beforeEach`), `packages/drwil/test/kit-commun.mjs` (retrait de `process.env`).
 **Preuve** : test du moteur qui relance les tests du moteur et ceux du paquet, `DRWIL_PUSH_*` posées comme au push, et exige qu'ils passent.
 **Contrôle** : `tests-qua-212`
 **Tests** : `.githooks/engine.test.mjs`
