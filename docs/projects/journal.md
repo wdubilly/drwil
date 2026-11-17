@@ -4623,3 +4623,15 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : aucune limite hors cadre relevée. `.githooks/close.mjs` est au plafond de 200 lignes (QUA-001). L'empreinte des critères elle-même relevait d'un chantier à part, « marque-humain-et-empreinte-des-criteres » (entrée du 2026-11-17 ci-dessous).
 
 - **Preuve de clôture** : `docs/preuves/cloture-fix-une-seule-fois.md`.
+
+## 2026-11-17 — La place de la marque `[humain]` ne change plus l'empreinte des critères acceptés
+
+- **Ce qui change** : dans `criteriaFingerprint` (`.githooks/state-acceptance.mjs`), la marque `[humain]` (`[human]`) est effacée avant la preuve de fin de ligne : en tête du critère, entre le tiret et la preuve (« — [humain] `QUA-013` »), après la preuve ou absente, l'empreinte est la même ; une marque citée entre accents graves reste du texte. `acceptanceCheck` compare aussi l'empreinte enregistrée au calcul d'avant (preuve retirée avant la marque) : un chantier accepté avant la mise à jour se clôt sans nouvelle acceptation ; le repli relit, jamais n'enregistre (QUA-175). QUA-174 réécrit, changelog à jour. Gabarit puis `npm run installer-depot` (QUA-018).
+- **Intention couverte** : l'intention « la place de la marque [humain] ne change jamais l'empreinte des critères acceptés », notée le 2026-11-14 après deux clôtures gênées (PR #428 : marque déplacée en tête pour passer ; PR #430 : marque retirée, nouvelle acceptation au terminal) ; entièrement couverte et retirée.
+- **Décisions clés** : D1 (2026-11-14), marque effacée avant la preuve, aucune place imposée par `check-docs` ; D2 (2026-11-14), ancienne empreinte relue en repli plutôt qu'exiger aucun chantier en cours à la mise à jour.
+- **Critères et preuves** : `.githooks/state.test.mjs` (quatre places de la marque, marque citée en code, repli sur l'ancienne empreinte sans écriture, critère modifié refusé avec les deux calculs ; QUA-174), en échec contre l'ancien code ; `node .githooks/run-checks.mjs` OK ; `drwil verify --agent` : `GOVERNANCE: PASS (CI pending)` (276 PASS, 21 ATTESTED, 0 FAIL, 0 MANUAL).
+- **Limites connues** : le repli ne couvre pas une marque retirée d'entre le tiret et la preuve après une acceptation à l'ancien calcul (l'empreinte enregistrée contient la preuve) : une nouvelle acceptation reste demandée dans ce seul cas. L'avertissement du lancement (`.githooks/state-hooks.mjs`, QUA-137) ramène un test cité au module qu'il teste (`.githooks/state.test.mjs` vers `.githooks/state.mjs`) et annonce un refus de clôture que la règle de clôture, qui ne regarde que les fichiers modifiés, ne prononce pas : faux positif, déjà noté le 2026-11-15 dans `docs/intentions/notes.md`, non corrigé ici.
+
+## marque-humain-et-empreinte-des-criteres
+
+- **Preuve de clôture** : `docs/preuves/marque-humain-et-empreinte-des-criteres.md`.
