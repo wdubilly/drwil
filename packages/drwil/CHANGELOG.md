@@ -8,6 +8,16 @@ release renames this section to its version.
 
 ### Added
 
+- `node .githooks/pr-watch.mjs` no longer says « green » while the PR's
+  automatic merge is scheduled: it waits for the merge, within the same
+  30 minutes, and sees it as soon as the PR's head is contained in the
+  remote main branch after `git fetch`, without waiting for the forge's
+  state (GitHub and GitLab alike); a PR the forge says closed, its head not
+  in the main branch, stays « closed without merge ». The scoping skill
+  (`/drwil-scope`) groups the scoping edits of a conversation on one branch
+  and one PR by default, and schedules its merge only when a start needs
+  one of its briefs, when the human asks, or offered at the end of the
+  exchange; an edit is never pushed on a branch whose merge is scheduled.
 - A file derived from a file of the active brief's scope is admitted as if
   it were listed, by the scope barrier (commit, push, CI), check-docs and
   Claude Code's write guard, in four closed cases only: a test citing a

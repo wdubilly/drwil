@@ -137,9 +137,6 @@ d'un outil) la dit dans son statut.
 
 ### Expérience au quotidien
 
-- [ ] [IA] [P0] (0.11.2) La fusion d'une PR s'attend sans tourner à vide (lue dans la branche principale, GitHub et
-  GitLab) et les retouches de cadrage se regroupent en une PR ; prêt, D1 à D3 tranchées (cadré le 2026-11-14) —
-  `docs/projects/attente-de-fusion-courte.md`.
 - [ ] [IA] [P0] (0.11.2) Une limite hors cadre dit son lien avec le problème (bloquant, lié, périphérique) et
   l'élargissement se compte au journal (cadré le 2026-11-13) — `docs/projects/limites-classees-par-lien.md`.
 - [ ] [IA] [P0] (0.11.2) Cadrer de la documentation depuis le dossier d'un chantier en BUILD (cadré le 2026-11-12) —
