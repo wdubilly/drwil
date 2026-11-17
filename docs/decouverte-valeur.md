@@ -149,7 +149,7 @@ reproduire (aucune lecture de la forge faite pour ce scan).
 - OPT-1, volet cadrage : fait (puces de hooks et CHANGELOG ajoutés aux sept fiches P0).
 - OPT-2 : fait, élargi aux risques RSK-1, RSK-5 et RSK-6 de `docs/audit-risques.md` (journal
   `docs/projects/journal.md`, 2026-11-13, « Le suivi de PR ne dit « verte » que sur la CI de la PR »).
-- OPT-3 : fiche `docs/projects/refus-d-attestation-lisible.md`, avec RSK-2, RSK-8 et RSK-9.
+- OPT-3 : fait, avec RSK-2, RSK-8 et RSK-9 (journal `docs/projects/journal.md`, 2026-11-17, « Le refus du sondage d'attestation dit sa cause et se rejoue »).
 - OPT-5 : tranché autrement, fait — la ligne « Unreleased » s'écrit en fin de BUILD
   (journal `docs/projects/journal.md`, 2026-11-13, avec RSK-3).
 - OPT-4 : intention `docs/intentions/attestations-qui-tombent-pour-leur-objet.md`, cadrée le 2026-11-13 en

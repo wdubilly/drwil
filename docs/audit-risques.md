@@ -175,7 +175,7 @@ anglais, choisi par la langue du projet dans `.githooks/run-checks.mjs` et `.git
 réel est que la recette ne cite que le nom anglais. Ce rapport remplace donc celui du 2026-10-04 sous le même nom.
 
 - RSK-1, RSK-5, RSK-6 : fait avec OPT-2 de `docs/decouverte-valeur.md` (journal `docs/projects/journal.md`, 2026-11-13).
-- RSK-2, RSK-8, RSK-9 : `docs/projects/refus-d-attestation-lisible.md`.
+- RSK-2, RSK-8, RSK-9 : fait (journal `docs/projects/journal.md`, 2026-11-17, « Le refus du sondage d'attestation dit sa cause et se rejoue »).
 - RSK-3 : fait — la ligne « Unreleased » s'écrit en fin de BUILD (décision du 2026-11-13) et
   `close.mjs --check` signale son absence (journal `docs/projects/journal.md`, 2026-11-13, « La ligne
   « Unreleased » du changelog s'écrit en fin de BUILD »).

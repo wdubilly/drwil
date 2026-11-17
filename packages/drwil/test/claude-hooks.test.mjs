@@ -235,6 +235,118 @@ test("QUA-235 : le hook refuse réponse agent, défaut, recommandation, faux out
   }
 });
 
+test("QUA-235 : chaque refus nomme sa cause et ce qu'il faut refaire, et garde sa charge pour la rejouer", async () => {
+  const { dir, hook, prepare, post, contract, output } = await projetAttestation();
+  const errors = [];
+  const error = console.error;
+  console.error = (text) => errors.push(String(text));
+  const last = () => {
+    const said = [...errors, ...output].at(-1) ?? "";
+    errors.length = output.length = 0;
+    return said;
+  };
+  const kept = join(dir, ".drwil/evidence/attest-poll-refused.json");
+  try {
+    const base = await prepare();
+    const form = /sondage d'attestation refusé — .* ; aucune attestation enregistrée\. relancer `drwil attest-poll APP-009/;
+    for (const [change, cause] of [
+      [(x) => (x.tool_input.metadata = { source: "agent" }), /champ inattendu \(tool_input\.metadata\)/],
+      [(x) => (x.tool_input.questions[0].default = "Attester"), /champ inattendu \(questions\[0\]\.default\)/],
+      [(x) => x.tool_input.questions.push({ header: "autre" }), /plusieurs questions \(2\)/],
+      [
+        (x) => (x.tool_input.questions[0].options[0].label += " (Recommended)"),
+        /recommandation dans l'option « Attester \(Recommended\) »/,
+      ],
+      [
+        (x) => (x.tool_input.questions[0].question = x.tool_input.questions[0].question.replace("lisibilité fictive", "faux critère")),
+        /résumé différent de la préparation — première ligne qui diffère : .*faux critère/,
+      ],
+      [(x) => (x.tool_name = "Bash"), /appel non corrélable/],
+    ]) {
+      const input = structuredClone(base);
+      change(input);
+      assert.equal(await hook(input), 2);
+      const said = last();
+      assert.match(said, cause);
+      assert.match(said, form);
+      // La charge gardée se rejoue telle quelle et redonne la même cause, sans chemin local.
+      const trace = JSON.parse(readFileSync(kept, "utf8"));
+      assert.ok(trace.cause && !("cwd" in trace.input) && !("transcript_path" in trace.input));
+      assert.equal(await hook(trace.input), 2);
+      assert.match(last(), cause);
+    }
+    await hook(post(base));
+    assert.match(last(), /préparation absente/);
+    for (const [change, cause] of [
+      [(x) => (x.tool_response.answers = {}), /réponse illisible/],
+      [(x) => (x.tool_response.answers[x.tool_input.questions[0].question] = "Autre chose"), /réponse illisible/],
+    ]) {
+      assert.equal(await hook(base), 0);
+      const response = post(base);
+      change(response);
+      await hook(response);
+      assert.match(last(), cause);
+    }
+    assert.equal(await hook(base), 0);
+    await hook(post(base, "Refuser"));
+    const human = last();
+    assert.match(human, /refus choisi par l'humain \(« Refuser »\)/);
+    assert.doesNotMatch(human, /sondage d'attestation refusé/, "le refus humain n'est pas un refus de forme");
+    assert.equal(await hook(base), 0);
+    const pendingFile = join(dir, ".drwil/evidence/attest-polls", readdirSync(join(dir, ".drwil/evidence/attest-polls"))[0]);
+    writeFileSync(pendingFile, JSON.stringify({ ...JSON.parse(readFileSync(pendingFile, "utf8")), askedAt: "2000-01-01T00:00:00Z" }));
+    await hook(post(base));
+    assert.match(last(), /préparation expirée/);
+    assert.equal(await hook(base), 0);
+    writeFileSync(join(dir, "src/objet.js"), "export const valeur = 4;\n");
+    await hook(post(base));
+    assert.match(last(), /preuve ou couverture changée/);
+    assert.equal((await contract()).status, "MANUAL");
+  } finally {
+    console.error = error;
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("QUA-235 : un résumé qui cite « (recommandé) » est accepté ; une charge PostToolUse réelle se rejoue", async () => {
+  const { dir, hook, prepare, contract, output } = await projetAttestation();
+  try {
+    const registry = join(dir, "docs/contracts.md");
+    writeFileSync(registry, readFileSync(registry, "utf8").replace("règle fictive.", "règle fictive, réglage (recommandé)."));
+    const input = await prepare();
+    assert.match(input.tool_input.questions[0].question, /\(recommandé\)/);
+    assert.equal(await hook(input), 0);
+    const question = input.tool_input.questions[0];
+    // Forme relevée sur Claude Code 2.1 : chemins de session, mode de permission, réponses répétées dans tool_input.
+    const real = {
+      session_id: "session-fictive",
+      transcript_path: "/home/fictif/.claude/projects/projet/session-fictive.jsonl",
+      cwd: dir,
+      permission_mode: "default",
+      hook_event_name: "PostToolUse",
+      tool_name: "AskUserQuestion",
+      tool_input: { questions: [question], answers: { [question.question]: "Attester" }, annotations: {} },
+      tool_response: { questions: [question], answers: { [question.question]: "Attester" }, annotations: {} },
+      tool_use_id: "appel-fictif",
+    };
+    assert.equal(await hook(JSON.parse(JSON.stringify(real))), 0);
+    assert.match(output.join("\n"), /APP-009 attesté/);
+    assert.equal((await contract()).status, "ATTESTED");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("QUA-235 : les entrées AskUserQuestion du hook déclarent un délai pour la relance de verify", () => {
+  for (const file of [join(HOOKS, "../settings.json"), fileURLToPath(new URL("../../../.claude/settings.json", import.meta.url))]) {
+    const settings = JSON.parse(readFileSync(file, "utf8").replace("{{stackAllowJson}}", ""));
+    for (const event of ["PreToolUse", "PostToolUse"]) {
+      const entry = settings.hooks[event].find((h) => h.matcher === "AskUserQuestion");
+      for (const h of entry.hooks) assert.ok(h.timeout >= 300, `${file} ${event} : timeout ${h.timeout}`);
+    }
+  }
+});
+
 test("QUA-235 : un contrôle devenu rouge pendant la réponse ne peut pas être attesté", async () => {
   const { dir, hook, prepare, post, contract, output } = await projetAttestation();
   try {

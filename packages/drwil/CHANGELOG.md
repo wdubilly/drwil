@@ -45,6 +45,15 @@ release renames this section to its version.
 
 ### Changed
 
+- A refused attestation poll in Claude Code now names its cause (unexpected
+  field, several questions, recommendation, summary different from the
+  preparation, missing or expired preparation, unreadable answer, proof or
+  coverage changed) and what to redo; the human's own « Decline » is told as
+  such. The last refused payload, redacted, is kept in
+  `.drwil/evidence/attest-poll-refused.json` to be replayed. A recommendation
+  is only looked for in the options, so a contract that quotes the word no
+  longer refuses its own poll, and the hook's `AskUserQuestion` entries
+  declare a 600-second timeout for the re-run of `verify`.
 - On a Node layer with coverage debt, the tests run once for coverage instead
   of twice: `drwil guarantees` declares a single `coverage-diff-<layer>` check
   that deletes the cobertura report, runs `npm test` under c8 at the measured
