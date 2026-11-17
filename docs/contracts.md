@@ -81,7 +81,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/scope.mjs`, `docs/ia-first/7-scoping-reminder.md`.
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI, sévérité selon le réglage) ; refus avant écriture côté agent : `.claude/hooks/scope-reminder.mjs`.
 **Contrôle** : `docs-references`, `tests-qua-016`
-**Tests** : `packages/drwil/test/kit.test.mjs`, `packages/drwil/test/kit-fiches.test.mjs`
+**Tests** : `packages/drwil/test/kit-fiches.test.mjs`, `packages/drwil/test/kit-mise-a-jour.test.mjs`
 **Raison** : Du code détaché de tout chantier ne se retrouve plus.
 **Modifié** : 2026-11-16 — un fichier dérivé d'un fichier du scope (quatre cas fermés, jamais un fichier de règles) est couvert d'office ; ancien critère : « Tout fichier de code indexé est couvert par le bloc `scope` d'une fiche de `docs/projects/` » ; validé par le demandeur le 2026-11-13 (chantier « perimetre-prevu-au-cadrage »).
 
@@ -159,7 +159,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/manifest.ts` (`writeInstall`, `readInstall`, `uninstall`), `packages/drwil/src/index.ts` (`init`).
 **Preuve** : Test sur un dépôt temporaire.
 **Contrôle** : `tests-qua-025`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-mise-a-jour.test.mjs`
 **Origine** : fiabiliser le package npm — « init (installation ou mise à jour) enregistre la version du moteur dans .drwil/install.json sans changer le manifeste ; uninstall le retire »
 **Raison** : Savoir quelle version du moteur tourne dans un projet, pour le diagnostiquer et le mettre à jour.
 
@@ -169,7 +169,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/doctor.ts` (point « version »).
 **Preuve** : Test sur un dépôt temporaire.
 **Contrôle** : `tests-qua-026`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-mise-a-jour.test.mjs`
 **Origine** : fiabiliser le package npm — « doctor affiche la version installée et signale un écart avec la CLI »
 **Raison** : Un écart de version silencieux fait tourner des hooks d'une version avec une CLI d'une autre.
 
@@ -179,7 +179,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/index.ts` (`init`), `packages/drwil/src/manifest.ts` (`removeObsolete`, `writeManifest`, `writeInstall`).
 **Preuve** : Test de mise à jour sur un dépôt temporaire, version antérieure simulée hors réseau.
 **Contrôle** : `tests-qua-027`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-mise-a-jour.test.mjs`
 **Origine** : fiabiliser le package npm — « Passer d'une version à la suivante préserve les fichiers modifiés par le client et retire les fichiers obsolètes non modifiés »
 **Raison** : Une mise à jour qui écrase le travail du client ou laisse des restes fait renoncer aux mises à jour.
 
@@ -386,7 +386,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/render.ts` (`keepDate`).
 **Preuve** : tests du paquet et de l'installateur du dépôt (vraie CLI).
 **Contrôle** : `tests-qua-047`
-**Tests** : `packages/drwil/test/kit.test.mjs`, `outils/installer-depot.test.mjs`
+**Tests** : `packages/drwil/test/kit-mise-a-jour.test.mjs`, `outils/installer-depot.test.mjs`
 **Origine** : date gardée et feu vert de publication (0.6.5) — « Installer ou mettre à jour ne réécrit pas un document dont seule la date changerait : la date d'origine est gardée, une nouvelle date n'est écrite que si le reste du document change »
 **Raison** : Chaque `npm run installer-depot` réécrivait la date de `docs/ia-first.md`, seul fichier changé : un faux changement à annuler à la main ou qui polluait le commit ; une mise à jour d'un projet faisait le même bruit sur ses documents datés.
 
@@ -2390,7 +2390,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/kit-update.ts` (`prepareUpdate`, `finishUpdate`), appelé par `packages/drwil/src/index.ts`.
 **Preuve** : test du paquet sur un dépôt temporaire équipé par une version antérieure : mise à jour en SCOPING commitée sur `workstream/kit-update` avec le trailer, arbre propre, branche principale intacte ; refus sans rien écrire (arbre sale, sans identité git, principale en retard, branche existante) ; mise à jour déjà faite sans nouveau commit.
 **Contrôle** : `tests-qua-237`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-mise-a-jour.test.mjs`
 **Origine** : mise-a-jour-du-kit-sans-blocage — « Après `drwil init` sur un projet équipé en SCOPING, `git status` est propre ou la mise à jour est commitée sur sa propre branche, sans commit refusé par la barrière de périmètre »
 **Raison** : Le 2026-11-04, sur `drwil_walk`, une mise à jour laissait une soixantaine de fichiers non commités que la barrière de périmètre refusait en SCOPING, sans issue indiquée (QUA-027, mise à jour sûre).
 
@@ -2400,7 +2400,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/base/.githooks/scope-gate-kit.mjs` (`nonKitFiles`), `packages/drwil/templates/common/base/.githooks/scope-gate.mjs` (`checkScope`, `checkBranch`).
 **Preuve** : tests de la barrière sur un dépôt temporaire : mise à jour reconnue au commit et au rejeu ; hook modifié à la main refusé avec ou sans trailer, même avec la variable ; fichier hors manifeste dans le commit de mise à jour refusé ; configuration dont une garde est coupée refusée ; test du paquet bout en bout.
 **Contrôle** : `tests-qua-238`
-**Tests** : `.githooks/scope-gate.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/scope-gate.test.mjs`, `packages/drwil/test/kit-mise-a-jour.test.mjs`
 **Origine** : mise-a-jour-du-kit-sans-blocage — « La mise à jour commitée passe la barrière en local et en CI (rejeu de la branche), alors qu'un fichier de mécanique modifié à la main dans un commit ordinaire reste refusé en SCOPING »
 **Raison** : Sans règle écrite, la mise à jour commitée par `init` serait refusée par la barrière, ou la barrière serait contournée (QUA-019).
 
@@ -2410,7 +2410,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/manifest-completed.ts` (`recordCompletion`, `writeCompleted`), appelé par `packages/drwil/src/complete.ts` et `packages/drwil/src/index.ts` ; `packages/drwil/templates/common/base/.githooks/scope-gate-kit.mjs` (`nonKitFiles`).
 **Preuve** : test du paquet sur un dépôt temporaire équipé par une version antérieure dont le `.gitignore` et la fiche de mécanique sont à compléter, intacts puis retouchés à la main : mise à jour commitée sans refus, rejeu de la barrière vert ; intacts, nouvelle empreinte au manifeste et rien de noté à part ; retouchés, empreinte d'installation gardée, empreinte après complétion notée à part, `uninstall` ne supprime pas le fichier ; une retouche suivante sous le signal de `init` reste refusée.
 **Contrôle** : `tests-qua-244`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-mise-a-jour.test.mjs`
 **Origine** : empreinte-des-fichiers-completes-par-init — « Sur un projet équipé par une version précédente, une mise à jour par `init` qui complète un fichier du manifeste — intact ou modifié à la main par le projet — commite sans refus de la barrière de périmètre ; un fichier intact reçoit sa nouvelle empreinte au manifeste ; un fichier modifié à la main garde son empreinte d'installation (`uninstall` et le retrait des fichiers obsolètes ne le suppriment toujours pas) et son empreinte après complétion est notée à part, admise par la barrière seulement pour le commit de mise à jour »
 **Raison** : Le 2026-11-05, sur un projet équipé, `drwil init` 0.11.0 complétait `.gitignore` et la fiche de mécanique sans mettre leur empreinte à jour : la barrière les jugeait hors kit et refusait le commit, la mise à jour du kit était bloquée.
 
@@ -2420,7 +2420,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/kit-update.ts` (`finishUpdate`).
 **Preuve** : test du paquet : les trois messages en français et en anglais après une mise à jour, le message « déjà à jour », le signalement des fichiers non réécrits et d'un `core.hooksPath` externe.
 **Contrôle** : `tests-qua-239`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-mise-a-jour.test.mjs`
 **Origine** : mise-a-jour-du-kit-sans-blocage — « `init` dit, à la fin d'une mise à jour, ce qu'il a fait, ce qui reste à décider et la commande suivante »
 **Raison** : Sans ce compte rendu, l'utilisateur ne sait pas que la mise à jour attend une fusion ni quelle commande lancer.
 
