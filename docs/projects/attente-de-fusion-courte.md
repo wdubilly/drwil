@@ -46,7 +46,7 @@ CI d'une PR de doc seule dure 1 min 40 s (PR #438). Deux causes (détail : inten
 - Les retouches de cadrage d'une même conversation vont d'office sur une seule branche et une seule PR ; sa fusion
   est programmée quand un lancement (`/drwil-start`) a besoin d'une fiche qu'elle porte, à la demande de l'humain, ou
   proposée en fin d'échange ; une retouche n'est jamais poussée sur une branche dont la fusion est déjà programmée —
-  contrat à créer
+  `QUA-314`
 - Tests : fusion programmée suivie jusqu'à la fusion ; forge en retard (état ouvert, commit déjà dans la branche
   principale) vue fusionnée ; GitLab ; PR fermée sans fusion ; délai dépassé — `QUA-100`
 
@@ -94,5 +94,5 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-14) : cadrage terminé.
-- **Prochaine étape** : [humain] `/drwil-start`.
+- **Dernier état** (2026-11-17) : lots 1 et 2 faits ; QUA-314 créé.
+- **Prochaine étape** : vérification et clôture.
