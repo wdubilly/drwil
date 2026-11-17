@@ -999,13 +999,36 @@ test("QUA-212 : les tests du moteur et du paquet ne dépendent pas des variables
     DRWIL_PUSH_TAGS_ONLY: "",
     DRWIL_PUSH_NO_BRANCH: "",
   };
-  const jouer = (fichier, motif) =>
-    spawnSync(process.execPath, ["--test", `--test-name-pattern=${motif}`, fichier], { cwd: racine, env, encoding: "utf8" });
-  // Le test lui-même est exclu, sinon il se relancerait sans fin.
-  const moteur = jouer(".githooks/engine.test.mjs", "^(?!QUA-212)");
+  // Hérité du lanceur de ce test, NODE_TEST_CONTEXT fait du `node --test` relancé un enfant qui saute ses fichiers
+  // et passe sans rien jouer.
+  delete env.NODE_TEST_CONTEXT;
+  const jouer = (fichiers, filtre) =>
+    spawnSync(process.execPath, ["--test", "--test-reporter=tap", filtre, ...fichiers], {
+      cwd: racine,
+      env,
+      encoding: "utf8",
+    });
+  // Le test lui-même est exclu, sinon il se relancerait sans fin ; par --test-skip-pattern, car un motif négatif de
+  // --test-name-pattern est vrai pour le fichier entier, qui joue alors tous ses tests, celui-ci compris.
+  const moteur = jouer([".githooks/engine.test.mjs"], "--test-skip-pattern=^QUA-212");
   assert.equal(moteur.status, 0, `moteur posé comme au push :\n${moteur.stdout.slice(-1500)}`);
-  const paquet = jouer("packages/drwil/test/kit.test.mjs", "^QUA-2");
+  assert.ok(Number(/^# pass (\d+)/m.exec(moteur.stdout)?.[1] ?? 0) > 1, `aucun test du moteur joué :\n${moteur.stdout.slice(-1500)}`);
+  // Les tests du kit sont découpés par thème (QUA-315) : on joue chaque fichier qui en déclare un ouvert par QUA-2,
+  // et on exige que tous soient joués, sans quoi un fichier vidé ou renommé passerait à vide.
+  const dossier = join(racine, "packages", "drwil", "test");
+  const declares = readdirSync(dossier)
+    .filter((f) => /^kit-.+\.test\.mjs$/.test(f))
+    .map((f) => [`packages/drwil/test/${f}`, (readFileSync(join(dossier, f), "utf8").match(/^test\("QUA-2/gm) ?? []).length])
+    .filter(([, n]) => n > 0);
+  const attendus = declares.reduce((somme, [, n]) => somme + n, 0);
+  assert.ok(attendus > 0, "aucun test QUA-2xx déclaré dans les fichiers kit-*.test.mjs");
+  const paquet = jouer(
+    declares.map(([f]) => f),
+    "--test-name-pattern=^QUA-2",
+  );
   assert.equal(paquet.status, 0, `paquet posé comme au push :\n${paquet.stdout.slice(-1500)}`);
+  const joues = Number(/^# pass (\d+)/m.exec(paquet.stdout)?.[1] ?? 0);
+  assert.equal(joues, attendus, `tests QUA-2xx joués du paquet :\n${paquet.stdout.slice(-1500)}`);
 });
 
 test("QUA-217 : les tests du moteur passent quand node n'est que dans un dossier propre au shell (fnm), jamais dans /usr/bin ni /usr/local/bin", {
