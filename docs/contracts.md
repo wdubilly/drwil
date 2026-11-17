@@ -72,7 +72,7 @@ régression sauf si la fiche active déclare le changement (section
 **Contrôle** : `docs-references`, `tests-qua-015`
 **Manuel** : justesse du contenu des fiches.
 **Couvre** : `.githooks/briefs.mjs`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit.test.mjs`, `packages/drwil/test/kit-consignes.test.mjs`
 **Raison** : Un agent reprend un chantier à froid sans refaire le travail ni trancher à la place du demandeur.
 
 ## QUA-016 — Rappel de cadrage
@@ -149,7 +149,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : Ces deux fichiers du gabarit.
 **Preuve** : Test sur un `init` neuf.
 **Contrôle** : `tests-qua-024`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : capitaliser les non-régressions — « Un init neuf fournit un contrat métier d'exemple avec un contrôle à compléter »
 **Raison** : Un dépôt neuf démarre sans filet métier : l'exemple montre où et comment poser le premier.
 
@@ -209,7 +209,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/verify.ts`, `docs/recipes/adopt-the-kit.md` (étape 5).
 **Preuve** : tests du paquet (`couverture-tests`).
 **Contrôle** : `tests-qua-030`
-**Tests** : `packages/drwil/test/cycle.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/cycle.test.mjs`, `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : lien contrat ↔ test, échec attribué à la bonne règle — « Quand un contrôle cité par plusieurs contrats échoue, verify le dit au lieu de l'imputer sans réserve à chacun »
 **Raison** : Dans un vrai projet, tout passe souvent par un seul `npm test` : verify bloquait bien, mais pouvait désigner APP-001 quand APP-002 était cassé.
 
@@ -280,7 +280,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/state.mjs` (`start`, `stopQueue`), `.githooks/state-draft.mjs` (`draftAdd`, `draftFinish`), `.githooks/briefs.mjs` (`queueable`).
 **Preuve** : tests des hooks et du paquet.
 **Contrôle** : `tests-qua-037`
-**Tests** : `.githooks/state.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/state.test.mjs`, `packages/drwil/test/kit.test.mjs`, `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : enchaîner plusieurs chantiers sans intervention — « Un seul sondage /drwil-start à choix multiple enregistre une file ordonnée de fiches et la fusion automatique »
 **Raison** : Chaque chantier exigeait un sondage et une autorisation de fusion, même quand rien n'était à trancher : l'humain devait revenir entre deux chantiers. Premier pas vers l'intention « fabrique autonome ».
 **Modifié** : 2026-11-02 — file par sondages à choix unique enchaînés, décidée par le demandeur (chantier « parité des outils », lot 2) : Copilot CLI ne lit de façon fiable qu'un choix unique, donc une fiche par sondage ; l'invariant reste que l'humain répond et qu'un outil lit.
@@ -418,7 +418,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/detour.mjs`.
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires (mise de côté, branches, fusion, rebase, dépôt distant, hook prepare-commit-msg réel) et du paquet (livraison).
 **Contrôle** : `tests-qua-050`
-**Tests** : `.githooks/detour.test.mjs`, `.githooks/detour-resume.test.mjs`, `.githooks/state.test.mjs`, `.githooks/scope-gate.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/detour.test.mjs`, `.githooks/detour-resume.test.mjs`, `.githooks/state.test.mjs`, `.githooks/scope-gate.test.mjs`, `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : un détour pour une correction intercalée (0.6.5) — « En plein chantier, l'agent ouvre seul un détour pour un défaut hors du cadrage : le travail en cours est mis de côté et restauré par l'outil (jamais perdu), la correction passe par sa propre branche partie de la branche principale, sa fiche courte (correction et son test), sa PR marquée « détour de <fiche> » au mode de fusion décidé au lancement, et son entrée de journal ; à la reprise, la branche du chantier part de la branche principale corrigée et l'état revient en BUILD sur la fiche d'origine. Un détour qui changerait un contrat existant, un hook, un seuil ou la barrière demande le oui de l'humain ; en file, le sous-agent s'arrête alors »
 **Raison** : Point 8 de la clôture allégée (0.6.5) : en plein chantier, un défaut préalable hors du cadrage obligeait l'agent à élargir un cadrage sans rapport ou à s'arrêter ; il improvisait stash, allers-retours de branche et retours en cadrage à la main.
 **Modifié** : 2026-11-13 — la PR de détour est en fusion automatique, comme toute PR ; ancien critère : « La PR du détour est intitulée « Détour de <fiche> », au mode de fusion décidé au lancement » ; validé par le demandeur le 2026-11-13 (chantier « fusion automatique par défaut »).
@@ -470,7 +470,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `README.md`.
 **Preuve** : test du paquet qui lit les deux README.
 **Contrôle** : `tests-qua-055`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : une recette par version, pour une équipe hors dépôt (0.6.5) — « Les README pointent vers la dernière version validée par un lien fixe (releases/latest), qui ne montre jamais une pré-release : aucun commit à chaque version »
 **Raison** : Un README qui cite une version doit être recommité à chaque release, et montrerait une candidate non validée.
 
@@ -532,7 +532,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/base/AGENTS.md`, `packages/drwil/templates/common/base/docs/ia-first/8-conduct-rules.md`.
 **Preuve** : test du paquet qui installe un projet et lit la règle dans son `AGENTS.md`.
 **Contrôle** : `tests-qua-061`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : compatibilité des agents, le socle commun (0.6.7) — « `AGENTS.md` dit qu'en SCOPING un besoin exprimé se cadre (intention ou fiche) et ne se code pas, et qu'en cas de doute l'agent demande « intention ou demande de réalisation ? » avant d'agir »
 **Raison** : Essais du 2026-10-18 : aucun outil autre que Claude Code ne distinguait une intention d'une demande de réalisation, et l'agent codait dès qu'un besoin était exprimé.
 
@@ -542,7 +542,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/skill-headers.mjs` (`headerProblems`, `skillHeaderProblems`).
 **Preuve** : tests qui comparent le contrôle au parseur `yaml` sur chaque skill livré, un cas négatif rejoue l'en-tête de `start-a-workstream`, et un projet installé qui refuse le commit.
 **Contrôle** : `tests-qua-062`
-**Tests** : `.githooks/skill-headers.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/skill-headers.test.mjs`, `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : compatibilité des agents, le socle commun (0.6.7) — « Chaque en-tête de skill livré se lit en YAML strict ; un en-tête invalide est refusé au commit, et `start-a-workstream` apparaît dans `copilot skill list` »
 **Raison** : Sous Copilot CLI, un en-tête invalide en YAML strict fait disparaître le skill sans que rien ne le signale ; celui de `start-a-workstream` l'était (« : » dans la description).
 
@@ -668,7 +668,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/test/kit.test.mjs` (entrées simulées et sorties attendues des hooks).
 **Preuve** : test du paquet qui installe un projet, lit la forme du skill et rejoue les hooks avec des entrées simulées ; aucune session réelle ni appel au modèle.
 **Contrôle** : `tests-qua-072`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : fluidité de la clôture (0.6.9) — « Compatibilité Claude Code prouvée sans session réelle : le skill `/drwil-note` a la même forme que les autres skills `/drwil-*` (test du gabarit) et les hooks Claude Code existants, rejoués avec leurs entrées simulées, donnent la même sortie qu'avant »
 **Raison** : Pas de session Claude Code réelle disponible (plus de crédit) ; sans preuve déterministe, une régression des hooks de l'outil de référence passerait inaperçue.
 
@@ -1245,7 +1245,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/agents/drwil-checks.md`.
 **Preuve** : test du paquet qui installe un projet Claude Code (sous-agent livré, commandes lancées, consigne d'`AGENTS.md`) et un projet Codex seul (pas d'arbre `.claude`, consigne présente) ; en-tête du sous-agent dans la preuve de QUA-072.
 **Contrôle** : `tests-qua-129`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : reduction-contexte — « Avec Claude Code, les passages longs (`run-checks`, `drwil verify`) peuvent tourner dans un sous-agent livré (nommé `drwil-checks`, à créer dans l'arbre `.claude` du gabarit) qui ne renvoie que le verdict et les échecs ; pour les autres outils, `AGENTS.md` donne la consigne « si l'outil le permet » »
 **Raison** : Les sorties des contrôles longs restaient dans le contexte de la session principale ; un sous-agent les lit dans un contexte à part et n'en rend que la conclusion.
 
@@ -1255,7 +1255,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/agents/drwil-checks.md`.
 **Preuve** : test du paquet sur un projet installé : liste d'outils fermée sans écriture, interdits et format de recopie mot pour mot dans le sous-agent, consigne de la session principale dans `AGENTS.md`. Le comportement d'une session réelle n'est pas rejoué (pas de session Claude Code dans les tests, comme pour QUA-072).
 **Contrôle** : `tests-qua-130`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : reduction-contexte — « Le sous-agent recopie mot pour mot la ligne de verdict (`GOVERNANCE: …`) et la liste des contrats en échec ou à attester, sans reformulation ; il n'a accès ni à `drwil attest` ni à l'écriture de fichiers ; la session principale n'annonce « vérifié » que sur cette ligne recopiée »
 **Raison** : Un sous-agent qui résume pourrait transformer un FAIL en « presque bon » ; la gouvernance ne repose que sur la ligne de verdict elle-même.
 
@@ -1486,7 +1486,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/base/AGENTS.md`, `packages/drwil/templates/common/base/docs/ia-first/8-conduct-rules.md`.
 **Preuve** : test du paquet qui lit le gabarit : au plus 100 lignes, renvoi à la section 8, et chaque règle de conduite de `AGENTS.md` retrouvée sous son nom dans la section 8.
 **Contrôle** : `tests-qua-153`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : agents-md-court — « `AGENTS.md` du gabarit et celui du dépôt font 100 lignes au plus. »
 **Raison** : `AGENTS.md` est chargé à chaque requête par tout agent : livré à 247 lignes, il coûtait du contexte à chaque message.
 
@@ -1753,7 +1753,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/worktree.mjs` (`prepareBranch`).
 **Preuve** : tests : création depuis `origin` à jour sans suivi, depuis la principale locale en avance sur `origin`, branche gardée, arbre sale, branche non fusionnée, fusion non établie, branche existante, `git switch` en échec, branche fusionnée quittée, messages anglais, `fetch` en échec, sans branche principale ; test du paquet : la recette livrée a la puce « This folder », qui dit la création de `workstream/<fiche>` depuis la principale à jour et ses refus.
 **Contrôle** : `tests-qua-179`
-**Tests** : `.githooks/worktree.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/worktree.test.mjs`, `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : retour-scoping-branche-sondage — « Un lancement en "This folder" depuis la branche principale crée et bascule sur workstream/<fiche> depuis la branche principale à jour ; depuis une branche de chantier il la garde ; une branche déjà existante ou un arbre sale est refusé avec un message qui dit quoi faire »
 **Raison** : Le lancement en « This folder » passait en BUILD sur la branche courante, souvent la principale : seul le refus de commit forçait ensuite à créer la branche à la main.
 
@@ -1868,7 +1868,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/base/docs/ia-first.md` (sommaire), `packages/drwil/templates/common/base/docs/ia-first/`, `packages/drwil/src/config.ts` (`KIT_PROSE`).
 **Preuve** : tests du paquet : sommaire de moins de 100 lignes avec une ligne et un fichier par section, sommaire réduit à l'introduction et à la table des sections (aucun paragraphe de règle), aucun paragraphe d'au moins 40 caractères en double entre fichiers (hors titres et en-tête de renvoi), dossier et sommaire identiques (gabarit et copie du dépôt), chaque fichier sous 400 lignes, titré et renvoyant au sommaire ; chaque renvoi du gabarit résolu, titres cités dans les commentaires des hooks livrés compris, aucun renvoi relatif hors de son fichier (gabarit et copie du dépôt), renvois les plus lus vers un fichier de section existant ; registre du dépôt et intention sur la compatibilité des outils sans renvoi par le sommaire, chaque fichier de section cité existant ; installation qui livre le dossier au manifeste, mise à jour qui rafraîchit une section inchangée et garde une section adaptée.
 **Contrôle** : `tests-qua-190`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : ia-first-en-sections-courtes — « Chaque section issue de la découpe se lit seule : un agent la charge sans lire les autres, et chaque renvoi existant vers `docs/ia-first.md` mène à la bonne section »
 **Raison** : `docs/ia-first.md` faisait 916 lignes : un agent qui ne cherchait qu'une règle en chargeait des centaines.
 
@@ -1908,7 +1908,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.drwil/ia-first.json` (`checks`, `diffCoverage`).
 **Preuve** : test du paquet : le contrôle `couverture-diff` est déclaré dans le job CI `checks` avec sa commande, son rapport et ses exclusions justifiées, et la copie du dépôt est identique au gabarit.
 **Contrôle** : `tests-qua-194`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : couverture-du-code-modifie — « Ce dépôt applique le contrôle à ses propres branches, en plus du cliquet de seuils »
 **Raison** : Le dépôt qui livre le contrôle l'éprouve sur ses propres branches avant d'y obliger les autres.
 
@@ -1918,7 +1918,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/base/docs/contracts-catalog.md` (définition), sa copie française `docs/contracts-catalog.md`.
 **Preuve** : test du paquet : la section existe dans le gabarit et dans la copie du dépôt, avec la ligne de chaque forme (bibliothèque, service, application web) et la mention d'absence d'exception.
 **Contrôle** : `tests-qua-195`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : e2e-et-attestation-precises — « Le catalogue définit l'e2e par forme de projet : bibliothèque (installer le paquet comme un client, appeler l'API publique, vérifier résultats et erreurs), service (un parcours à travers son API), application web (un parcours utilisateur) »
 **Raison** : « De bout en bout » ne voulait rien dire pour une bibliothèque ou un outil sans interface ; chacun l'interprétait à sa façon.
 
@@ -1928,7 +1928,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/base/docs/contracts-catalog.md` (la définition) ; la recette ne fait que la citer.
 **Preuve** : test du paquet : la recette cite la section du catalogue, aucune des lignes du tableau de formes n'y figure, et la copie du dépôt est identique au gabarit.
 **Contrôle** : `tests-qua-196`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : e2e-et-attestation-precises — « La recette d'adoption renvoie à cette définition sans la recopier (une information, une seule source) »
 **Raison** : Deux définitions de l'e2e finiraient par diverger.
 
@@ -1938,7 +1938,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/base/docs/ia-first/5-proving-the-work.md`.
 **Preuve** : test du paquet : la section nomme les trois niveaux, dit que l'identité n'est pas garantie et que l'auteur vient de la configuration git, et la copie du dépôt est identique au gabarit.
 **Contrôle** : `tests-qua-197`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : e2e-et-attestation-precises — « La doc des preuves distingue l'identité, l'approbation et la preuve d'exécution, et dit ce que garantit `drwil attest` et ce qu'il ne garantit pas »
 **Raison** : Une attestation lue comme une preuve d'identité donnerait une fausse assurance.
 
@@ -1998,7 +1998,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/cli-install.ts` (`chooseTools`).
 **Preuve** : tests du paquet : première installation sans terminal refusée avec le nom de l'option ; question posée en terminal, « all » et liste acceptés, réponse vide refusée ; mise à jour et `--tools` explicite sans question.
 **Contrôle** : `tests-qua-203`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : installation-depot-neuf — « `init` demande à l'humain quels outils IA configurer en terminal interactif ; sans terminal, il refuse de choisir à sa place et demande `--tools` »
 **Raison** : `init` configurait cinq outils sans le demander ; à l'installation de `drwil_walk` l'agent en a choisi un seul de lui-même, un choix qui revient à l'utilisateur.
 
@@ -2008,7 +2008,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/settings.json`.
 **Preuve** : test du paquet qui lit le gabarit : les règles `allow` attendues y sont, `push`, `merge` et `rebase` sont dans `ask` et absents de `allow`, le refus de `--no-verify` demeure.
 **Contrôle** : `tests-qua-204`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : adoption-fluide-projet-neuf — « Le gabarit livre un `.claude/settings.json` Claude Code qui autorise sans demande les commandes git, gh et `.githooks` courantes et garde une demande sur `git push`, `merge` et `rebase` »
 **Raison** : À l'installation de `drwil_walk`, chaque commande git, gh ou `.githooks` courante déclenchait une demande d'autorisation, sans rien protéger de plus.
 
@@ -2039,7 +2039,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md`, `INSTALL.md`.
 **Preuve** : test du paquet qui lit la recette du gabarit et `INSTALL.md` et y cherche les passages attendus ; la lisibilité du texte reste jugée par l'humain.
 **Contrôle** : `tests-qua-207`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-consignes.test.mjs`
 **Origine** : adoption-fluide-projet-neuf — « La recette d'adoption et `INSTALL.md` disent ce que fait `init` du premier commit et pourquoi une autorisation n'est pas demandée »
 **Raison** : L'adoptant ne devait pas deviner le commit initial de `init` ni la raison des autorisations livrées.
 
