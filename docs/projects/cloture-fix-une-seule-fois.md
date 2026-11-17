@@ -68,10 +68,10 @@ a acceptés au lancement (empreinte sha256:…, aujourd'hui —) ». Causes, lue
   clôture à lancer ensuite — `QUA-076`
 - `node .githooks/close.mjs` relancé sur une clôture déjà faite (fiche absente de la copie de travail, preuve
   écrite, ligne d'index retirée) dit « clôture déjà faite » avec ce qui a été fait, code 0, sans rien réécrire ni
-  consigner une seconde fois la consommation, et ne parle jamais d'empreinte modifiée — `QUA-048`
+  consigner une seconde fois la consommation, et ne parle jamais d'empreinte modifiée [humain] — `QUA-048`
 - `node .githooks/close.mjs --check` (et le passage de BUILD à EVIDENCE) signale des critères d'acceptation modifiés
   depuis leur acceptation, avec le même texte que le refus de la clôture : jamais « rien ne ferait échouer » quand la
-  clôture refuserait pour cette raison — `QUA-048`
+  clôture refuserait pour cette raison [humain] — `QUA-048`
 - Une citation de la fiche close n'est réorientée vers le journal que dans une forme de simple renvoi (entre
   parenthèses, « voir … », après un tiret en fin de ligne) ; dans toute autre phrase, elle est signalée « à réécrire
   à la main », sans correction proposée ni écrite — `QUA-076`

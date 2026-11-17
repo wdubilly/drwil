@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — notes rangées le 2026-11-15 (rangement du backlog).
+**Statut** : ouverte en permanence — notes rangées le 2026-11-17 (rangement du backlog).
 
 ## Besoin
 
@@ -38,3 +38,4 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 - 2026-11-13 — (plus tard) `drwil serve` : un chat web intégré, intention distincte à ouvrir (reprise de l'intention `drwil-serve`, retirée au ménage du 2026-11-13).
 - 2026-11-15 — L'avertissement du lancement (QUA-137) prend une simple mention d'un hook dans la fiche (hors périmètre, contrainte) pour une modification et annonce une clôture refusée : il force à déclarer une puce « Contrats modifiés » pour un fichier non modifié — vu au chantier cout-par-activite le 2026-11-15 (state.mjs, dashboard.mjs)
 - 2026-11-15 — Fusion automatique perdue : PR de cadrage #441 programmée et vérifiée par merge-auto, CI verte, puis autoMergeRequest vide et PR ouverte (CLEAN) ; relancer merge-auto l'a fusionnée — cause inconnue, à reproduire (2026-11-15)
+- 2026-11-17 — Séparer QUA-048 : ses comportements mécaniques (clôture déjà faite reconnue, --check qui voit les critères modifiés) prouvés par un contrat purement testé, sans volet humain ; aujourd'hui marqués [humain] faute de mieux (chantier cloture-fix-une-seule-fois)
