@@ -1795,7 +1795,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/fingerprint.ts` (`proofFingerprints`, `covers`, `obsoleteReasons`), `packages/drwil/src/attest.ts`.
 **Preuve** : test du paquet sur un dépôt temporaire : champs d'exécution et ordre des paths changés, attestation intacte ; attestation de version 3 lue puis rendue obsolète avec la raison.
 **Contrôle** : `tests-qua-183`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-attestation.test.mjs`
 **Origine** : attestations-sur-l-effet-et-couvre — « L'empreinte d'une attestation porte sur l'effet des contrôles que le contrat cite (commande, tests visés, `paths`) et plus sur les champs d'exécution (`build`, `needsBuild`, `parallel`, `reuse`) : ajouter ou retirer un champ d'exécution ne fait pas tomber l'attestation »
 **Raison** : Le 2026-10-24, l'ajout de champs de compilation et de parallélisme à une centaine de contrôles a périmé six attestations alors que l'effet des contrôles n'avait pas changé : l'humain a dû tout réattester.
 
@@ -1805,7 +1805,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/fingerprint.ts` (`proofFingerprints`, `obsoleteReasons`), `packages/drwil/src/verify.ts`.
 **Preuve** : test du paquet sur un dépôt temporaire : commande, test visé et paths changés tour à tour, statut `MANUAL` et raison nommant le contrôle.
 **Contrôle** : `tests-qua-184`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-attestation.test.mjs`
 **Origine** : attestations-sur-l-effet-et-couvre — « Une attestation tombe quand l'effet d'un contrôle change (commande, test visé ou `paths`), comme avant : QUA-013 (un contrôle non exécuté n'est pas passé) reste vrai »
 **Raison** : Alléger l'empreinte ne doit pas laisser vivre une preuve humaine sur un contrôle qui ne dit plus la même chose (QUA-013).
 
@@ -1815,7 +1815,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/coverage.ts` (`coverageOf`, `lacksCoverage`), `docs/contracts.md` (champs `**Couvre**`).
 **Preuve** : test du paquet : `aucun` déclaré dans un dépôt temporaire (aucun fichier couvert, attestation intacte, doctor muet) et `drwil doctor` sur ce dépôt (point de couverture au vert).
 **Contrôle** : `tests-qua-185`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-attestation.test.mjs`
 **Origine** : attestations-sur-l-effet-et-couvre — « Chaque contrat attesté du dépôt déclare ce qu'il couvre (`**Couvre**`) ; `drwil doctor` ne signale plus aucun contrat attesté sans couverture déclarée »
 **Raison** : 15 contrats attestés sur 17 ne déclaraient rien : le code jugé pouvait changer sans que l'attestation tombe (le workflow de CI de QUA-013 a changé ainsi).
 
@@ -2081,7 +2081,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/base/docs/ia-first/4-checks-in-git.md` ; `packages/drwil/src/fingerprint.ts` (`proofFingerprints`) pour l'attestation.
 **Preuve** : test du moteur : trois réglages (aucun, `["verify", "ci"]`, `["push", "verify", "ci"]`) donnent trois empreintes, le même réglage la même ; test du paquet sur un dépôt temporaire : attestation intacte après ajout de `runAt`, tombée quand les `paths` changent, page du gabarit et copie du dépôt qui portent les passages attendus ; la lisibilité du texte reste jugée par l'humain.
 **Contrôle** : `tests-qua-211`
-**Tests** : `.githooks/engine.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/engine.test.mjs`, `packages/drwil/test/kit-attestation.test.mjs`
 **Origine** : controles-lents-verify-ci — « La doc de `paths` décrit le réglage, et l'attestation (QUA-183, QUA-184) et la reprise par contrôle (QUA-141) restent justes pour un contrôle réservé »
 **Raison** : Un réglage que la doc ne décrit pas ne s'adopte pas ; un verdict repris ou une attestation gardée sous un autre réglage serait une preuve périmée.
 
