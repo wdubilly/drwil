@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { init } from "../dist/index.js";
+import { createHash } from "node:crypto";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les projets de test (et leurs hooks) sur le dépôt qui lance la suite.
@@ -149,3 +150,5 @@ export const cli = (dir, ...args) =>
     encoding: "utf8",
     env: envTest,
   });
+
+export const empreinte = (contenu) => createHash("sha256").update(contenu).digest("hex");

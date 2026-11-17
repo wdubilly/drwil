@@ -294,7 +294,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/install.ts`, `docs/recipes/adopt-the-kit.md` (étape 0).
 **Preuve** : tests du paquet.
 **Contrôle** : `tests-qua-038`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-installation.test.mjs`
 **Origine** : un projet neuf commence par son cadrage global — « Sans pile détectée, drwil init n'écrit aucune couche »
 **Raison** : Un répertoire vide recevait backend/ et frontend/ pour un projet qui n'existait pas encore, et l'adoption supposait du code existant.
 
@@ -2028,7 +2028,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/install.ts` (`commitKit`), appelé par `packages/drwil/src/index.ts`.
 **Preuve** : test du paquet sur un dossier vide : un seul commit sur `workstream/kit-installation`, arbre propre, kit suivi, relance sans nouveau commit ; sans identité git, l'avertissement est émis.
 **Contrôle** : `tests-qua-206`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-installation.test.mjs`
 **Origine** : adoption-fluide-projet-neuf — « Sur un projet neuf, `drwil init` commite lui-même le kit sur sa branche d'installation, et le premier chantier peut se lancer sans commit refusé »
 **Raison** : Depuis que l'installation neuve écrit `scopeGate` en `blocking`, le premier commit du kit en SCOPING était refusé sans que la recette le dise.
 **Modifié** : 2026-11-04 — décision humaine (mise-a-jour-du-kit-sans-blocage) : l'ancien critère « un dépôt déjà existant n'est jamais commité par `init` » devient « `init` commite aussi la mise à jour d'un projet équipé, sur sa branche dédiée ».
