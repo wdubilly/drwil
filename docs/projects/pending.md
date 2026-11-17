@@ -173,6 +173,8 @@ d'un outil) la dit dans son statut.
 
 ### Fiabilité
 
+- [ ] [IA] [P1] (0.11.2) La clôture rattache sa preuve à l'entrée du journal écrite sur la branche, refusée sans
+  entrée reconnue ; plus d'entrée réduite au renvoi (cadré le 2026-11-17) — `docs/projects/journal-sans-entree-vide.md`.
 - [ ] [IA] [P1] (0.11.2) Durcissements de l'audit du 2026-11-12 : préfixes de code, preuve de file protégée,
   recette d'audit, jeton GitLab (cadré le 2026-11-13) — `docs/projects/durcissements-audit-2026-11-12.md`.
 - [ ] [IA] [P1] (0.11.2) Une fiche P0 passe d'abord une analyse d'urgence (cadré le 2026-11-12) —
@@ -339,6 +341,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 
 ### Clôture, file et chantiers en parallèle
 
+- [ ] [décision] [P2] Audit de cohérence des garanties existantes (preuve et clôture, sept thèmes) : rapport seul,
+  verdicts couvert, écart démontré, non couvert ; chaque écart devient une fiche (noté le 2026-11-17) —
+  `docs/intentions/audit-coherence-des-garanties-existantes.md`.
 - [ ] [décision] [P2] (0.12.0) Clôture, réouverture et reprise : la barrière de périmètre nomme chaque fichier refusé, la
   réouverture rend l'intention retirée, `resume` et les faux positifs de la barrière de réouverture (4 notes
   regroupées le 2026-11-09) — `docs/intentions/cloture-et-attestations.md` (partie « ex-cloture-reouverture-et-reprise-defauts »).
