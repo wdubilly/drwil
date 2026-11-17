@@ -3068,3 +3068,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/pr-watch.test.mjs`
 **Origine** : attente-de-fusion-courte — « Les retouches de cadrage d'une même conversation vont d'office sur une seule branche et une seule PR ; sa fusion est programmée quand un lancement (`/drwil-start`) a besoin d'une fiche qu'elle porte, à la demande de l'humain, ou proposée en fin d'échange ; une retouche n'est jamais poussée sur une branche dont la fusion est déjà programmée »
 **Raison** : Le 2026-11-14, huit PR de documentation à la suite (#431 à #438) ont chacune payé branche, contrôles, CI et fusion ; regrouper d'office épargne ce circuit à chaque retouche (décision D1 du demandeur, le 2026-11-14).
+
+## QUA-315 — La découpe des tests du kit ne perd ni ne change aucun test
+**Règle** : Propre à ce dépôt. Les tests que déclarent `packages/drwil/test/kit.test.mjs` et les fichiers nés de sa découpe par thème (`kit-<thème>.test.mjs`, même dossier) sont exactement ceux de l'inventaire figé avant la découpe : même nombre, mêmes noms (ni perdu, ni renommé, ni doublé), donc le même nombre de tests pour chaque contrat cité dans les noms ; aucun n'y est sauté, réservé ni isolé par sa méthode (`skip`, `todo`, `only`). Une déclaration de test hors de la forme lue (nom entre guillemets doubles, en début de ligne) est un échec, jamais un test ignoré (QUA-013).
+**Périmètre** : `packages/drwil/test/kit.test.mjs` et les fichiers `kit-<thème>.test.mjs` du même dossier.
+**Source de vérité** : `packages/drwil/test/decoupe-kit.inventaire.json` (noms triés, figés le 2026-11-17 sur `packages/drwil/test/kit.test.mjs` : 209 tests).
+**Preuve** : test du paquet, lecture statique des fichiers du kit comparée à l'inventaire ; cas synthétiques d'un test perdu, renommé, doublé ou déclaré hors de la forme lue, chacun détecté.
+**Contrôle** : `tests-qua-315`
+**Tests** : `packages/drwil/test/decoupe-kit.test.mjs`
+**Origine** : tests-du-kit-decoupes-par-theme — « Aucun test n'est perdu ni modifié dans le découpage : le nombre de tests et la liste des contrats cités sont identiques avant et après, prouvé par un test qui compare les deux »
+**Raison** : `packages/drwil/test/kit.test.mjs` (209 tests, plus de 6 000 lignes) ne se joue qu'en un processus ; le découper par thème pour le jouer en parallèle déplace chaque test, et un test perdu en route laisserait son contrat vert sans plus rien prouver.

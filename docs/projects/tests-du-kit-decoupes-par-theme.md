@@ -36,7 +36,7 @@ Le projet : découper ce fichier par thème, sans changer ce que testent les tes
 ## Critères d'acceptation
 
 - Aucun test n'est perdu ni modifié dans le découpage : le nombre de tests et la liste des contrats cités sont identiques
-  avant et après, prouvé par un test qui compare les deux — contrat à créer
+  avant et après, prouvé par un test qui compare les deux — `QUA-315`
 - Aucun fichier de test du kit ne dépasse un plafond de durée fixé à la réalisation, relevé dans le journal de clôture :
   mesure avant et après de chaque fichier — [humain] `QUA-013`
 - Chaque contrôle de `.drwil/ia-first.json` et chaque ligne « Couvre » de `docs/contracts.md` qui citaient le gros fichier
@@ -93,4 +93,13 @@ Tranchées par le demandeur le 2026-11-11 (l'agent n'en a tranché aucune) :
 
 ## 7. Reprise
 
-Prêt à démarrer par le lot 1 ; rien de commencé.
+- **Lot 1 fait** (2026-11-17) : QUA-315 créé, test de non-perte `packages/drwil/test/decoupe-kit.test.mjs` vert sur le
+  fichier actuel ; inventaire figé `packages/drwil/test/decoupe-kit.inventaire.json` : 209 tests (noms triés, relus à
+  l'identique sur une exécution réelle). Contrôle `tests-qua-315` déclaré dans `.drwil/ia-first.json`.
+- **Nommage décidé** : les fichiers nés de la découpe s'appellent `kit-<thème>.test.mjs` (même dossier), ce que lit le
+  test de non-perte ; le module commun des helpers (lot 2) : kit-commun.mjs (sans `.test.`, jamais lu comme fichier de
+  tests). Chaque fichier neuf entre au bloc `scope` par un commit de cadrage séparé : aucun cas admis d'office ne les
+  couvre (`packages/drwil/test/kit.test.mjs` est lui-même un test).
+- **Mesure avant** (2026-11-17, ce poste, `node --test` sur `packages/drwil/test/kit.test.mjs` seul) : 209 tests, 220,5 s (`duration_ms`
+  220514), contre 68 s au profil du 2026-11-11 sur un autre poste : comparer avant et après sur le même poste.
+- **Suite** : lot 2, extraire les helpers partagés dans kit-commun.mjs, sans bouger de test.

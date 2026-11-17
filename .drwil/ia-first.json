@@ -4248,6 +4248,18 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-315",
+      "name": "tests de QUA-315, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node outils/tests-par-fichier.mjs QUA-315 packages/drwil/test/decoupe-kit.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/tests-par-fichier.mjs",
+        "packages/drwil/test/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
       "id": "couverture-diff",
       "runAt": [
         "ci"
