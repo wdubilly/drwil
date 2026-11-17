@@ -731,3 +731,180 @@ test("QUA-100 appel à gh bloqué : délai sur chaque appel, « non exécuté »
   assert.equal(r.code, 2);
   assert.match(r.message, /suivi non exécuté : gh injoignable/);
 });
+
+// --- Attente de la fusion programmée, fusion lue dans la branche principale (QUA-100) ---
+
+const programmee = (...controles) => ({ ...ouverte(...controles), headRefOid: SHA, headRefName: "workstream/x", autoMergeRequest: {} });
+const FUSION = "3333333333333333333333333333333333333333";
+
+test("QUA-100 fusion programmée et CI verte : attend la fusion au lieu de rendre « verte », suivi de la branche principale sur le commit de fusion", async () => {
+  const T = texts(tmp());
+  const journal = [];
+  const vus = [];
+  const reponses = [{ state: "open" }, { state: "open" }, { state: "merged", sha: FUSION }];
+  const { gh, appels } = routeur({ vues: [programmee(run("checks", "COMPLETED", "SUCCESS"))] });
+  const h = horloge();
+  const r = await watch({
+    pr: "7",
+    gh,
+    T,
+    root: tmp(),
+    localHead: () => null,
+    inMain: (head) => {
+      vus.push(head);
+      return reponses.shift();
+    },
+    log: (m) => journal.push(m),
+    ...h,
+  });
+  assert.equal(r.code, 0);
+  assert.match(
+    r.message,
+    /^\[pr-watch\] PR #7 fusionnée\.\n\[pr-watch\] CI de la branche principale verte sur le commit de fusion 3333333/,
+  );
+  assert.deepEqual(vus, [SHA, SHA, SHA], "la tête de la PR est cherchée dans la branche principale");
+  assert.equal(h.ecoule(), 30_000, "deux attentes avant la fusion vue");
+  assert.match(journal[0], /PR #7 : CI verte, fusion automatique programmée — attente de la fusion…/);
+  assert.ok(appels.includes(`run list --commit ${FUSION} --workflow ia-first.yml --event push --json databaseId,status,conclusion,url`));
+  assert.ok(appels.includes("pr view 7 --json autoMergeRequest"), "la programmation est lue sur la forge");
+});
+
+test("QUA-100 forge en retard (état ouvert, commit déjà dans la branche principale) : vue fusionnée ; sans fusion programmée, « verte » comme avant", async () => {
+  const T = texts(tmp());
+  const r = await watch({
+    pr: "7",
+    gh: routeur({ vues: [programmee(run("checks", "COMPLETED", "SUCCESS"))] }).gh,
+    T,
+    root: tmp(),
+    localHead: () => null,
+    inMain: () => ({ state: "merged", sha: FUSION }),
+  });
+  assert.equal(r.code, 0);
+  assert.match(r.message, /fusionnée\.\n.*commit de fusion 3333333/);
+  // Sans fusion programmée : verte tout de suite, la branche principale n'est pas interrogée.
+  let interroge = false;
+  const r2 = await watch({
+    gh: faux([{ ...programmee(run("checks", "COMPLETED", "SUCCESS")), autoMergeRequest: null }]).gh,
+    T,
+    localHead: () => null,
+    inMain: () => {
+      interroge = true;
+      return { state: "open" };
+    },
+  });
+  assert.deepEqual([r2.code, r2.message, interroge], [0, "[pr-watch] PR #7 : CI verte (1 contrôle(s)).", false]);
+  // La forge dit fusionnée avant git : fusionnée par la forge, comme avant.
+  const r3 = await watch({
+    pr: "7",
+    // Une vue pour le suivi, une pour la programmation, puis la forge dit fusionnée.
+    gh: routeur({ vues: [programmee(run("checks", "COMPLETED", "SUCCESS")), programmee(), { ...fusionnee, headRefOid: SHA }] }).gh,
+    T,
+    root: tmp(),
+    localHead: () => null,
+    inMain: () => ({ state: "open" }),
+    ...horloge(),
+  });
+  assert.equal(r3.code, 0);
+  assert.match(r3.message, /fusionnée\.\n.*commit de fusion abcdef0/);
+});
+
+test("QUA-100 fusion programmée jamais faite : délai dépassé, « non exécuté » ; git fetch en échec le dit ; PR fermée sans fusion reste « fermée »", async () => {
+  const T = texts(tmp());
+  const vue = programmee(run("checks", "COMPLETED", "SUCCESS"));
+  let r = await watch({ gh: faux([vue]).gh, T, localHead: () => null, inMain: () => ({ state: "open" }), timeout: 1, ...horloge(61_000) });
+  assert.deepEqual(
+    [r.code, r.message],
+    [
+      2,
+      "[pr-watch] suivi non exécuté : délai de 1 min dépassé sur la PR #7 — CI verte, fusion programmée pas encore vue dans la branche principale",
+    ],
+  );
+  // Lecture par git par défaut, hors dépôt : fetch impossible, jamais une fusion supposée.
+  r = await watch({ gh: faux([vue]).gh, T, root: tmp(), localHead: () => null, timeout: 1, ...horloge(61_000) });
+  assert.equal(r.code, 2);
+  assert.match(r.message, /pas encore vue dans la branche principale \(git fetch en échec\)$/);
+  // Fermée par la forge, la tête absente de la branche principale : fermée sans fusion, jamais une fusion supposée.
+  r = await watch({
+    gh: faux([vue, vue, { number: 7, state: "CLOSED" }]).gh,
+    T,
+    localHead: () => null,
+    inMain: () => ({ state: "open" }),
+    ...horloge(),
+  });
+  assert.deepEqual([r.code, r.message], [1, "[pr-watch] PR #7 fermée sans fusion."]);
+  const en = tmp();
+  mkdirSync(join(en, ".drwil"));
+  writeFileSync(join(en, ".drwil", "ia-first.json"), JSON.stringify({ lang: "en" }));
+  r = await watch({
+    gh: faux([vue]).gh,
+    T: texts(en),
+    localHead: () => null,
+    inMain: () => ({ state: "not-run" }),
+    timeout: 1,
+    ...horloge(61_000),
+  });
+  assert.match(r.message, /1 min limit reached on PR #7 — CI green, scheduled merge not seen in the main branch yet \(git fetch failed\)$/);
+});
+
+test("QUA-100 GitLab : fusion programmée attendue, puis vue dans la branche principale ; sans programmation, « verte »", async () => {
+  const T = texts(tmp());
+  const f = glabFaux({ vues: [mr("success", { merge_when_pipeline_succeeds: true })], jobs: [[job("checks", "success")]] });
+  const reponses = [{ state: "open" }, { state: "merged", sha: FUSION }];
+  const r = await watch({ forge: "gitlab", glab: f.glab, T, localHead: () => null, inMain: () => reponses.shift(), ...horloge() });
+  assert.deepEqual(
+    [r.code, r.message],
+    [
+      0,
+      "[pr-watch] MR !7 fusionnée.\n[pr-watch] CI de la MR à la fusion : verte ; CI de la branche principale non suivie hors GitHub, à vérifier à la main.",
+    ],
+  );
+  const r2 = await watch({
+    forge: "gitlab",
+    glab: glabFaux({ vues: [mr("success")], jobs: [[job("checks", "success")]] }).glab,
+    T,
+    localHead: () => null,
+    inMain: () => assert.fail("non interrogée"),
+  });
+  assert.equal(r2.code, 0);
+});
+
+test("QUA-100 fusion lue par git : tête contenue dans la branche principale distante (commit de fusion, avance rapide), absente, fetch en échec", async () => {
+  const { mergedInMain } = await import("./pr-watch-main.mjs");
+  const base = tmp();
+  const origine = join(base, "origine.git");
+  const depot = join(base, "depot");
+  const git = (cwd, ...a) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...a], { cwd, encoding: "utf8" }).stdout.trim();
+  spawnSync("git", ["init", "-q", "--bare", "-b", "master", origine]);
+  spawnSync("git", ["clone", "-q", origine, depot]);
+  git(depot, "checkout", "-q", "-b", "master");
+  git(depot, "commit", "-q", "--allow-empty", "-m", "un");
+  git(depot, "push", "-q", "origin", "master");
+  git(depot, "checkout", "-q", "-b", "workstream/x");
+  git(depot, "commit", "-q", "--allow-empty", "-m", "deux");
+  const tete = git(depot, "rev-parse", "HEAD");
+  assert.deepEqual(mergedInMain(depot, tete), { state: "open" }, "pas encore dans la branche principale");
+  // Fusion par commit de fusion, faite ailleurs (la forge) puis poussée : le commit de fusion est trouvé après fetch.
+  const ailleurs = join(base, "ailleurs");
+  spawnSync("git", ["clone", "-q", origine, ailleurs]);
+  git(depot, "push", "-q", "origin", "workstream/x");
+  git(ailleurs, "fetch", "-q", "origin");
+  git(ailleurs, "commit", "-q", "--allow-empty", "-m", "autre");
+  git(ailleurs, "merge", "-q", "--no-ff", "-m", "fusion", "origin/workstream/x");
+  const fusion = git(ailleurs, "rev-parse", "HEAD");
+  git(ailleurs, "commit", "-q", "--allow-empty", "-m", "après");
+  git(ailleurs, "push", "-q", "origin", "master");
+  assert.deepEqual(mergedInMain(depot, tete), { state: "merged", sha: fusion });
+  // Avance rapide : la tête elle-même est le commit de fusion.
+  git(depot, "fetch", "-q", "origin");
+  git(depot, "checkout", "-q", "-b", "workstream/y", "origin/master");
+  git(depot, "commit", "-q", "--allow-empty", "-m", "trois");
+  const rapide = git(depot, "rev-parse", "HEAD");
+  git(depot, "push", "-q", "origin", "HEAD:master");
+  assert.deepEqual(mergedInMain(depot, rapide), { state: "merged", sha: rapide });
+  // Tête inconnue, sans tête, sans branche principale, fetch en échec : jamais une fusion supposée.
+  assert.deepEqual(mergedInMain(depot, ANCIEN), { state: "open" });
+  assert.deepEqual(mergedInMain(depot, undefined), { state: "not-run" });
+  assert.deepEqual(mergedInMain(tmp(), tete), { state: "not-run" });
+  git(depot, "remote", "set-url", "origin", join(base, "absente.git"));
+  assert.deepEqual(mergedInMain(depot, tete), { state: "not-run" });
+});

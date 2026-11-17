@@ -4,10 +4,13 @@
 // next workstream (`start` of the queue's head, so `state.mjs next` and the chaining at the merge seen, QUA-178),
 // the other verdicts let the refusal say why. The proof holds for one commit: the tip of the up-to-date main
 // branch, the one the next workstream's branch is cut from. Only on GitHub: elsewhere the start is not held back.
+// QUA-100: a PR is seen merged as soon as its head is in the fetched remote main branch, the forge's own state lagging
+// minutes behind at times; the same reading on GitHub and GitLab.
 import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { mainBranch } from "./close-branches.mjs";
+import { normalizeMr } from "./merge-auto-forge.mjs";
 
 export const WORKFLOW = "ia-first.yml";
 export const ALERT_TITLE = "CI broken on the main branch";
@@ -98,6 +101,42 @@ export function mainTip(root) {
   const fetched = spawnSync("git", ["fetch", "--quiet", "origin", main], { cwd: root, timeout: 20000, env }).status === 0;
   const remote = fetched && git(root, "merge-base", "--is-ancestor", main, `origin/${main}`) !== null;
   return git(root, "rev-parse", remote ? `origin/${main}` : main);
+}
+
+/**
+ * `head` seen by git in the remote main branch, once fetched: { state: "merged", sha } (sha: the merge commit on the main
+ * branch's first-parent line, `head` itself after a fast-forward), "open", or "not-run" when the fetch fails (QUA-013).
+ */
+export function mergedInMain(root, head) {
+  const main = mainBranch(root);
+  if (!main || !head) return { state: "not-run" };
+  const env = { ...process.env, GIT_TERMINAL_PROMPT: "0" };
+  if (spawnSync("git", ["fetch", "--quiet", "origin", main], { cwd: root, timeout: 20000, env }).status !== 0) return { state: "not-run" };
+  if (git(root, "merge-base", "--is-ancestor", head, `origin/${main}`) === null) return { state: "open" };
+  const after = git(root, "rev-list", "--first-parent", "--ancestry-path", "--reverse", `${head}..origin/${main}`);
+  return { state: "merged", sha: (after || head).split("\n")[0] };
+}
+
+/** `glab` keeping the last MR it read (`view`), whose scheduled merge `scheduledMerge` reads without asking again. */
+export function keepView(glab) {
+  const seen = { view: null };
+  seen.glab = (a) => {
+    const r = glab(a);
+    if (a[0] === "mr") seen.view = r;
+    return r;
+  };
+  return seen;
+}
+
+/**
+ * A green PR `s` whose automatic merge the forge shows scheduled (GitLab: in `view`, the MR already read): `git`, its head
+ * looked up by `inMain` (`mergedInMain`), and `s` turned merged on the merge commit when found there; else `git` null.
+ */
+export function scheduledMerge(s, { gitlab, view, gh, inMain }) {
+  const auto = gitlab ? normalizeMr(view) : gh(["pr", "view", String(s.number), "--json", "autoMergeRequest"]);
+  if (!auto?.autoMergeRequest) return { s, git: null };
+  const git = inMain(s.head);
+  return { git, s: git.state === "merged" ? { ...s, state: "merged", ci: s.state, mergeCommit: git.sha } : s };
 }
 
 /** Forge of the `origin` remote, by the rule of `drwil guarantees` (`forgeOf`): "github", "other", or null without a remote. */
