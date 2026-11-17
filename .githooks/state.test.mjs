@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { PassThrough, Readable } from "node:stream";
+import { undeclaredHooks } from "./base-checks.mjs";
 import { blockingGuarantee, briefIntent, intentsLeftBehind, lastReview, missingCriteria, staleIntents } from "./briefs.mjs";
 import {
   ACTIVITIES,
@@ -2388,8 +2389,8 @@ test("QUA-174 : accept au terminal : l'humain voit les critères et confirme ; s
   assert.match((await avecTerminal([], () => capturer(() => main(["accept"], en)))).erreurs, /has no acceptance criteria/);
 });
 
-/** Fiche dont le bloc scope cite des hooks ; les fichiers de `.githooks/` listés existent dans le dépôt. */
-function depotHooks({ lang, puces = "", scope, existants = ["etat.mjs", "etat.test.mjs", "outil.mjs", "pose.mjs"] } = {}) {
+/** Fiche dont le bloc scope cite des hooks ; les fichiers de `.githooks/` listés existent dans le dépôt ; `corps` : texte hors du bloc. */
+function depotHooks({ lang, puces = "", scope, corps = "", existants = ["etat.mjs", "etat.test.mjs", "outil.mjs", "pose.mjs"] } = {}) {
   const lignes = scope ?? [
     ".githooks/etat.mjs",
     ".githooks/etat.test.mjs",
@@ -2400,7 +2401,7 @@ function depotHooks({ lang, puces = "", scope, existants = ["etat.mjs", "etat.te
     "docs/x.githooks/etat.mjs",
     "src/a.ts",
   ];
-  const texte = `# Projet : Hooks\n\n**Statut** : cadré le 2026-10-09.\n**Maturité** : prêt\n\n<!-- scope\nfiles:\n${lignes.map((l) => `  - ${l}`).join("\n")}\n-->\n\n## Critères d'acceptation\n\n- Un critère — \`QUA-001\`\n\n## Contrats modifiés\n\n${puces}\n`;
+  const texte = `# Projet : Hooks\n\n**Statut** : cadré le 2026-10-09.\n**Maturité** : prêt\n\n<!-- scope\nfiles:\n${lignes.map((l) => `  - ${l}`).join("\n")}\n-->\n\n## Critères d'acceptation\n\n- Un critère — \`QUA-001\`\n\n## Contrats modifiés\n\n${puces}\n${corps}`;
   const { racine, git } = depotCriteres({ lang, texte });
   mkdirSync(join(racine, ".githooks"), { recursive: true });
   for (const f of existants) writeFileSync(join(racine, ".githooks", f), "");
@@ -2409,28 +2410,55 @@ function depotHooks({ lang, puces = "", scope, existants = ["etat.mjs", "etat.te
   return racine;
 }
 
-test("QUA-137 : le lancement nomme chaque hook existant cité par le cadrage sans puce, sans jamais refuser", () => {
+test("QUA-137 : le lancement nomme chaque hook existant cité par le bloc scope sans puce, tel que cité, sans jamais refuser", () => {
   const sans = start(depotHooks({ puces: "- `.githooks/pose.mjs` — change (validé par le demandeur le 2026-10-09)" }), FICHE, {
     human: true,
   });
   assert.equal(sans.code, 0, sans.message);
   assert.match(
     sans.message,
-    /\navertissement : le cadrage cite `\.githooks\/etat\.mjs`, `\.githooks\/outil\.mjs` sans puce dans « Contrats modifiés »/,
+    /\navertissement : le bloc scope cite `\.githooks\/etat\.mjs`, `\.githooks\/etat\.test\.mjs`, `\.githooks\/outil\.mjs` sans puce dans « Contrats modifiés »/,
   );
   assert.match(sans.message, /la clôture sera refusée \(QUA-137\)/);
-  assert.doesNotMatch(sans.message, /pose\.mjs|absent|test\.mjs/);
+  assert.match(sans.message, /« - `\.githooks\/etat\.test\.mjs` — <ce qui change> \(validé par le demandeur le <date>\) »/);
+  assert.match(sans.message, /un test modifié se déclare par son nom ou par celui de son module/);
+  assert.match(sans.message, /aucune puce n'est due pour un fichier seulement mentionné dans le texte de la fiche/);
+  assert.doesNotMatch(sans.message, /pose\.mjs|absent|le cadrage cite/);
 
   const en = start(depotHooks({ lang: "en", puces: "" }), FICHE, { human: true });
   assert.match(
     en.message,
-    /\nwarning: the scope cites `\.githooks\/etat\.mjs`, `\.githooks\/outil\.mjs`, `\.githooks\/pose\.mjs` without a bullet/,
+    /\nwarning: the scope block cites `\.githooks\/etat\.mjs`, `\.githooks\/etat\.test\.mjs`, `\.githooks\/outil\.mjs`, `\.githooks\/pose\.mjs` without a bullet/,
   );
+  assert.match(en.message, /a modified test is declared by its own name or by its module's/);
+  assert.match(en.message, /no bullet is due for a file only mentioned in the brief's text/);
 
   const tout = ["- `.githooks/etat.mjs` — a", "- `.githooks/outil.mjs` — b", "- `.githooks/pose.mjs` — c"].join("\n");
-  assert.doesNotMatch(start(depotHooks({ puces: tout }), FICHE, { human: true }).message, /avertissement : le cadrage cite/);
+  assert.doesNotMatch(start(depotHooks({ puces: tout }), FICHE, { human: true }).message, /avertissement/);
+});
+
+test("QUA-137 : un test cité seul est nommé comme test, et sa puce à son nom vaut au lancement comme à la clôture", () => {
   const seulTest = depotHooks({ scope: [".githooks/etat.test.mjs"], puces: "" });
-  assert.match(start(seulTest, FICHE, { human: true }).message, /cite `\.githooks\/etat\.mjs` sans puce/);
+  const message = start(seulTest, FICHE, { human: true }).message;
+  assert.match(message, /le bloc scope cite `\.githooks\/etat\.test\.mjs` sans puce/);
+  assert.doesNotMatch(message, /`\.githooks\/etat\.mjs`/);
+
+  const puce = "- `.githooks/etat.test.mjs` — attend autre chose (validé par le demandeur le 2026-10-09)";
+  const declare = depotHooks({ scope: [".githooks/etat.test.mjs"], puces: puce });
+  assert.doesNotMatch(start(declare, FICHE, { human: true }).message, /avertissement/);
+  writeFileSync(join(declare, ".githooks", "etat.test.mjs"), "// modifié\n");
+  const texte = readFileSync(join(declare, FICHE), "utf8");
+  assert.deepEqual(undeclaredHooks(declare, texte, { env: { DRWIL_BASE: "HEAD" } }).files, []);
+  assert.deepEqual(undeclaredHooks(declare, texte.replace(puce, ""), { env: { DRWIL_BASE: "HEAD" } }).files, [".githooks/etat.test.mjs"]);
+});
+
+test("QUA-137 : un hook mentionné dans le texte de la fiche, hors du bloc scope, ne déclenche aucun avertissement", () => {
+  const corps =
+    "\n## 2. Hors périmètre\n\n- `.githooks/outil.mjs` : inchangé.\n\n## 3. Contraintes\n\n- Lire `.githooks/etat.mjs` et `.githooks/etat.test.mjs`.\n";
+  const racine = depotHooks({ scope: ["src/a.ts"], corps });
+  const r = start(racine, FICHE, { human: true });
+  assert.equal(r.code, 0, r.message);
+  assert.doesNotMatch(r.message, /avertissement|\.githooks\//);
 });
 
 // --- La file attend la fusion et l'état revient en SCOPING (QUA-176 à QUA-178) ---
