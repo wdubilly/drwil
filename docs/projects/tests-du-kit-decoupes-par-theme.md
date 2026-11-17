@@ -15,6 +15,7 @@ files:
   - packages/drwil/CHANGELOG.md
   - packages/drwil/test/decoupe-kit.test.mjs
   - packages/drwil/test/decoupe-kit.inventaire.json
+  - packages/drwil/test/kit-commun.mjs
 -->
 
 (Le bloc `scope` couvre le fichier découpé, les contrôles et le registre qui le citent. Les fichiers de test neufs, nés du
