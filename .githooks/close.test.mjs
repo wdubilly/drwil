@@ -128,8 +128,80 @@ test("QUA-048 : en CLOSING, la commande fait la mécanique d'un geste — fiche 
   assert.equal(git(racine, "diff", "--cached", "--name-only"), "", "rien d'indexé");
   // Relancée : rien à refaire, la consommation n'est jamais consignée deux fois.
   const encore = close(racine, { logs: journaux() });
-  assert.match(encore.message, /aucune ligne d'index à retirer/);
-  assert.match(encore.message, /déjà une ligne pour « exemple »/);
+  assert.equal(encore.code, 0, encore.message);
+  assert.match(encore.message, /^clôture déjà faite/);
+  assert.equal(readFileSync(join(racine, ".drwil/usage.jsonl"), "utf8"), usage);
+});
+
+test("QUA-076 : en CLOSING, --fix écrit seulement les corrections proposées — ni preuve, ni fiche supprimée, ni index, ni consommation — et dit la commande de clôture", () => {
+  for (const lang of [undefined, "en"]) {
+    const racine = depot({ lang });
+    ecrire(racine, { "docs/recipes/r.md": "Voir `docs/intentions/retiree.md`.\n" });
+    const index = readFileSync(join(racine, "docs/projects/pending.md"), "utf8");
+    const propose = close(racine, { check: true });
+    assert.match(propose.message, lang ? /`node \.githooks\/close\.mjs` closes/ : /`node \.githooks\/close\.mjs` clôt/);
+    const r = close(racine, { fix: true, logs: journaux() });
+    assert.equal(readFileSync(join(racine, "docs/recipes/r.md"), "utf8"), "Voir.\n", "la correction est écrite");
+    assert.ok(existsSync(join(racine, FICHE)), "fiche gardée");
+    assert.ok(!existsSync(join(racine, "docs/preuves/exemple.md")), "aucune preuve");
+    assert.equal(readFileSync(join(racine, "docs/projects/pending.md"), "utf8"), index, "index intact");
+    assert.ok(!existsSync(join(racine, ".drwil/usage.jsonl")), "rien de consigné");
+    assert.match(
+      r.message,
+      lang ? /Closing to run next: `node \.githooks\/close\.mjs`/ : /Clôture à lancer ensuite : `node \.githooks\/close\.mjs`/,
+    );
+  }
+});
+
+test("QUA-048 : une clôture déjà faite, relancée, est dite sans rien réécrire ni parler d'empreinte ; une trace manquante, la clôture suit son cours", () => {
+  for (const lang of [undefined, "en"]) {
+    const racine = depot({ lang });
+    // En anglais, l'index est réglé (au même chemin) : la reconnaissance lit le réglage.
+    if (lang)
+      ecrire(racine, {
+        ".drwil/ia-first.json": JSON.stringify({ lang, contractPrefixes: ["QUA"], dirs: { index: "docs/projects/pending.md" } }),
+      });
+    recordAcceptance(racine, FICHE);
+    assert.equal(close(racine, { logs: journaux() }).code, 0);
+    const traces = ["docs/preuves/exemple.md", "docs/projects/pending.md", ".drwil/usage.jsonl", "docs/projects/journal.md"];
+    const avant = traces.map((f) => readFileSync(join(racine, f), "utf8"));
+    const r = close(racine, { logs: journaux() });
+    assert.equal(r.code, 0, r.message);
+    assert.match(
+      r.message,
+      lang ? /^closing already done: proof docs\/preuves\/exemple\.md/ : /^clôture déjà faite : preuve docs\/preuves\/exemple\.md/,
+    );
+    assert.doesNotMatch(r.message, /empreinte|fingerprint/);
+    assert.deepEqual(
+      traces.map((f) => readFileSync(join(racine, f), "utf8")),
+      avant,
+    );
+    // Une seule trace manquante (la preuve) : pas de clôture « déjà faite ».
+    rmSync(join(racine, "docs/preuves/exemple.md"));
+    assert.doesNotMatch(close(racine, { logs: journaux() }).message, /déjà faite|already done/);
+  }
+  const indexe = depot();
+  assert.equal(close(indexe, { logs: journaux() }).code, 0);
+  ecrire(indexe, { "docs/projects/pending.md": INDEX });
+  assert.doesNotMatch(close(indexe, { logs: journaux() }).message, /déjà faite/, "ligne d'index encore là");
+  rmSync(join(indexe, "docs/projects/pending.md"));
+  assert.match(close(indexe, { logs: journaux() }).message, /^clôture déjà faite/, "sans index, aucune ligne qui la cite");
+});
+
+test("QUA-048 : --check et le passage vers EVIDENCE signalent des critères modifiés depuis l'acceptation, avec le texte du refus de la clôture", () => {
+  const racine = depot({ activite: "BUILD" });
+  recordAcceptance(racine, FICHE);
+  ecrire(racine, { [FICHE]: fiche("- Un critère changé — `QUA-001`") });
+  const r = close(racine, { check: true });
+  assert.equal(r.code, 1, r.message);
+  assert.doesNotMatch(r.message, /Rien ne ferait échouer/);
+  assert.match(
+    r.message,
+    /⚠ les critères de la fiche ne sont plus ceux que l'humain a acceptés au lancement \(empreinte sha256:[0-9a-f]{16}, aujourd'hui sha256:/,
+  );
+  assert.ok(closingSignals(racine, FICHE).some((s) => s.includes("node .githooks/state.mjs accept")));
+  ecrire(racine, { [FICHE]: "# Exemple\n" });
+  assert.match(close(racine, { check: true }).message, /aujourd'hui —\)/, "critères retirés");
 });
 
 test("QUA-048 : hors CLOSING, la mécanique est refusée ; --check signale sans rien écrire ; sans fiche, refus", () => {
@@ -633,9 +705,10 @@ test("QUA-077 : références à la fiche réorientées vers le journal, intentio
     /Avertissements \(non bloquants\) :\n {2}⚠ src\/a\.mjs : cité par docs\/intentions\/neuve\.md, déjà cité par docs\/intentions\/origine\.md/,
   );
   ecrire(racine, { "docs/intentions/origine.md": "# Origine mise à jour\n\nCite `src/a.mjs`.\n" });
-  const fin = close(racine, { fix: true, logs: journaux() });
-  assert.equal(fin.code, 0, fin.message);
+  close(racine, { fix: true });
   assert.equal(readFileSync(join(racine, "docs/recipes/r.md"), "utf8"), "Fiche : `docs/projects/journal.md`.\n");
+  const fin = close(racine, { logs: journaux() });
+  assert.equal(fin.code, 0, fin.message);
 });
 
 test("QUA-076 : --fix est accepté par la ligne de commande, une option inconnue reste refusée", () => {

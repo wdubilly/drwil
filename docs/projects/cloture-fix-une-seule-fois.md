@@ -132,5 +132,13 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-15) : cadrage terminé, contenu validé par le demandeur le 2026-11-15.
-- **Prochaine étape** : [humain] `/drwil-start`.
+- **Dernier état** (2026-11-17) : lot 1 fait — `--fix` n'écrit que les corrections (plus de mécanique, en CLOSING
+  comme ailleurs ; la proposition et `--fix` en CLOSING donnent `node .githooks/close.mjs` à lancer ensuite) ;
+  `.githooks/close-done.mjs` (nouveau) reconnaît une clôture faite sur ses trois traces et porte le signal des critères
+  modifiés, ajouté à `closingReport` (donc à `--check` et au passage vers EVIDENCE) ; QUA-048 et QUA-076 réécrits
+  pour ces deux points (la phrase de QUA-076 sur la réorientation vers le journal reste pour le lot 2) ; tests de
+  `.githooks/close.test.mjs` verts, `.githooks/close-done.mjs` couvert à 100 %. `.githooks/close.mjs` est à 200
+  lignes, le plafond (QUA-001) : rien de plus n'y entre.
+- **Prochaine étape** : lot 2 — réorientation limitée aux simples renvois dans `.githooks/doc-coherence.mjs`
+  (`redirect`, ligne 101, appliqué ligne 130), signal « à réécrire à la main » sinon, phrases fausses existantes
+  réécrites, puce réorientation de QUA-076 réécrite, ligne « Unreleased » du CHANGELOG, note d'origine retirée.

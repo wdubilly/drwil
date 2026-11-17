@@ -52,6 +52,7 @@ files:
   - .githooks/state.test.mjs
   - .githooks/close.mjs
   - .githooks/close-mechanics.mjs
+  - .githooks/close-done.mjs
   - .githooks/close-journal.mjs
   - .githooks/close-branches.mjs
   - .githooks/close-limits.mjs
