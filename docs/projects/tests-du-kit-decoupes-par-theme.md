@@ -17,6 +17,7 @@ files:
   - packages/drwil/test/decoupe-kit.inventaire.json
   - packages/drwil/test/kit-commun.mjs
   - packages/drwil/test/kit-*.test.mjs
+  - .githooks/engine.test.mjs
 -->
 
 (Le bloc `scope` couvre le fichier découpé, les contrôles et le registre qui le citent. Les fichiers de test neufs, nés du
@@ -46,7 +47,7 @@ Le projet : découper ce fichier par thème, sans changer ce que testent les tes
 
 ## Contrats modifiés
 
-(aucun à ce stade ; si le découpage change un contrat existant, la puce s'écrit ici sur le oui du demandeur.)
+- `.githooks/engine.test.mjs` — le test de QUA-212 joue les fichiers nés de la découpe du kit au lieu de kit.test.mjs vidé (validé par le demandeur le 2026-11-17, réponse « Traiter maintenant » au sondage des limites)
 
 ## 2. Hors périmètre
 
