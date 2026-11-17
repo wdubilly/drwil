@@ -2117,7 +2117,7 @@
     {
       "id": "tests-qua-139",
       "name": "tests de QUA-139, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-139 packages/drwil/test/kit.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-139 packages/drwil/test/kit-verify-reprise.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
@@ -2132,7 +2132,7 @@
     {
       "id": "tests-qua-140",
       "name": "tests de QUA-140, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-140 .githooks/engine.test.mjs .githooks/run-checks.test.mjs packages/drwil/test/kit.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-140 .githooks/engine.test.mjs .githooks/run-checks.test.mjs packages/drwil/test/kit-verify-reprise.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
@@ -2148,7 +2148,7 @@
     {
       "id": "tests-qua-141",
       "name": "tests de QUA-141, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-141 .githooks/engine.test.mjs .githooks/run-checks.test.mjs packages/drwil/test/kit.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-141 .githooks/engine.test.mjs .githooks/run-checks.test.mjs packages/drwil/test/kit-verify-reprise.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
@@ -2394,7 +2394,7 @@
     {
       "id": "tests-qua-159",
       "name": "tests de QUA-159, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-159 packages/drwil/test/kit.test.mjs .githooks/state.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-159 packages/drwil/test/kit-verify-reprise.test.mjs .githooks/state.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",

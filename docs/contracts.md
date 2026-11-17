@@ -1345,7 +1345,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/verify.ts`.
 **Preuve** : tests du paquet : mêmes statuts, raisons et contrôles, contrat par contrat, en parallèle et en série (échec, réussite, contrôle partagé, preuve humaine, commande introuvable) ; deux contrôles qui s'attendent l'un l'autre ne passent qu'avec le réglage.
 **Contrôle** : `tests-qua-139`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-verify-reprise.test.mjs`
 **Origine** : verify-en-parallele — « Avec le réglage `parallel`, `drwil verify` lance en parallèle les contrôles qui le permettent et rend le même verdict, contrat par contrat, qu'une passe en série »
 **Raison** : La passe de `verify` durait la somme de tous ses contrôles, alors que `run-checks` les lance déjà en parallèle.
 
@@ -1355,7 +1355,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/engine.mjs` (`treeFingerprint`) et `packages/drwil/src/evidence.ts` (`reusableVerdicts`).
 **Preuve** : tests du moteur (empreinte stable, changée par un octet d'un fichier suivi, par un fichier non suivi ajouté, par la configuration ; `reuse` déclaré) ; test de `run-checks` (verdicts consignés hors hook, rien dans un hook ni sur un arbre changé en cours de passe) ; tests du paquet (verdict repris, puis rejoué : arbre modifié d'un octet, fichier non suivi ajouté, configuration changée, verdict absent, contrôle `reuse: false`, `reuse: false` de `verify`).
 **Contrôle** : `tests-qua-140`
-**Tests** : `.githooks/engine.test.mjs`, `.githooks/run-checks.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/engine.test.mjs`, `.githooks/run-checks.test.mjs`, `packages/drwil/test/kit-verify-reprise.test.mjs`
 **Origine** : verify-reprend-run-checks — « `drwil verify` reprend le verdict d'un contrôle joué par `run-checks` sur un arbre et une configuration identiques, le dit dans sa preuve, contrat par contrat, et rejoue tout contrôle dont l'empreinte diffère, dont le verdict manque ou qui dépend de l'extérieur »
 **Raison** : Le 2026-10-25, un `verify --evidence` a pris environ 4 min 30, dont la suite complète du paquet avec couverture, déjà jouée juste avant par `run-checks` sur le même code.
 
@@ -1365,7 +1365,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/engine.mjs` (`controlFingerprints`) et `packages/drwil/src/evidence.ts` (`reusableVerdicts`).
 **Preuve** : tests du moteur (empreinte de contrôle stable, changée par un octet d'un fichier du `paths`, par la déclaration, jamais calculée sans `paths` ni avec `reuse` refusé) ; tests de `run-checks` (reprise, rejeu sur octet ou déclaration changés, `--tout-rejouer`, CI, hook, contrôles jamais repris, fichiers changés pendant la passe) ; tests du paquet (reprise par contrôle, rejeu, `--evidence` et `--no-reuse` sans reprise par contrôle).
 **Contrôle** : `tests-qua-141`
-**Tests** : `.githooks/engine.test.mjs`, `.githooks/run-checks.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/engine.test.mjs`, `.githooks/run-checks.test.mjs`, `packages/drwil/test/kit-verify-reprise.test.mjs`
 **Origine** : verify-reprise-par-controle — « `run-checks` et `drwil verify` reprennent un verdict contrôle par contrôle, pour les itérations, sur une empreinte propre à chaque contrôle ; la preuve de clôture garde l'empreinte de tout l'arbre »
 **Raison** : Depuis QUA-140, un octet changé n'importe où invalide tous les verdicts : pendant les itérations, le gain était nul et `run-checks` rejouait tout.
 
@@ -1546,7 +1546,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/failed.ts` (`verifyFailed`).
 **Preuve** : tests du paquet (contrats rejoués, PASS/ATTESTED et MANUAL non rejoués, libellé, code de sortie, aucune preuve écrite, sans preuve lisible, `--failed` avec `--evidence`) ; test du rappel de VERIFY.
 **Contrôle** : `tests-qua-159`
-**Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/state.test.mjs`
+**Tests** : `packages/drwil/test/kit-verify-reprise.test.mjs`, `.githooks/state.test.mjs`
 **Origine** : verify-rejoue-les-echecs — « `drwil verify --failed` rejoue les seuls contrats qui n'étaient pas PASS ou ATTESTED à la dernière preuve ; ce verdict partiel le dit, n'est jamais `GOVERNANCE: PASS` et ne vaut jamais preuve de clôture »
 **Raison** : Corriger un contrat après un FAIL obligeait à une passe complète de `verify` pour savoir si la correction tient : six passes ont pris 25 à 30 min d'un chantier de 45 min, avec 17 passes FAIL sur 40 en deux jours.
 
