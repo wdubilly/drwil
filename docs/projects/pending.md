@@ -145,8 +145,6 @@ d'un outil) la dit dans son statut.
 - [ ] [IA] [P1] (0.11.2) Une fusion automatique qui n'est plus programmée est dite par `pr-watch`, avec la commande
   `merge-auto` à relancer ; après l'attente de fusion (cadré le 2026-11-15) —
   `docs/projects/fusion-auto-perdue-signalee.md`.
-- [ ] [IA] [P1] (0.11.2) L'avertissement de lancement (QUA-137) nomme le hook réellement cité par le bloc scope,
-  un fichier de test tel quel (cadré le 2026-11-15) — `docs/projects/avertissement-de-lancement-juste.md`.
 - [ ] [IA] [P1] (0.12.0) Retirer le hook commit-msg et son refus « Co-Authored-By » (cadré le
   2026-11-06) — `docs/projects/retirer-le-hook-commit-msg.md`.
 - [ ] [IA] [P0] (0.11.2) Une relecture critique légère avant la clôture, sans frein au full auto (cadré le 2026-11-12) —

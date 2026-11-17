@@ -132,6 +132,12 @@ release renames this section to its version.
 
 ### Fixed
 
+- The start's warning about undeclared hooks (QUA-137) now names each file of
+  `.githooks/` as the scope block cites it: a test file is named as a test,
+  no longer renamed to its module, and the bullet it proposes names that
+  file. It says « the scope block cites », that a modified test is declared
+  by its own name or by its module's, and that a file only mentioned in the
+  brief's text, outside the scope block, needs no bullet.
 - The `[humain]` (`[human]`) mark no longer changes the fingerprint of the
   accepted criteria wherever it stands, between the dash and the proof
   included (« — [humain] `QUA-013` »): adding, removing or moving it no

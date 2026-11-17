@@ -4645,3 +4645,13 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Limites connues** : aucune limite hors cadre relevée. `.githooks/pr-watch.mjs` est à 199 lignes sur un plafond de 200 (QUA-001). Le menu `/drwil` décrit toujours `/drwil-scope` comme la seule mise en fusion automatique de la PR de cadrage, sans le regroupement (hors du bloc scope).
 
 - **Preuve de clôture** : `docs/preuves/attente-de-fusion-courte.md`.
+
+## 2026-11-17 — L'avertissement de lancement nomme le hook réellement cité par le bloc scope (avertissement-de-lancement-juste)
+
+- **Ce qui change** : l'avertissement du lancement (QUA-137, hook modifié non déclaré signalé avant la clôture) nomme chaque fichier de `.githooks/` tel que le bloc `scope` le cite : un fichier de test est nommé comme test, plus renommé en son module, et la puce proposée porte son nom ; le message dit « le bloc scope cite », qu'un test modifié se déclare par son nom ou par celui de son module, et qu'aucune puce n'est due pour un fichier seulement mentionné dans le texte de la fiche. Règle de clôture (`undeclaredHooks`) et rejeu (QUA-113) inchangés. QUA-137 réécrit ; gabarit puis `npm run installer-depot` (QUA-018) ; ligne « Unreleased » du changelog.
+- **Intention couverte** : la note du 2026-11-15 (chantier cout-par-activite, puces écrites pour des fichiers non modifiés), retirée de `docs/intentions/notes.md`. Reproduction réelle au lancement de ce chantier : « le cadrage cite `.githooks/state.mjs` » alors que le bloc scope cite `.githooks/state.test.mjs`.
+- **Décisions clés** : 2026-11-15, corriger le message, garder la règle de clôture.
+- **Critères et preuves** : `.githooks/state.test.mjs` (test cité seul nommé comme test, en échec contre l'ancien code ; puce au nom du test acceptée au lancement et par `undeclaredHooks` ; hook mentionné hors du bloc sans avertissement ; anglais) ; `node .githooks/run-checks.mjs` OK ; `drwil verify --evidence` : `GOVERNANCE: PASS (CI pending)` (277 PASS, 21 ATTESTED, 0 FAIL, 0 MANUAL).
+- **Limites connues** : aucune limite hors cadre relevée.
+
+- **Preuve de clôture** : `docs/preuves/avertissement-de-lancement-juste.md`.
