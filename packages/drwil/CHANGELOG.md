@@ -122,6 +122,12 @@ release renames this section to its version.
 
 ### Fixed
 
+- The `[humain]` (`[human]`) mark no longer changes the fingerprint of the
+  accepted criteria wherever it stands, between the dash and the proof
+  included (« — [humain] `QUA-013` »): adding, removing or moving it no
+  longer refuses the closing. A workstream accepted before the update still
+  closes without a new acceptance: the former fingerprint is read as a
+  fallback, never written.
 - A refused start chained at the prompt now says why (dirty tree included,
   with what to do) instead of being dropped, and the « ✗ » refusal of the
   `/drwil-start` poll is shown to the human too. Several calls attached to
