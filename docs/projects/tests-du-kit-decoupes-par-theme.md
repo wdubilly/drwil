@@ -13,6 +13,8 @@ files:
   - docs/contracts.md
   - docs/architecture.md
   - packages/drwil/CHANGELOG.md
+  - packages/drwil/test/decoupe-kit.test.mjs
+  - packages/drwil/test/decoupe-kit.inventaire.json
 -->
 
 (Le bloc `scope` couvre le fichier découpé, les contrôles et le registre qui le citent. Les fichiers de test neufs, nés du
