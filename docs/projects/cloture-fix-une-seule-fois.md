@@ -30,6 +30,9 @@ files:
   - docs/projects/pending.md
   - docs/projects/journal.md
   - packages/drwil/CHANGELOG.md
+  - docs/architecture.md
+  - docs/projects/kit-mechanics.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
 -->
 
 ## 1. Besoin
