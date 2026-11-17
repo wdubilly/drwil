@@ -430,7 +430,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/create-release.mjs`.
 **Preuve** : tests des hooks sur de vrais dépôts git temporaires (origin nu local, gh et npm simulés) et du paquet (module livré, jamais copié par défaut, `--candidate --dry-run` dans un projet installé).
 **Contrôle** : `tests-qua-051`
-**Tests** : `.githooks/create-release.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/create-release.test.mjs`, `packages/drwil/test/kit-modules.test.mjs`
 **Origine** : une recette par version, pour une équipe hors dépôt (0.6.5) — « Une version candidate est publiée en pré-release GitHub (par exemple v0.6.5-rc.1), avec son tarball et une fiche de recette en Markdown générée (jamais écrite à la main) du dernier tag définitif à la candidate, lisible sans Git »
 **Raison** : Une équipe de recette, qui ne lit pas le dépôt, valide chaque version ; son approbation conditionne la publication : elle teste le tarball avant la release définitive.
 

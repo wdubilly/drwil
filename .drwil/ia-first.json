@@ -753,7 +753,7 @@
     {
       "id": "tests-qua-051",
       "name": "tests de QUA-051, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-051 .githooks/create-release.test.mjs packages/drwil/test/kit.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-051 .githooks/create-release.test.mjs packages/drwil/test/kit-modules.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
