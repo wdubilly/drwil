@@ -280,7 +280,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/state.mjs` (`start`, `stopQueue`), `.githooks/state-draft.mjs` (`draftAdd`, `draftFinish`), `.githooks/briefs.mjs` (`queueable`).
 **Preuve** : tests des hooks et du paquet.
 **Contrôle** : `tests-qua-037`
-**Tests** : `.githooks/state.test.mjs`, `packages/drwil/test/kit.test.mjs`, `packages/drwil/test/kit-consignes.test.mjs`
+**Tests** : `.githooks/state.test.mjs`, `packages/drwil/test/kit-consignes.test.mjs`, `packages/drwil/test/kit-hooks.test.mjs`
 **Origine** : enchaîner plusieurs chantiers sans intervention — « Un seul sondage /drwil-start à choix multiple enregistre une file ordonnée de fiches et la fusion automatique »
 **Raison** : Chaque chantier exigeait un sondage et une autorisation de fusion, même quand rien n'était à trancher : l'humain devait revenir entre deux chantiers. Premier pas vers l'intention « fabrique autonome ».
 **Modifié** : 2026-11-02 — file par sondages à choix unique enchaînés, décidée par le demandeur (chantier « parité des outils », lot 2) : Copilot CLI ne lit de façon fiable qu'un choix unique, donc une fiche par sondage ; l'invariant reste que l'humain répond et qu'un outil lit.
@@ -304,7 +304,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/glossary.mjs`, `packages/drwil/src/verdict.ts` (`labelIds`).
 **Preuve** : tests des hooks et du paquet.
 **Contrôle** : `tests-qua-039`
-**Tests** : `.githooks/glossary.test.mjs`, `.githooks/run-checks.test.mjs`, `packages/drwil/test/kit.test.mjs`, `packages/drwil/test/cycle.test.mjs`
+**Tests** : `.githooks/glossary.test.mjs`, `.githooks/run-checks.test.mjs`, `packages/drwil/test/kit-hooks.test.mjs`, `packages/drwil/test/cycle.test.mjs`
 **Origine** : un identifiant cité à l'humain vient avec ce qu'il désigne — « Une seule source repère dans un texte les identifiants et rend leurs libellés »
 **Raison** : La règle écrite (« références lisibles ») ne suffisait pas : des comptes rendus citaient encore « QUA-036 » sans dire ce que c'est. Le libellé doit être sous les yeux de l'agent, quel qu'il soit.
 
@@ -356,7 +356,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : chaque hook (constante de racine), `.githooks/state.mjs` (point d'entrée), `.githooks/glossary.mjs` (point d'entrée), le point d'entrée de chaque script livré.
 **Preuve** : tests du paquet et du moteur d'état ; un test parcourt les scripts du gabarit et refuse tout point d'entrée qui ne compare pas les chemins réels des deux côtés.
 **Contrôle** : `tests-qua-044`
-**Tests** : `packages/drwil/test/kit.test.mjs`, `.githooks/state.test.mjs`
+**Tests** : `packages/drwil/test/kit-hooks.test.mjs`, `.githooks/state.test.mjs`
 **Origine** : les hooks trouvent la racine du projet par l'emplacement de leur fichier — « Tous les hooks d'agent livrés, et le moteur d'état quand un hook l'appelle, prennent pour racine le dossier qui contient leur `.claude/` ou `.githooks/`, jamais le dossier courant »
 **Raison** : Constaté le 2026-10-16 : après un `cd` de l'agent, le rappel lisait un état absent et créait un `.drwil` parasite ; vérifié au chantier, la garde de cadrage ne refusait plus rien depuis un sous-dossier. Étendu le 2026-10-24 (PR #223, CI macOS rouge) : la correction par chemins réels n'avait pas été appliquée partout — le garde shell, la garde de commit, le rejeu des hooks de la branche principale, le suivi de PR et la création de release comparaient encore des URL et ne faisaient rien par un lien symbolique.
 
@@ -567,7 +567,7 @@ régression sauf si la fiche active déclare le changement (section
 **Contrôle** : `tests-qua-064`
 **Manuel** : un `/drwil-start` tapé dans Copilot CLI interactif lance un chantier (le banc ne lance que le mode non interactif).
 **Couvre** : `packages/drwil/src/config-tools.ts`, `packages/drwil/src/render.ts`, `packages/drwil/src/drift.ts`, `packages/drwil/src/essentials.ts`, `packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-hooks.test.mjs`
 **Origine** : compatibilité des agents, volet Copilot (0.6.7) — « Copilot lit `.claude/` : hooks, réglages et skills lui sont donnés, et ses hooks natifs apportent l'état et le rappel »
 **Raison** : Essais du 2026-10-18 : `--tools copilot` n'installait que des consignes, donc aucun hook ni commande `/drwil-*` ; l'écriture de code hors chantier n'était arrêtée par rien.
 
@@ -606,7 +606,7 @@ régression sauf si la fiche active déclare le changement (section
 **Contrôle** : `tests-qua-066`
 **Manuel** : approuver le dossier dans une session Gemini CLI interactive (sans cela, Gemini ne lance aucun hook du dépôt).
 **Couvre** : `packages/drwil/src/render-gemini.ts`, `packages/drwil/templates/common/tools/gemini/.gemini/settings.json`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-hooks.test.mjs`
 **Origine** : compatibilité des agents, volet Gemini (0.6.7) — « Sous Gemini CLI, en SCOPING, une écriture de fichier de code (`write_file`, `replace`) est refusée avec le motif drwil »
 **Raison** : Essai du 2026-10-18 : `--tools gemini` ne posait que `GEMINI.md`, aucun hook ; sonde du 2026-10-19 : Gemini ne charge les hooks d'un dépôt que dans un dossier de confiance (`--skip-trust` seul ne suffit pas), et lit `GEMINI_PROJECT_DIR`.
 
@@ -618,7 +618,7 @@ régression sauf si la fiche active déclare le changement (section
 **Contrôle** : `tests-qua-067`
 **Manuel** : lancer le banc sur le poste et attester la ligne Gemini de la matrice.
 **Couvre** : `.githooks/state-cli.mjs`, `.claude/hooks/scope-reminder.mjs`
-**Tests** : `.githooks/state.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/state.test.mjs`, `packages/drwil/test/kit-hooks.test.mjs`
 **Origine** : compatibilité des agents, volet Gemini (0.6.7) — « Gemini CLI reçoit le rappel d'état au démarrage et à chaque message »
 **Raison** : `.githooks/state.mjs` imprimait du texte brut et `scope-reminder` rendait le format de Claude Code (`permissionDecision`), que Gemini ignore ; sans le format natif, ni refus ni rappel n'arrivent.
 
@@ -1095,7 +1095,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.claude/hooks/bash-guard.mjs` (`skipsHooks`).
 **Preuve** : tests du paquet : chaque forme refusée, y compris composée et dans `sh -c`, `bash -c`, `eval` ; les lectures et les messages qui citent `-n` ou `--no-verify` sans commande git passent ; dans un projet installé, le refus l'emporte sur la demande d'accord d'un `.env`.
 **Contrôle** : `tests-qua-114`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-hooks.test.mjs`
 **Origine** : contournements-completes — « La garde shell de Claude Code refuse à l'agent, sans demander, toute commande qui saute les hooks ou écrit, supprime ou surcharge `core.hooksPath` (`--no-verify`, `commit -n`, `-c core.hooksPath=`, `git config core.hooksPath`, `--unset`, `GIT_CONFIG_*`), y compris dans une commande composée ou un `sh -c` ; une simple lecture du réglage passe »
 **Raison** : Les permissions de Claude Code refusaient `git *--no-verify*` et `git -c *`, mais ni `git config core.hooksPath …`, ni `--unset`, ni les variables `GIT_CONFIG_*`, ni une commande enfouie dans `bash -c "…"` ; la garde shell ne les voyait pas.
 
@@ -1275,7 +1275,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.claude/hooks/read-guard.mjs` (`guardedFiles`, `decide`).
 **Preuve** : test du paquet qui installe un projet et rejoue les hooks avec des entrées simulées : lecture entière refusée (chemin absolu, relatif, par un lien symbolique, depuis un sous-dossier), lecture par plage permise, autre fichier permis, fichier absent ou entrée invalide permis, chemins lus dans la configuration, message en français et en anglais ; `cat`, `less` et `more` refusés, `sed -n`, `grep` et `head` permis ; le `.claude/settings.json` livré branche le hook sur Read.
 **Contrôle** : `tests-qua-132`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-hooks.test.mjs`
 **Origine** : reduction-contexte — « Avec Claude Code, la lecture entière de `docs/contracts.md` ou de `docs/projects/journal.md` est refusée avant qu'elle ait lieu (outil Read sans plage, `cat`/`less`/`more` du fichier dans une commande shell), avec un renvoi vers `node .githooks/glossary.mjs --contract <ID>`, `--contracts` et `--journal <chantier>` ; une lecture par plage et une recherche restent permises ; `AGENTS.md` le dit »
 **Raison** : La consigne écrite de lecture ciblée (QUA-124) ne suffit pas : un agent qui lit le registre ou le journal en entier y ajoute des dizaines de milliers de tokens, relus à chaque requête suivante.
 
@@ -1375,7 +1375,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/worktree.mjs` (`launchInWorktree`).
 **Preuve** : tests sur dépôts jetables (dépôt `origin` nu et clone) : dossier et branche créés depuis une branche principale avancée sur `origin`, état BUILD écrit dans le worktree, aucun état dans le dossier d'origine, configuration du dépôt principal identique avant et après ; refus sans rien créer ; repli sans réseau ; hook rejoué sur les deux formes de sondage (réponse « Nouveau worktree » lancée dans le worktree, « Ce dossier » dans le dossier d'origine).
 **Contrôle** : `tests-qua-142`
-**Tests** : `.githooks/worktree.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/worktree.test.mjs`, `packages/drwil/test/kit-hooks.test.mjs`
 **Origine** : worktree-par-chantier — « Au sondage de lancement, l'humain peut choisir de mener le chantier dans un nouveau worktree ; la réponse, lue par le hook et jamais par l'agent, crée le dossier et sa branche depuis la branche principale à jour, et y lance le chantier : son fichier d'état est écrit par `.githooks/state.mjs`, jamais à la main, et l'état du dossier d'origine ne change pas »
 **Raison** : Travailler deux chantiers à la fois imposait `git worktree add`, l'installation et le lancement à la main, et rien ne laissait à l'humain le choix au moment où il lance.
 
@@ -1425,7 +1425,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/worktree.mjs` (`launchParallel`).
 **Preuve** : tests sur dépôts jetables (dépôt `origin` nu et clone) : deux fiches lancées chacune dans son worktree en BUILD sans marque de fusion ni file, dossier d'origine en SCOPING avec `parallel` ; refus sans rien créer (une fiche, doublon, fiche non prête, cadrages recoupés hors index et journal, au-delà de `maxParallel` en comptant les chantiers d'un autre worktree) ; échec d'un lancement qui garde les précédents ; hook rejoué sur le sondage Claude Code (« File en parallèle » lance les worktrees dans l'ordre du sondage, « File séquentielle » garde la file du dossier, réponse préremplie refusée).
 **Contrôle** : `tests-qua-147`
-**Tests** : `.githooks/worktree.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/worktree.test.mjs`, `packages/drwil/test/kit-hooks.test.mjs`
 **Origine** : file-en-parallele — « Au sondage, l'humain choisit de mener la file en parallèle ; chaque fiche choisie est lancée dans son propre worktree par le hook, jamais par l'agent ; au plus N chantiers sont actifs à la fois »
 **Raison** : Des chantiers indépendants d'une file attendaient la fusion du précédent sans raison, et un lancement des worktrees par l'agent aurait contourné la décision de l'humain.
 **Modifié** : 2026-11-13 — `auto_merge` n'est plus écrit ; ancien critère : chaque worktree portant la fusion automatique décidée au sondage ; validé par le demandeur le 2026-11-13 (chantier « fusion automatique par défaut »).
@@ -1609,7 +1609,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/hooks/start-poll.mjs`, `packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md`.
 **Preuve** : test du hook rejoué sur un sondage Copilot à champ `array` : file lue dans l'ordre des options malgré une réponse en désordre, fusion non lue, liste entre crochets, une seule fiche, valeur par défaut refusée. La forme réelle de la réponse de Copilot CLI n'est pas encore relevée (essai humain, `docs/intentions/sondage-worktree-copilot-cli.md`).
 **Contrôle** : `tests-qua-165`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-hooks.test.mjs`
 **Origine** : sondage-copilot-choix-multiple — « Le sondage `/drwil-start` de Copilot CLI propose et lit un choix multiple (file de chantiers) »
 **Raison** : Sans ce champ, Copilot CLI ne proposait jamais la file ni le lancement en parallèle que le hook sait lire.
 **Modifié** : 2026-11-13 — `auto_merge` n'est plus écrit et la réponse `drwil-merge` n'est plus lue ; ancien critère : la fusion lue écrite dans l'état ; validé par le demandeur le 2026-11-13 (chantier « fusion automatique par défaut »).
@@ -1763,7 +1763,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md`.
 **Preuve** : test : le skill livré prescrit le choix unique et interdit `array` pour Copilot CLI ; le hook rejoué lit une fiche sur un champ `enum` seul, sans lire ni écrire de fusion, et lit toujours un tableau.
 **Contrôle** : `tests-qua-180`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-hooks.test.mjs`
 **Origine** : retour-scoping-branche-sondage — « Le sondage multi-choix revient vide sous Copilot CLI ; le même champ en choix unique est lu »
 **Raison** : Le champ en tableau prescrit par le skill revenait vide trois fois : le lancement ne partait pas.
 **Modifié** : 2026-11-13 — `auto_merge` n'est plus écrit : la réponse de fusion n'est plus lue ; ancien critère : la fusion lue écrite dans l'état ; validé par le demandeur le 2026-11-13 (chantier « fusion automatique par défaut »).
@@ -2121,7 +2121,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : les commandes de hook de ces réglages ; `packages/drwil/src/render-gemini.ts` (forme de Gemini selon le système).
 **Preuve** : test du paquet : chaque commande de hook de Claude et de Copilot, lancée par `/bin/sh` avec un `PATH` vide, écrit le message sur stderr et rien sur stdout (hors Windows) ; pour Gemini, `init` écrit la forme à lanceur, qui sans node sort 2 (`BeforeTool`) ou 1 avec le message et, avec node, donne la sortie du hook appelé directement ; la forme Windows est celle de `node` seul (test de `geminiNode("win32")`) ; les formes PowerShell de Copilot et de Windows ne sont pas jouées en CI (humaine).
 **Contrôle** : `tests-qua-215`
-**Tests** : `packages/drwil/test/claude-hooks.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/claude-hooks.test.mjs`, `packages/drwil/test/kit-hooks.test.mjs`
 **Origine** : hooks-sans-dependance-au-shell — « Un hook d'assistant lancé sans `node` dans le `PATH` dit en clair que `node` est introuvable et quoi faire, au lieu d'un 127 muet »
 **Raison** : Constaté le 2026-11-02 : sous fnm, un assistant lancé depuis un autre shell que celui qui a initialisé `node` exécute les hooks du kit en code 127 « hook errored », sans cause ni piste ; décision du demandeur du même jour : message lisible seulement, ni chemin absolu écrit à l'installation, ni repli vers fnm ou `~/.local/bin`.
 
