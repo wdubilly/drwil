@@ -16,6 +16,7 @@ files:
   - packages/drwil/test/decoupe-kit.test.mjs
   - packages/drwil/test/decoupe-kit.inventaire.json
   - packages/drwil/test/kit-commun.mjs
+  - packages/drwil/test/kit-*.test.mjs
 -->
 
 (Le bloc `scope` couvre le fichier découpé, les contrôles et le registre qui le citent. Les fichiers de test neufs, nés du
@@ -111,5 +112,12 @@ Tranchées par le demandeur le 2026-11-11 (l'agent n'en a tranché aucune) :
   Les helpers d'un seul thème (`projetReprise`, `projetAtteste`, `empreinte`…) restent avec leurs tests et partent avec
   eux au lot 3 ; un helper que deux thèmes partagent rejoint alors le module commun, jamais une copie. `node --test`
   sans argument (le `npm test` du paquet) lit aussi le module commun comme un fichier de tests vide (0 test).
-- **Suite** : lot 3, déplacer les tests par thème dans `kit-<thème>.test.mjs`, un commit par thème, chaque fichier neuf
-  au bloc `scope` par un commit de cadrage séparé, test de non-perte vert à chaque commit.
+- **Thèmes du lot 3** (choisis le 2026-11-17 d'après les durées par test d'une exécution de `packages/drwil/test/kit.test.mjs`,
+  113 s en tout, charge 2,4) : `consignes` (documents, consignes et skills livrés, ~4 s), `fiches` (fiches, cadrage,
+  check-docs, ~11 s), `hooks` (hooks des outils IA, lancement par sondage, ~12 s), `installation` (init, projet existant,
+  désinstallation, ~12 s), `mise-a-jour` (version, mise à jour, réglages gardés, ~13 s), `ci` (branche principale, push,
+  CI livrée, ~17 s), `modules` (modules optionnels, release, paquet npm, ~10 s), `verify` (verdicts, critères, ~13 s),
+  `verify-reprise` (parallèle, reprise des verdicts, `--failed`, ~12 s), `attestation` (~9 s). Les fichiers neufs
+  entrent au bloc `scope` par le motif `packages/drwil/test/kit-*.test.mjs` (un commit de cadrage).
+- **Suite** : lot 3, déplacer les tests par thème dans `kit-<thème>.test.mjs`, un commit par thème, test de non-perte
+  vert à chaque commit.
