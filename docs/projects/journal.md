@@ -4653,3 +4653,5 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Décisions clés** : 2026-11-15, corriger le message, garder la règle de clôture.
 - **Critères et preuves** : `.githooks/state.test.mjs` (test cité seul nommé comme test, en échec contre l'ancien code ; puce au nom du test acceptée au lancement et par `undeclaredHooks` ; hook mentionné hors du bloc sans avertissement ; anglais) ; `node .githooks/run-checks.mjs` OK ; `drwil verify --evidence` : `GOVERNANCE: PASS (CI pending)` (277 PASS, 21 ATTESTED, 0 FAIL, 0 MANUAL).
 - **Limites connues** : aucune limite hors cadre relevée.
+
+- **Preuve de clôture** : `docs/preuves/avertissement-de-lancement-juste.md`.
