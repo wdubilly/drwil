@@ -72,7 +72,7 @@ régression sauf si la fiche active déclare le changement (section
 **Contrôle** : `docs-references`, `tests-qua-015`
 **Manuel** : justesse du contenu des fiches.
 **Couvre** : `.githooks/briefs.mjs`
-**Tests** : `packages/drwil/test/kit.test.mjs`, `packages/drwil/test/kit-consignes.test.mjs`
+**Tests** : `packages/drwil/test/kit-consignes.test.mjs`, `packages/drwil/test/kit-fiches.test.mjs`
 **Raison** : Un agent reprend un chantier à froid sans refaire le travail ni trancher à la place du demandeur.
 
 ## QUA-016 — Rappel de cadrage
@@ -81,7 +81,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/scope.mjs`, `docs/ia-first/7-scoping-reminder.md`.
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI, sévérité selon le réglage) ; refus avant écriture côté agent : `.claude/hooks/scope-reminder.mjs`.
 **Contrôle** : `docs-references`, `tests-qua-016`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit.test.mjs`, `packages/drwil/test/kit-fiches.test.mjs`
 **Raison** : Du code détaché de tout chantier ne se retrouve plus.
 **Modifié** : 2026-11-16 — un fichier dérivé d'un fichier du scope (quatre cas fermés, jamais un fichier de règles) est couvert d'office ; ancien critère : « Tout fichier de code indexé est couvert par le bloc `scope` d'une fiche de `docs/projects/` » ; validé par le demandeur le 2026-11-13 (chantier « perimetre-prevu-au-cadrage »).
 
@@ -119,7 +119,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/briefs.mjs` (`readyGaps`), `.githooks/check-docs.mjs`, `.githooks/state.mjs` (clôture).
 **Preuve** : `check-docs` (hook + CI) refuse la fiche « prête » ; la clôture avertit.
 **Contrôle** : `tests-qua-021`
-**Tests** : `.githooks/check-docs.test.mjs`, `.githooks/state.test.mjs`, `packages/drwil/test/kit.test.mjs`
+**Tests** : `.githooks/check-docs.test.mjs`, `.githooks/state.test.mjs`, `packages/drwil/test/kit-fiches.test.mjs`
 **Origine** : capitaliser les non-régressions — « Une fiche « prête » sans critères d'acceptation est refusée par check-docs ; une fiche sans critères qui n'est pas « prête » reçoit un avertissement à la clôture »
 **Raison** : Un chantier sans critère prouvé ne laisse rien à rejouer : la non-régression métier commence par la fiche.
 
@@ -1496,7 +1496,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/config-write.ts`.
 **Preuve** : test du paquet : installation neuve en bloquant ; réinstallation d'un projet sans réglage en avertissement ; réglage choisi gardé.
 **Contrôle** : `tests-qua-154`
-**Tests** : `packages/drwil/test/kit.test.mjs`
+**Tests** : `packages/drwil/test/kit-fiches.test.mjs`
 **Origine** : niveau-de-protection — « Une installation neuve écrit la barrière de périmètre en bloquant ; un projet déjà installé garde son réglage, même absent, et rien ne change pour lui »
 **Raison** : Le 2026-10-22, une revue externe a relevé qu'un projet qui adopte drwil croit avoir une barrière de périmètre alors qu'elle n'était qu'un avertissement par défaut, y compris sur une installation neuve.
 
