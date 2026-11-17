@@ -908,3 +908,24 @@ test("QUA-100 fusion lue par git : tête contenue dans la branche principale dis
   git(depot, "remote", "set-url", "origin", join(base, "absente.git"));
   assert.deepEqual(mergedInMain(depot, tete), { state: "not-run" });
 });
+
+// Retouches de cadrage regroupées (QUA-314) : la consigne livrée, dans les skills de cadrage et de lancement.
+test("QUA-314 : les retouches de cadrage d'une conversation vont sur une branche et une PR, fusion programmée au besoin", () => {
+  const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
+  const gabarit = join(racine, "packages/drwil/templates/common/tools/claude/.claude/skills");
+  const plat = (f) => readFileSync(join(gabarit, f), "utf8").replace(/\s+/g, " ");
+  const cadrage = plat("scope-a-workstream/SKILL.md");
+  assert.match(cadrage, /by default, on \*\*the same branch\*\* \(one branch, one PR, no new branch\)/);
+  assert.match(cadrage, /a `\/drwil-start` needs a brief it carries/);
+  assert.match(cadrage, /the human asks for it/);
+  assert.match(cadrage, /offered at the end of the exchange/);
+  assert.match(cadrage, /never pushed on a branch whose merge is already scheduled/);
+  assert.match(cadrage, /`gh pr view <number> --json autoMergeRequest`/);
+  const lancement = plat("start-a-workstream/SKILL.md");
+  assert.match(lancement, /brief carried only by an open scoping PR/);
+  assert.match(lancement, /`node \.githooks\/merge-auto\.mjs <number>` from its branch/);
+  assert.ok(lancement.indexOf("brief carried only by an open scoping PR") < lancement.indexOf("3. Open **one** poll"));
+  // Copies installées identiques au gabarit (npm run installer-depot).
+  for (const f of ["scope-a-workstream/SKILL.md", "start-a-workstream/SKILL.md"])
+    assert.equal(readFileSync(join(racine, ".claude/skills", f), "utf8"), readFileSync(join(gabarit, f), "utf8"), f);
+});

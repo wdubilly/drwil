@@ -17,7 +17,10 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
    index `priority`.
 2. Read the "Proposed order" sections of the intentions (`docs/intentions/`): they may put one
    brief before another of the same rank. Also note the index's P1 intentions that have no framed
-   brief yet.
+   brief yet. A brief carried only by an open scoping PR (scoping edits grouped on one branch,
+   `/drwil-scope`) is not in the list: when the human wants to start it, first schedule that PR's
+   merge with `node .githooks/merge-auto.mjs <number>` from its branch, follow it with
+   `node .githooks/pr-watch.mjs <number>` until merged, update the main branch, then list again.
 3. Open **one** poll (Claude Code: `AskUserQuestion`; Copilot CLI: `ask_user`), in that order,
    preceded by a short message citing the P1 intentions "to frame" (never offered for start):
    - Claude Code: `header` exactly `drwil-start`; one option per brief, **label = exact path**
