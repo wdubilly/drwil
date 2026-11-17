@@ -80,8 +80,8 @@ Quelle que soit la cause, une fusion attendue qui n'est plus programmée doit se
 
 ## 3. Contraintes
 
-- Après `docs/projects/attente-de-fusion-courte.md` : elle modifie le même code (`.githooks/pr-watch.mjs`,
-  `.githooks/pr-watch-main.mjs`) et le même contrat (QUA-100), et y ajoute l'attente d'une fusion programmée que le
+- Après le chantier « attente de fusion courte » (clos le 2026-11-17, entrée du journal) : il a modifié le même code (`.githooks/pr-watch.mjs`,
+  `.githooks/pr-watch-main.mjs`) et le même contrat (QUA-100), et y a ajouté l'attente d'une fusion programmée que le
   troisième critère complète.
 - `.githooks/pr-watch.mjs` est à 188 lignes sur un plafond de 200 (QUA-001) : la lecture de l'historique va dans
   `.githooks/pr-watch-main.mjs` ou un module ajouté.
@@ -108,4 +108,4 @@ Aucun.
 ## 7. Reprise
 
 - **Dernier état** (2026-11-15) : cadrage terminé, contenu validé par le demandeur le 2026-11-15.
-- **Prochaine étape** : [humain] `/drwil-start`, après la fusion de `docs/projects/attente-de-fusion-courte.md`.
+- **Prochaine étape** : [humain] `/drwil-start`, après la fusion du chantier « attente de fusion courte ».
