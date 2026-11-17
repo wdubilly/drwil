@@ -6,6 +6,8 @@ export const TEXTS = {
     checkedButOpen: (brief) => `case cochée mais la fiche ${brief} ne se dit pas terminée (QUA-015)`,
     deadClosing: (place, b) => `${place} cite ${b}, qui sera supprimée : à réorienter vers le journal`,
     deadGone: (place, b) => `${place} cite ${b}, déjà retirée : citation à supprimer`,
+    deadInSentence: (place, b) =>
+      `${place} cite ${b}, qui sera supprimée, dans une phrase qui ne serait plus juste réorientée vers le journal : à réécrire à la main (QUA-076)`,
     codeCite: (place, b) =>
       `${place} cite la fiche de chantier ${b} : réécrire ce commentaire en citant le contrat que ce code sert (la clôture ne touche pas au code) (QUA-049)`,
     intentLeft: (b, i) =>
@@ -17,6 +19,8 @@ export const TEXTS = {
     checkedButOpen: (brief) => `item checked but ${brief} does not say it is done (QUA-015)`,
     deadClosing: (place, b) => `${place} cites ${b}, which will be deleted: to redirect to the journal`,
     deadGone: (place, b) => `${place} cites ${b}, already removed: citation to delete`,
+    deadInSentence: (place, b) =>
+      `${place} cites ${b}, which will be deleted, in a sentence that would no longer be true pointing to the journal: to rewrite by hand (QUA-076)`,
     codeCite: (place, b) =>
       `${place} cites the workstream brief ${b}: rewrite this comment citing the contract this code serves (closing does not touch code) (QUA-049)`,
     intentLeft: (b, i) =>

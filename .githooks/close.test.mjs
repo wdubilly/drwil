@@ -680,7 +680,7 @@ test("QUA-077 : références à la fiche réorientées vers le journal, intentio
   const racine = depot();
   ecrire(racine, {
     "docs/projects/journal.md": "# Journal\n\n## exemple\n\nPreuve : `docs/preuves/exemple.md`.\n",
-    "docs/recipes/r.md": "Fiche : `docs/projects/exemple.md`.\n",
+    "docs/recipes/r.md": "Fiche (voir `docs/projects/exemple.md`).\n",
     "docs/intentions/origine.md": "# Origine\n\nCite `src/a.mjs`.\n",
     "docs/projects/exemple.md": fiche("- Un critère — `QUA-001`").replace(
       "# Projet : Exemple",
@@ -706,7 +706,7 @@ test("QUA-077 : références à la fiche réorientées vers le journal, intentio
   );
   ecrire(racine, { "docs/intentions/origine.md": "# Origine mise à jour\n\nCite `src/a.mjs`.\n" });
   close(racine, { fix: true });
-  assert.equal(readFileSync(join(racine, "docs/recipes/r.md"), "utf8"), "Fiche : `docs/projects/journal.md`.\n");
+  assert.equal(readFileSync(join(racine, "docs/recipes/r.md"), "utf8"), "Fiche (voir `docs/projects/journal.md`).\n");
   const fin = close(racine, { logs: journaux() });
   assert.equal(fin.code, 0, fin.message);
 });

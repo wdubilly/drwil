@@ -139,6 +139,8 @@ Aucun.
   pour ces deux points (la phrase de QUA-076 sur la réorientation vers le journal reste pour le lot 2) ; tests de
   `.githooks/close.test.mjs` verts, `.githooks/close-done.mjs` couvert à 100 %. `.githooks/close.mjs` est à 200
   lignes, le plafond (QUA-001) : rien de plus n'y entre.
-- **Prochaine étape** : lot 2 — réorientation limitée aux simples renvois dans `.githooks/doc-coherence.mjs`
-  (`redirect`, ligne 101, appliqué ligne 130), signal « à réécrire à la main » sinon, phrases fausses existantes
-  réécrites, puce réorientation de QUA-076 réécrite, ligne « Unreleased » du CHANGELOG, note d'origine retirée.
+- **Lot 2 fait** (2026-11-17) : `deadReferences` (`.githooks/doc-coherence.mjs`) ne réoriente la fiche qui se clôt
+  que dans un simple renvoi (entre parenthèses, après « voir », « see » ou « cf. », après un tiret en fin de ligne) ;
+  sinon, signal « à réécrire à la main » sans correction ; phrases fausses réécrites, QUA-076 et l'origine de QUA-309
+  réécrites, ligne « Unreleased » ajoutée, note d'origine retirée.
+- **Prochaine étape** : vérifier (`run-checks`, `verify --agent`) puis clore.

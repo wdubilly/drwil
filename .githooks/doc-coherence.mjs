@@ -99,6 +99,12 @@ const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 // Dead reference: redirected to the journal when it is the closing brief, otherwise the citation
 // goes, with the dash or the parentheses that introduced it.
 const redirect = (cite, to) => (s) => s.split(`\`${cite}\``).join(`\`${to}\``);
+// Only a plain pointer stays true once it points to the journal (« à lancer après `journal.md` » would not):
+// in parentheses, after « voir / see / cf. », or after a dash ending the line.
+const plainPointer = (before, after) =>
+  (/\($/.test(before) && /^\)/.test(after)) ||
+  /(?:^|[\s(])(?:voir|see|cf\.)\s+$/i.test(before) ||
+  (/[—–]\s*$/.test(before) && /^\s*[.;,]?\s*$/.test(after));
 const drop = (cite) => {
   const c = escapeRe(cite);
   const re = new RegExp(`\\s*(?:\\((?:voir |see |cf\\. )?\`${c}\`\\)|[—–]\\s*\`${c}\`|\`${c}\`)`);
@@ -108,7 +114,8 @@ const drop = (cite) => {
 /**
  * Citations of a brief or intent in the Markdown files that no longer lead anywhere, or will not once
  * `closing` (the brief being closed) is deleted: `[{ place, message, file, line, edit }]`, `edit` being
- * the line rewrite (redirect to the journal for the closing brief, deletion for any other).
+ * the line rewrite (redirect to the journal for a plain pointer to the closing brief, deletion for any
+ * other brief); a closing brief cited in a sentence has no `edit`: it is rewritten by hand.
  */
 export function deadReferences(root, cfg, lang, closing, { journal = "docs/projects/journal.md" } = {}) {
   const T = TEXTS[lang === "en" ? "en" : "fr"];
@@ -127,7 +134,9 @@ export function deadReferences(root, cfg, lang, closing, { journal = "docs/proje
       for (const m of line.matchAll(BRIEF_CITATION_RE)) {
         const cite = m[1];
         if (/[<>{}*?|=:@\s]/.test(cite) || TO_CREATE_RE.test(line.slice(m.index + m[0].length))) continue;
-        if (cite === closing) edits.push({ message: T.deadClosing, cite, edit: redirect(cite, journal) });
+        if (cite === closing && !plainPointer(line.slice(0, m.index), line.slice(m.index + m[0].length)))
+          edits.push({ message: T.deadInSentence, cite });
+        else if (cite === closing) edits.push({ message: T.deadClosing, cite, edit: redirect(cite, journal) });
         else if (!existsSync(join(root, cite)) && !existsSync(join(root, dirname(file), cite)))
           edits.push({ message: T.deadGone, cite, edit: drop(cite) });
       }

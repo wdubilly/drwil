@@ -26,7 +26,7 @@ Toujours prioriser une fiche en P0 sans se demander si elle peut attendre. Il fa
 
 ### 3. Fichier neuf couvert par la PR
 
-Déjà traité : QUA-173, chantier fusionné par #409. Reste le défaut de couverture cadré dans `docs/projects/journal.md`. Rien d'autre à cadrer ici.
+Déjà traité : QUA-173, chantier fusionné par #409. Le défaut de couverture de `closedBriefPatterns` qui restait a été traité par son chantier, clos le 2026-11-12 (voir `docs/projects/journal.md`). Rien d'autre à cadrer ici.
 
 ### 4. Fusion automatique par défaut
 
