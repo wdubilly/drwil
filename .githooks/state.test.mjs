@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { PassThrough, Readable } from "node:stream";
 import { blockingGuarantee, briefIntent, intentsLeftBehind, lastReview, missingCriteria, staleIntents } from "./briefs.mjs";
 import {
@@ -2169,6 +2170,59 @@ test("QUA-174 : seules les marques de classification humaines sont exclues, pas 
     assert.notEqual(criteriaFingerprint(texte(literal)), criteriaFingerprint(texte(literal.replace("[humain]", "[human]"))));
     assert.equal(criteriaFingerprint(texte(`${literal} [humain]`)), criteriaFingerprint(texte(literal)));
   }
+});
+
+test("QUA-174 : la place de la marque humaine ne change pas l'empreinte, entre le tiret et la preuve comprise", () => {
+  const sans = criteriaFingerprint("## Critères d'acceptation\n- Un résultat visible — `QUA-013`\n");
+  for (const marque of ["[humain]", "[human]", "[Humain]"]) {
+    for (const critere of [
+      `${marque} Un résultat visible — \`QUA-013\``,
+      `Un résultat visible — ${marque} \`QUA-013\``,
+      `Un résultat visible — \`QUA-013\` ${marque}`,
+      `Un résultat visible — ${marque} contrat à créer`,
+    ]) {
+      assert.equal(criteriaFingerprint(`## Critères d'acceptation\n- ${critere}\n`), sans, critere);
+    }
+  }
+  const lu = "## Critères d'acceptation\n- Un résultat visible — [humain] `QUA-013`\n";
+  assert.notEqual(criteriaFingerprint(lu.replace("visible", "invisible")), sans, "le texte compte toujours");
+  assert.notEqual(
+    criteriaFingerprint("## Critères d'acceptation\n- Un résultat visible — `[humain]` `QUA-013`\n"),
+    sans,
+    "une marque citée en code reste du texte, même entre le tiret et la preuve",
+  );
+});
+
+test("QUA-174 : une empreinte de l'ancien calcul reste reconnue en repli ; un critère modifié est refusé avec les deux calculs", () => {
+  const { racine } = depotCriteres();
+  const ancienne = (texte) =>
+    `sha256:${createHash("sha256")
+      .update(
+        JSON.stringify(
+          [...texte.matchAll(/^- (.+)$/gm)].map((m) =>
+            m[1]
+              .replace(/\s+[—–]\s+(?:contrat à créer|contract to create|`[A-Za-z][\w.:-]*`).*$/, "")
+              .replace(/(`+).*?\1|\[(?:humain|human)\]/gi, (x) => (x.startsWith("`") ? x : ""))
+              .replace(/\s+/g, " ")
+              .trim(),
+          ),
+        ),
+      )
+      .digest("hex")
+      .slice(0, 16)}`;
+  const fiche = "# Fiche\n\n## Critères d'acceptation\n\n- Un résultat visible — [humain] `QUA-013`\n- Autre — `QUA-001`\n";
+  assert.notEqual(ancienne(fiche), criteriaFingerprint(fiche), "l'ancien calcul gardait la preuve derrière la marque");
+  mkdirSync(join(racine, ".drwil", "evidence"), { recursive: true });
+  const enregistre = { [FICHE]: { fingerprint: ancienne(fiche), acceptedAt: "2026-11-14T10:00:00.000Z" } };
+  writeFileSync(join(racine, ".drwil", "evidence", "acceptance.json"), JSON.stringify(enregistre));
+  assert.equal(acceptanceCheck(racine, FICHE, fiche).kind, "same", "un chantier accepté avant la mise à jour se clôt");
+  assert.equal(acceptanceCheck(racine, FICHE, fiche.replace("Autre", "Autre chose")).kind, "changed");
+  assert.equal(acceptanceCheck(racine, FICHE, fiche.replace("visible", "invisible")).kind, "changed");
+  assert.deepEqual(
+    JSON.parse(readFileSync(join(racine, ".drwil", "evidence", "acceptance.json"), "utf8")),
+    enregistre,
+    "le repli n'écrit rien",
+  );
 });
 
 test("QUA-174 : le lancement humain enregistre l'empreinte des critères acceptés, de la fiche et de celles qu'il met en file", () => {

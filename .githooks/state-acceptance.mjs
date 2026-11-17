@@ -41,6 +41,12 @@ const texts = (root) => TEXTS[config(root).lang === "en" ? "en" : "fr"];
 
 /** `sha256:<16 hex>` of the criteria of `text` (their proofs left out), or null without any. */
 export function criteriaFingerprint(text) {
+  return fingerprint(text, false);
+}
+
+// QUA-174 : avant la 0.11.2, la preuve était retirée avant la marque ; une marque entre le tiret et la preuve
+// laissait la preuve dans le texte. Ce calcul reste relu en repli pour un chantier accepté avant la mise à jour.
+function fingerprint(text, legacy) {
   const items = [];
   let inside = false;
   let open = false;
@@ -56,12 +62,9 @@ export function criteriaFingerprint(text) {
     open = Boolean(item) || (open && /^\s+\S/.test(line));
   }
   if (!items.length) return null;
+  const unmark = (i) => i.replace(HUMAN_MARK, (m) => (m.startsWith("`") ? m : ""));
   const normal = items.map((i) =>
-    i
-      .replace(PROOF_TAIL, "")
-      .replace(HUMAN_MARK, (m) => (m.startsWith("`") ? m : ""))
-      .replace(/\s+/g, " ")
-      .trim(),
+    (legacy ? unmark(i.replace(PROOF_TAIL, "")) : unmark(i).replace(PROOF_TAIL, "")).replace(/\s+/g, " ").trim(),
   );
   return `sha256:${createHash("sha256").update(JSON.stringify(normal)).digest("hex").slice(0, 16)}`;
 }
@@ -108,7 +111,8 @@ export function acceptanceCheck(root, brief, text) {
   const record = readAll(root)[brief];
   if (typeof record?.fingerprint !== "string") return { kind: "none" };
   const current = criteriaFingerprint(text);
-  return { kind: current === record.fingerprint ? "same" : "changed", record, current };
+  const same = current === record.fingerprint || fingerprint(text, true) === record.fingerprint;
+  return { kind: same ? "same" : "changed", record, current };
 }
 
 /** `accept` command: records the acceptance of the active brief's criteria, from an interactive terminal only. Exit code. */
