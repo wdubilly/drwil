@@ -137,6 +137,9 @@ d'un outil) la dit dans son statut.
 
 ### Expérience au quotidien
 
+- [ ] [IA] [P0] (0.11.2) Tout geste humain encore au terminal se fait aussi depuis le chat (acceptation des critères,
+  verdict de recette, transitions humaines, oui au détour), sous Claude Code et Copilot CLI, et l'attestation se fait
+  par lot (cadré le 2026-11-18) — `docs/projects/gestes-humains-depuis-le-chat.md`.
 - [ ] [IA] [P0] (0.11.2) Une limite hors cadre dit son lien avec le problème (bloquant, lié, périphérique) et
   l'élargissement se compte au journal (cadré le 2026-11-13) — `docs/projects/limites-classees-par-lien.md`.
 - [ ] [IA] [P0] (0.11.2) Cadrer de la documentation depuis le dossier d'un chantier en BUILD (cadré le 2026-11-12) —
