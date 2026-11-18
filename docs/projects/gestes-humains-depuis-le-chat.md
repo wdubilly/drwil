@@ -73,6 +73,11 @@ files:
   - docs/projects/pending.md
   - docs/projects/journal.md
   - packages/drwil/CHANGELOG.md
+  - packages/drwil/templates/common/optional/create-release/release-verdict-poll.mjs
+  - packages/drwil/templates/common/optional/create-release/README.md
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/verdict-poll.mjs
+  - .githooks/release-verdict-poll.mjs
+  - .claude/hooks/verdict-poll.mjs
 -->
 
 ## 1. Besoin
