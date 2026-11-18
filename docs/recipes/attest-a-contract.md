@@ -12,14 +12,19 @@ own work. First the attestation poll in the chat; the terminal as fallback.
    `npx drwil attest-poll <ID> --tried "What I tried"` (add `--renew` only
    for an intentional renewal of a still valid attestation). It prints the
    poll as JSON: rule, automated results, human criterion, your trial and
-   the covered paths.
+   the covered paths. Several contracts to attest (Claude Code, 4 at most):
+   `npx drwil attest-poll <ID1> <ID2> … --tried "What I tried"` prepares a
+   single multiple-choice poll, one option per contract.
 3. Ask it through your tool's poll, passing the JSON **unchanged**: no
    answer filled in, no default, no recommended choice, no extra field or
    question. The hook refuses an altered poll before it is shown.
-4. Only the human answers **Attest** or **Decline**. The hook reads the
-   answer in the tool's own result, reruns the contract's checks and writes
-   the attestation; you never answer, never call the hook, never write in
-   `.drwil/evidence/attestations/` (if present).
+4. Only the human answers **Attest** or **Decline** (several contracts: the
+   human ticks each contract they attest; an unticked one is not attested).
+   The hook reads the answer in the tool's own result, reruns the contract's
+   checks and writes one attestation per attested contract, each bound to its
+   own proof; a contract whose proof changed during the question is refused
+   alone, the others are kept. You never answer, never call the hook, never
+   write in `.drwil/evidence/attestations/` (if present).
 5. Run `npx drwil verify --agent` again. Declined, unanswered, expired
    (one hour) or refused: prepare a new poll, never reuse the old JSON.
 
@@ -46,6 +51,8 @@ A subagent does not ask the poll: it stops with the contract ID and the
 ## 2. The terminal (fallback)
 
 No poll in the tool, hooks unavailable, or the human prefers it: give the
-human `npx drwil attest <ID>`, to run in **their own** interactive terminal.
-It reruns the checks, shows the contract and asks them to type its ID. Never
-run it yourself, never accept an answer typed in the chat instead.
+human `npx drwil attest <ID>`, to run in **their own** interactive terminal
+(several contracts: `npx drwil attest <ID1> <ID2> …`). It reruns the checks,
+shows each contract in turn and asks them to type its ID; a declined contract
+does not stop the next ones. Never run it yourself, never accept an answer
+typed in the chat instead.

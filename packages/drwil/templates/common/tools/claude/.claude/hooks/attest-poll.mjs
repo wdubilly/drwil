@@ -4,8 +4,11 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { attestBatch, attestSnapshot } from "./attest-batch.mjs";
 
 const RECOMMENDED = /\((recommended|recommandée?)\)/i;
+const QUESTION =
+  /^drwil-attest ([A-Z][A-Z0-9]*-\d+(?: [A-Z][A-Z0-9]*-\d+)*)( --renew)?\n[\s\S]*\n\n(?:Essai de l'agent|Agent trial):\n([\s\S]+)$/;
 
 // Une ligne par cause, {d} reçoit le détail ; « humain » n'est pas un refus de forme et se dit à part.
 const TEXTS = {
@@ -77,9 +80,7 @@ export function attestationPoll(input) {
   const all = Array.isArray(e?.questions) ? e.questions : [];
   const q = all.find((q) => q?.header === "drwil-attest");
   if (!q) return null;
-  const match = /^drwil-attest ([A-Z][A-Z0-9]*-\d+)( --renew)?\n[\s\S]*\n\n(?:Essai de l'agent|Agent trial):\n([\s\S]+)$/.exec(
-    q.question ?? "",
-  );
+  const match = QUESTION.exec(q.question ?? "");
   // L'outil ajoute `answers` et `annotations` à tool_input après la réponse humaine : tolérés en
   // PostToolUse seulement, jamais lus ; seule la question est comparée à la préparation.
   const added = input.hook_event_name === "PostToolUse" ? ["answers", "annotations"] : [];
@@ -156,7 +157,8 @@ export async function attestationHook(input, { root, tell }) {
     return refuse(poll.refusal);
   }
   try {
-    const options = { targetDir: root, id: poll.id, renew: poll.renew, tried: poll.tried };
+    const ids = poll.id.split(" ");
+    const options = { targetDir: root, id: ids[0], ids, renew: poll.renew, tried: poll.tried };
     if (pre) {
       rmSync(file, { force: true });
       const prepared = await drwil.prepareAttestationPoll(options);
@@ -164,7 +166,7 @@ export async function attestationHook(input, { root, tell }) {
       const difference = pollDifference(prepared.poll, poll.asked);
       if (difference) return refuse(difference);
       mkdirSync(dir, { recursive: true });
-      writeFileSync(file, JSON.stringify({ poll: poll.asked, snapshot: prepared.snapshot, askedAt: new Date().toISOString() }));
+      writeFileSync(file, JSON.stringify({ poll: poll.asked, snapshots: prepared.snapshots, askedAt: new Date().toISOString() }));
       return 0;
     }
     if (!existsSync(file)) return refuse({ cause: "absente" });
@@ -181,16 +183,16 @@ export async function attestationHook(input, { root, tell }) {
     if (keys.length !== 1 || keys[0] !== question.question)
       return refuse({ cause: "illisible", detail: `tool_response.answers: ${keys.length}` });
     const label = answer[question.question];
+    const origin = { source: "claude-poll", sessionId: input.session_id, toolUseId: input.tool_use_id, askedAt: pending.askedAt };
+    const attestOne = (id, confirm) => drwil.attest({ ...options, id, note: poll.tried, origin, confirm });
+    if (ids.length > 1) return attestBatch({ answer: label, ids, pending, attestOne, refuse, tell, en: T === TEXTS.en, preuve: T.preuve });
     if (label !== question.options[0].label)
       return question.options.some((o) => o.label === label)
         ? refuse({ cause: "humain", detail: label })
         : refuse({ cause: "illisible", detail: `« ${String(label)} » ∉ options` });
-    const seen = [];
-    const origin = { source: "claude-poll", sessionId: input.session_id, toolUseId: input.tool_use_id, askedAt: pending.askedAt };
-    const confirm = async (_, snapshot) => seen.push(snapshot) > 0 && snapshot === pending.snapshot;
-    const result = await drwil.attest({ ...options, note: poll.tried, origin, confirm });
-    if (seen.length && seen[0] !== pending.snapshot) return refuse({ cause: "preuve" });
-    tell(`${result.code === 0 ? "✓" : "✗"} ${result.message}${result.file ? ` : ${result.file}` : ""}`);
+    const done = await attestSnapshot(poll.id, pending.snapshots?.[poll.id], attestOne);
+    if (done.changed) return refuse({ cause: "preuve" });
+    tell(done.line);
   } catch (e) {
     return refuse({ cause: "erreur", detail: e?.message ?? String(e) });
   }

@@ -2,11 +2,12 @@
 // `npm run test:claude:coverage` (QUA-004). Les copies installées sont les mêmes fichiers (scopeMirrors).
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { cli, contrat, projetVerify } from "./kit-commun.mjs";
 
 const HOOKS = fileURLToPath(new URL("../templates/common/tools/claude/.claude/hooks/", import.meta.url));
 const GITHOOKS = fileURLToPath(new URL("../../../.githooks/", import.meta.url));
@@ -94,6 +95,7 @@ test("QUA-235 : seul le retour du sondage humain attesté, corrélé et consomm�
       "start-poll.mjs",
       "queue-poll.mjs",
       "attest-poll.mjs",
+      "attest-batch.mjs",
       "portable-attest.mjs",
       "attest-adapters.mjs",
     ])
@@ -233,6 +235,164 @@ test("QUA-235 : le hook refuse réponse agent, défaut, recommandation, faux out
   } finally {
     rmSync(en.dir, { recursive: true, force: true });
   }
+});
+
+test("QUA-235 : attestation par lot — un sondage à choix multiple, une attestation par ID coché, avec sa propre empreinte", async () => {
+  const { dir, hook, output } = await projetAttestation();
+  const { prepareAttestationPoll, verify } = await import("../dist/index.js");
+  const registry = join(dir, "docs/contracts.md");
+  let text = readFileSync(registry, "utf8");
+  for (const [id, where] of [
+    ["APP-010", "lib"],
+    ["APP-011", "outil"],
+    ["APP-012", "page"],
+  ]) {
+    mkdirSync(join(dir, where), { recursive: true });
+    writeFileSync(join(dir, where, "objet.js"), "export const valeur = 1;\n");
+    text += `\n## ${id} — Jugement ${where}\n**Règle** : règle ${where}.\n**Manuel** : lisibilité ${where}.\n**Couvre** : \`${where}/**\`\n`;
+  }
+  writeFileSync(registry, text);
+  const statusOf = async (id) => (await verify({ targetDir: dir, only: [id] })).contracts[0];
+  const ask = async (ids, call) => {
+    const r = await prepareAttestationPoll({ targetDir: dir, ids, tried: "Essai fictif par lot." });
+    assert.equal(r.code, 0, r.message);
+    const input = {
+      hook_event_name: "PreToolUse",
+      tool_name: "AskUserQuestion",
+      session_id: "session-lot",
+      tool_use_id: call,
+      tool_input: r.poll,
+    };
+    assert.equal(await hook(input), 0);
+    return input;
+  };
+  const answer = (input, label) => {
+    const answers = { [input.tool_input.questions[0].question]: label };
+    return {
+      ...input,
+      hook_event_name: "PostToolUse",
+      tool_input: { ...input.tool_input, answers, annotations: {} },
+      tool_response: { answers },
+    };
+  };
+  const said = () => output.splice(0).join("\n");
+  try {
+    const q = (await ask(["APP-009", "APP-010"], "appel-forme")).tool_input.questions[0];
+    assert.equal(q.multiSelect, true);
+    assert.deepEqual(
+      q.options.map((o) => o.label),
+      ["APP-009", "APP-010"],
+    );
+    assert.match(q.options[1].description, /^Jugement lib — Essai de l'agent : Essai fictif par lot\.$/);
+    assert.match(
+      q.question,
+      /^drwil-attest APP-009 APP-010\n[\s\S]*lisibilité fictive[\s\S]*lisibilité lib[\s\S]*non coché n'est pas attesté/,
+    );
+
+    await hook(answer(await ask(["APP-009", "APP-010"], "appel-rien"), ""));
+    assert.match(said(), /refus choisi par l'humain \(« aucun contrat coché »\)/);
+    await hook(answer(await ask(["APP-009", "APP-010"], "appel-autre"), "APP-009, Autre chose"));
+    assert.match(said(), /réponse illisible \(« Autre chose » ∉ options\)/);
+    await hook(answer(await ask(["APP-009", "APP-010"], "appel-nombre"), 42));
+    assert.match(said(), /réponse illisible \(« 42 » ∉ options\)/);
+    for (const id of ["APP-009", "APP-010"]) assert.equal((await statusOf(id)).status, "MANUAL", "rien coché ou illisible : rien attesté");
+
+    const changed = await ask(["APP-009", "APP-010"], "appel-preuve");
+    writeFileSync(join(dir, "lib/objet.js"), "export const valeur = 2;\n");
+    await hook(answer(changed, "APP-010, APP-009"));
+    assert.equal((await statusOf("APP-009")).status, "ATTESTED", "la preuve changée d'un autre ID ne le refuse pas");
+    assert.equal((await statusOf("APP-010")).status, "MANUAL");
+    assert.match(said(), /✓ APP-009 attesté[\s\S]*✗ APP-010 : preuve ou couverture changée.*relancer `drwil attest-poll APP-010/);
+
+    await hook(answer(await ask(["APP-010", "APP-011"], "appel-partie"), "APP-011"));
+    assert.equal((await statusOf("APP-010")).status, "MANUAL", "non coché : non attesté");
+    assert.equal((await statusOf("APP-011")).status, "ATTESTED");
+    assert.match(said(), /APP-010 non coché : non attesté[\s\S]*✓ APP-011 attesté/);
+
+    await hook(answer(await ask(["APP-010", "APP-012"], "appel-tout"), "APP-012, APP-010"));
+    const [k10, k12] = [await statusOf("APP-010"), await statusOf("APP-012")];
+    assert.equal(k10.status, "ATTESTED");
+    assert.equal(k12.status, "ATTESTED");
+    assert.notEqual(k10.attestation.fingerprint, k12.attestation.fingerprint, "chaque ID a sa propre empreinte");
+    assert.equal(k10.attestation.origin.toolUseId, "appel-tout");
+    assert.match(said(), /✓ APP-010 attesté[\s\S]*✓ APP-012 attesté/, "dans l'ordre du sondage, pas des clics");
+
+    const five = await prepareAttestationPoll({ targetDir: dir, ids: ["APP-009", "APP-010", "APP-011", "APP-012", "APP-013"], tried: "x" });
+    assert.equal(five.code, 2);
+    assert.match(five.message, /de 1 à 4 contrats/);
+    assert.equal((await prepareAttestationPoll({ targetDir: dir, tried: "x" })).code, 2, "aucun ID");
+    const done = await prepareAttestationPoll({ targetDir: dir, ids: ["APP-009", "APP-010"], tried: "x" });
+    assert.equal(done.code, 1);
+    assert.match(done.message, /^APP-009 : APP-009 a déjà une attestation valide/);
+
+    writeFileSync(join(dir, "lib/objet.js"), "export const valeur = 3;\n");
+    writeFileSync(join(dir, "outil/objet.js"), "export const valeur = 3;\n");
+    const r = await prepareAttestationPoll({ targetDir: dir, ids: ["APP-010", "APP-011"], tried: "Essai fictif par lot." });
+    const altered = { hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", session_id: "s", tool_use_id: "a", tool_input: r.poll };
+    altered.tool_input.questions[0].options.pop();
+    assert.equal(await hook(altered), 2, "une option retirée : sondage différent de la préparation");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+  const en = await projetAttestation("en");
+  try {
+    const registry = join(en.dir, "docs/contracts.md");
+    mkdirSync(join(en.dir, "lib"), { recursive: true });
+    writeFileSync(join(en.dir, "lib/objet.js"), "export const valeur = 1;\n");
+    writeFileSync(
+      registry,
+      `${readFileSync(registry, "utf8")}\n## APP-010 — Lib\n**Règle** : lib.\n**Manuel** : lib.\n**Couvre** : \`lib/**\`\n`,
+    );
+    const r = await prepareAttestationPoll({ targetDir: en.dir, ids: ["APP-009", "APP-010"], tried: "Trial." });
+    assert.equal(r.code, 0, r.message);
+    const input = { hook_event_name: "PreToolUse", tool_name: "AskUserQuestion", session_id: "s", tool_use_id: "en", tool_input: r.poll };
+    assert.equal(await en.hook(input), 0);
+    const answers = { [r.poll.questions[0].question]: "APP-009" };
+    await en.hook({ ...input, hook_event_name: "PostToolUse", tool_response: { answers } });
+    assert.match(en.output.join("\n"), /APP-009 attested[\s\S]*APP-010 not ticked: not attested/);
+  } finally {
+    rmSync(en.dir, { recursive: true, force: true });
+  }
+});
+
+test("QUA-235 : `drwil attest` à plusieurs ID pose la question contrat par contrat, un refus n'empêche pas les suivants", async () => {
+  const { attestEach } = await import("../dist/cli-attest.js");
+  const asked = [];
+  const printed = [];
+  const one = async (id) => {
+    asked.push(id);
+    if (id === "QUA-002") return { code: 1, message: "attestation refusée : rien n'a été enregistré" };
+    if (id === "QUA-003") throw new Error("panne fictive");
+    return { code: 0, message: `${id} attesté`, file: `.drwil/evidence/attestations/${id}.json` };
+  };
+  const code = await attestEach(["QUA-001", "QUA-002", "QUA-003", "QUA-004", "QUA-001"], one, (l) => printed.push(l));
+  assert.deepEqual(asked, ["QUA-001", "QUA-002", "QUA-003", "QUA-004"], "chaque ID une fois, dans l'ordre donné");
+  assert.equal(code, 2, "le pire des codes");
+  assert.match(printed[0], /^✓ QUA-001 attesté/);
+  assert.match(printed[1], /^✗ attestation refusée/);
+  assert.match(printed[2], /^✗ QUA-003 : panne fictive/);
+  assert.match(printed[3], /^✓ QUA-004 attesté/);
+  assert.equal(await attestEach(["QUA-001"], one, () => {}), 0);
+
+  const dir = await projetVerify(
+    contrat("QUA-001", "**Contrôle** : `ok`\n**Manuel** : relecture des fiches") +
+      contrat("QUA-002", "**Contrôle** : `ok`\n**Manuel** : relecture du guide"),
+  );
+  const drwil = (...args) => cli(dir, ...args);
+  const sansTerminal = drwil("attest", "QUA-001", "QUA-002");
+  assert.equal(sansTerminal.status, 1);
+  assert.match(sansTerminal.stderr, /ne peut pas attester QUA-001 QUA-002/);
+  const portable = drwil("attest-poll", "QUA-001", "QUA-002", "--tried", "essai", "--tool", "copilot");
+  assert.equal(portable.status, 2, "le choix multiple n'est lu que sous Claude Code");
+  const lot = drwil("attest-poll", "QUA-001", "QUA-002", "--tried", "essai");
+  assert.equal(lot.status, 0, lot.stderr);
+  const q = JSON.parse(lot.stdout).questions[0];
+  assert.equal(q.multiSelect, true);
+  assert.deepEqual(
+    q.options.map((o) => o.label),
+    ["QUA-001", "QUA-002"],
+  );
+  assert.equal(existsSync(join(dir, ".drwil/evidence/attestations")), false, "préparer n'atteste rien");
 });
 
 test("QUA-235 : chaque refus nomme sa cause et ce qu'il faut refaire, et garde sa charge pour la rejouer", async () => {
