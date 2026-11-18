@@ -158,8 +158,6 @@ d'un outil) la dit dans son statut.
 - [ ] [IA] [P0] (0.11.2) Un contrôle lent est découpé en tranches dès sa déclaration chez tout adoptant : table des
   outils e2e, déclaré par `guarantees` et signalé par `drwil doctor` ; prêt, décisions D1 à D6 tranchées (cadré le
   2026-11-09) — `docs/projects/controles-lents-decoupes-des-le-depart.md`.
-- [ ] [IA] [P1] (0.11.2) Le plus gros fichier de tests du kit (68 s sur 213 s) est découpé par thème pour être joué en
-  parallèle ; prêt, D1 à D3 tranchées (cadré le 2026-11-11) — `docs/projects/tests-du-kit-decoupes-par-theme.md`.
 - [ ] [IA] [P1] (0.11.2) Les rejeux d'une clôture sont mesurés et le pre-push juge le commit réellement poussé ; prêt,
   D1 à D3 tranchées (cadré le 2026-11-11) — `docs/projects/preuves-fiables-rejeux-mesures.md`.
 - [ ] [IA] [P1] (0.11.2) Le temps passé dans les contrôles d'un chantier est journalisé à la clôture, dans
