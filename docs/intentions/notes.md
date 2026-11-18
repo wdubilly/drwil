@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — notes rangées le 2026-11-17 (rangement du backlog).
+**Statut** : ouverte en permanence — notes rangées le 2026-11-18 (rangement du backlog).
 
 ## Besoin
 
@@ -40,3 +40,4 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 - 2026-11-17 — Séparer QUA-048 : ses comportements mécaniques (clôture déjà faite reconnue, --check qui voit les critères modifiés) prouvés par un contrat purement testé, sans volet humain ; aujourd'hui marqués [humain] faute de mieux (chantier cloture-fix-une-seule-fois)
 - 2026-11-17 — Ajouter coverage/ au .gitignore du dépôt : une mesure c8 lancée à la main sans --temp-directory, interrompue, laisse ./coverage/ à la racine et bloque move CLOSING (arbre modifié) — vu au chantier cloture-fix-une-seule-fois ; entretien courant, une ligne ; le gabarit livré est un sujet à part (2026-11-17)
 - 2026-11-17 — Sur une PR, le contrôle exigé kit-tests (macos-latest) attend une machine macOS même quand ses étapes sont sautées (QUA-045) : le 2026-11-17, PR #450, aucun runner attribué, job annulé après 15 min sans aucune étape, CI rouge sans défaut de code (relance du seul job). Windows est sauté en 5 s. Piste : sur une PR, ne pas dépendre d'un runner macOS pour un job sans étape (ou un statut rendu depuis Ubuntu).
+- 2026-11-18 — Renommer un fichier de test sans changer aucun test (chantier tests-du-kit-decoupes-par-theme, 2026-11-18) a fait tomber cinq attestations (QUA-184, effet du contrôle changé) et exigé de déclarer 69 contrats modifiés (champs Tests, Source de vérité, Périmètre), alors que QUA-315 prouvait les tests identiques : le kit ne distingue pas un renommage de chemin d'un changement de règle ; à porter à l'audit de cohérence des garanties existantes (docs/intentions/audit-coherence-des-garanties-existantes.md).
