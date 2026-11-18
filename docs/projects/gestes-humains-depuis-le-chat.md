@@ -21,6 +21,8 @@ files:
   - .claude/hooks/prepared-poll.mjs
   - .claude/hooks/accept-poll.mjs
   - .githooks/state-polls.mjs
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
+  - docs/projects/kit-mechanics.md
   - packages/drwil/templates/common/tools/claude/.claude/hooks/attest-poll.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/attest-adapters.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/portable-attest.mjs
