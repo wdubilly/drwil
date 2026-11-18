@@ -10,6 +10,11 @@ avancée en 0.11.2 P0 par le demandeur le 2026-11-18) ; `docs/intentions/sondage
 <!-- scope
 files:
   - packages/drwil/src/cli-attest.ts
+  - packages/drwil/src/attest.ts
+  - packages/drwil/src/attest-texts.ts
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/attest-batch.mjs
+  - .claude/hooks/attest-batch.mjs
+  - docs/architecture.md
   - packages/drwil/templates/common/tools/claude/.claude/hooks/attest-poll.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/attest-adapters.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/portable-attest.mjs
@@ -187,5 +192,23 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-18) : cadrage terminé, contenu validé par le demandeur le 2026-11-18.
-- **Prochaine étape** : [humain] `/drwil-start`.
+- **Dernier état** (2026-11-18) : lot 1 (attestation par lot) fait. `drwil attest-poll ID1 ID2 …` (Claude Code,
+  4 ID au plus : limite d'options d'`AskUserQuestion`) prépare un sondage `drwil-attest` à choix multiple, une option
+  par ID (libellé = l'ID, description = titre du contrat et essai déclaré) ; un seul ID garde l'ancienne forme
+  Attester/Refuser. La préparation vit dans le moteur (`prepareAttestationPoll` accepte `ids`, rend `snapshots` par
+  ID ; textes déplacés dans `packages/drwil/src/attest-texts.ts`, plafond QUA-001). Le hook
+  (`.claude/hooks/attest-poll.mjs`, à 200 lignes pile) lit la réponse et délègue le lot à
+  `.claude/hooks/attest-batch.mjs` : une attestation par ID coché, empreinte propre, preuve changée refusée pour le
+  seul ID, rien coché = refus humain. `drwil attest ID1 ID2 …` au terminal : `attestEach` (`packages/drwil/src/cli-attest.ts`).
+  `--tool` autre que claude avec plusieurs ID : refusé (lot 5). QUA-235 réécrit (champ « Modifié » du 2026-11-18),
+  recette `docs/recipes/attest-a-contract.md` à jour. Tests : `packages/drwil/test/claude-hooks.test.mjs`
+  (« attestation par lot » et « `drwil attest` à plusieurs ID ») ; pas dans les fichiers du kit, dont QUA-315 fige
+  l'inventaire.
+- **Ce que le lot 2 doit savoir** : `.claude/hooks/attest-poll.mjs` est au plafond de 200 lignes ; le module de sondage partagé du
+  lot 2 doit en sortir `pollDifference`, `keep` et les refus communs (préparation absente/expirée, recommandation,
+  champ inattendu, résumé modifié, réponse illisible) plutôt que d'y ajouter. Les options d'un sondage sont copiées
+  depuis les textes (un appelant qui modifie le sondage mutait les textes partagés : 10 tests portables tombaient).
+  QUA-236 (lisibilité du sondage, attesté) couvre `packages/drwil/src/attest.ts` : son attestation tombe avec ce lot,
+  une réattestation humaine sera à proposer en VERIFY. Ligne « Unreleased » du CHANGELOG : au dernier lot (consigne
+  du rappel d'état), elle doit citer l'attestation par lot.
+- **Prochaine étape** : lot 2 — acceptation des critères dans le chat.
