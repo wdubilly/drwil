@@ -122,6 +122,25 @@ Sous Copilot CLI, la réponse à un sondage posé par `ask_user` n'est pas toujo
   demandeur le 2026-11-18)
 - `QUA-063` — ancien critère : sondages de Copilot CLI marqués selon l'essai du 2026-10-26 — raison : la matrice dit
   l'essai réel de ces sondages sous Copilot CLI (validé par le demandeur le 2026-11-18)
+- `.githooks/state-acceptance.mjs` — l'acceptation des critères lit aussi la réponse au sondage du chat (lot 2, QUA-175)
+  (validé par le demandeur le 2026-11-18)
+- `.githooks/state-cli.mjs` — la préparation des sondages des gestes humains faits depuis le chat (lots 2 et 4)
+  (validé par le demandeur le 2026-11-18)
+- `.githooks/state-transitions.mjs` — les transitions humaines faites depuis le sondage du chat (lot 4) (validé par le
+  demandeur le 2026-11-18)
+- `.githooks/detour.mjs` — le oui de l'humain au détour depuis le chat (lot 4, QUA-117) (validé par le demandeur le
+  2026-11-18)
+- `.githooks/detour-texts.mjs` — les textes du oui au détour depuis le chat (lot 4, QUA-117) (validé par le demandeur
+  le 2026-11-18)
+- `.githooks/release-verdict.mjs` — le verdict de recette depuis le chat (lot 3, QUA-053) (validé par le demandeur le
+  2026-11-18)
+- `.githooks/detour.test.mjs` — couvre le oui au détour depuis le chat (validé par le demandeur le 2026-11-18)
+- `.githooks/release-verdict.test.mjs` — couvre le verdict de recette depuis le chat (validé par le demandeur le
+  2026-11-18)
+- `.githooks/state-cli-process.test.mjs` — couvre les sondages préparés par l'interface de l'état (validé par le
+  demandeur le 2026-11-18)
+- `.githooks/state.test.mjs` — couvre l'acceptation et les transitions depuis le chat (validé par le demandeur le
+  2026-11-18)
 
 ## 2. Hors périmètre
 
