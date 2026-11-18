@@ -48,6 +48,7 @@ Le projet : découper ce fichier par thème, sans changer ce que testent les tes
 ## Contrats modifiés
 
 - `.githooks/engine.test.mjs` — le test de QUA-212 joue les fichiers nés de la découpe du kit au lieu de kit.test.mjs vidé (validé par le demandeur le 2026-11-17, réponse « Traiter maintenant » au sondage des limites)
+- `.githooks/engine.test.mjs` — le test de QUA-217 rejoue réellement les tests du moteur (NODE_TEST_CONTEXT retiré, exclusion par --test-skip-pattern) (validé par le demandeur le 2026-11-18, réponse « Traiter maintenant » au sondage des limites)
 
 ## 2. Hors périmètre
 
