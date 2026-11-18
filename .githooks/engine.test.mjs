@@ -1038,15 +1038,26 @@ test("QUA-217 : les tests du moteur passent quand node n'est que dans un dossier
   const bin = join(tmp(), "fnm-like", "bin");
   mkdirSync(bin, { recursive: true });
   symlinkSync(process.execPath, join(bin, "node"));
-  // git reste trouvable (les tests créent des dépôts), mais par son seul dossier système.
-  const gitDir = process.env.PATH.split(delimiter).find((d) => d && spawnSync(join(d, "git"), ["--version"]).status === 0);
+  // git reste trouvable (les tests créent des dépôts), mais par son seul dossier système. Sous un hook, git met en tête du
+  // PATH son dossier interne (git-core), sans `which` ni le reste du système : on l'écarte pour le vrai dossier système.
+  const gitDir = process.env.PATH.split(delimiter).find(
+    (d) => d && !/git-core[\\/]?$/.test(d) && spawnSync(join(d, "git"), ["--version"]).status === 0,
+  );
   assert.ok(gitDir, "git introuvable dans le PATH");
   const env = { ...process.env, PATH: [bin, gitDir].join(delimiter) };
-  // Le test lui-même et QUA-212 sont exclus, sinon ils se relanceraient sans fin.
-  const moteur = spawnSync(process.execPath, ["--test", "--test-name-pattern=^(?!QUA-21[27])", ".githooks/engine.test.mjs"], {
-    cwd: racine,
-    env,
-    encoding: "utf8",
-  });
+  // Hérité, NODE_TEST_CONTEXT fait du `node --test` relancé un enfant qui saute ses fichiers et passe sans rien jouer.
+  delete env.NODE_TEST_CONTEXT;
+  // Le test lui-même et QUA-212 sont exclus, sinon ils se relanceraient sans fin ; par --test-skip-pattern, car un motif
+  // négatif de --test-name-pattern est vrai pour le fichier entier, qui joue alors tous ses tests.
+  const moteur = spawnSync(
+    process.execPath,
+    ["--test", "--test-reporter=tap", "--test-skip-pattern=^QUA-21[27]", ".githooks/engine.test.mjs"],
+    {
+      cwd: racine,
+      env,
+      encoding: "utf8",
+    },
+  );
   assert.equal(moteur.status, 0, `moteur sans node système dans le PATH :\n${moteur.stdout.slice(-1500)}`);
+  assert.ok(Number(/^# pass (\d+)/m.exec(moteur.stdout)?.[1] ?? 0) > 1, `aucun test du moteur joué :\n${moteur.stdout.slice(-1500)}`);
 });
