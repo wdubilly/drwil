@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — notes rangées le 2026-11-17 (rangement du backlog).
+**Statut** : ouverte en permanence — notes rangées le 2026-11-18 (rangement du backlog).
 
 ## Besoin
 
@@ -40,3 +40,5 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 - 2026-11-17 — Séparer QUA-048 : ses comportements mécaniques (clôture déjà faite reconnue, --check qui voit les critères modifiés) prouvés par un contrat purement testé, sans volet humain ; aujourd'hui marqués [humain] faute de mieux (chantier cloture-fix-une-seule-fois)
 - 2026-11-17 — Ajouter coverage/ au .gitignore du dépôt : une mesure c8 lancée à la main sans --temp-directory, interrompue, laisse ./coverage/ à la racine et bloque move CLOSING (arbre modifié) — vu au chantier cloture-fix-une-seule-fois ; entretien courant, une ligne ; le gabarit livré est un sujet à part (2026-11-17)
 - 2026-11-17 — Sur une PR, le contrôle exigé kit-tests (macos-latest) attend une machine macOS même quand ses étapes sont sautées (QUA-045) : le 2026-11-17, PR #450, aucun runner attribué, job annulé après 15 min sans aucune étape, CI rouge sans défaut de code (relance du seul job). Windows est sauté en 5 s. Piste : sur une PR, ne pas dépendre d'un runner macOS pour un job sans étape (ou un statut rendu depuis Ubuntu).
+- 2026-11-17 — Fausse alerte transitoire de close.mjs --check (2026-11-17, chantier avertissement-de-lancement-juste) : juste après node .githooks/close.mjs, tant que la suppression de la fiche n'est pas commitée, --check signale à tort .githooks/state-hooks.mjs et .githooks/state.test.mjs comme hooks non déclarés (QUA-137) ; l'alerte disparaît une fois la suppression commitée. Piste : lire les puces « Contrats modifiés » de la fiche dans HEAD quand elle est supprimée de la copie de travail.
+- 2026-11-18 — Le sondage d'attestation a échoué deux fois sur deux le 2026-11-18 : préparation expirée pendant que la question restait affichée, puis réponse libre refusée ; le demandeur est passé par le terminal. Piste retenue par le demandeur, à traiter avec la note « Gestes humains depuis le chat » du 2026-11-07 : un geste humain du chat se confirme en tapant l'identifiant (l'ID du contrat pour une attestation), comme drwil attest au terminal, et non par un bouton Attester ou Refuser ; l'expiration se juge sur des preuves inchangées, pas sur l'heure de préparation.
