@@ -41,7 +41,7 @@ Le projet : découper ce fichier par thème, sans changer ce que testent les tes
 - Aucun test n'est perdu ni modifié dans le découpage : le nombre de tests et la liste des contrats cités sont identiques
   avant et après, prouvé par un test qui compare les deux — `QUA-315`
 - Aucun fichier de test du kit ne dépasse un plafond de durée fixé à la réalisation, relevé dans le journal de clôture :
-  mesure avant et après de chaque fichier — [humain] `QUA-013`
+  mesure avant et après de chaque fichier — `QUA-013`
 - Chaque contrôle de `.drwil/ia-first.json` et chaque ligne « Couvre » de `docs/contracts.md` qui citaient le gros fichier
   citent les fichiers qui portent désormais ses tests ; un contrat n'est jamais attesté sur un fichier qui ne le teste plus — `QUA-185`
 
@@ -166,7 +166,9 @@ Tranchées par le demandeur le 2026-11-11 (l'agent n'en a tranché aucune) :
   vide, 3,13 ; 14,3 en fin de passe) : jouée seule sur ce poste, la suite n'est pas plus courte, ses dix fichiers se
   disputant les 8 cœurs ; le gain attendu est celui des tranches (chantier 4), qui répartissent ces fichiers.
 - **Plafond proposé** : 30 s par fichier de tests du kit, joué seul sur ce poste au calme (le plus long : 21,5 s) ;
-  critère `[humain]` à attester (QUA-013).
-- **Limite hors cadre trouvée** : le test de QUA-217 dans `.githooks/engine.test.mjs` a le même défaut (0,27 s pour
-  « toute la suite du moteur ») ; à soumettre à l'humain avant VERIFY.
-- **Suite** : sondage de la limite QUA-217, puis vérifier, attester le plafond, clore.
+  marque `[humain]` retirée du critère le 2026-11-18 sur décision du demandeur (QUA-013 est automatique ; le
+  plafond mécanique par tranche relève de `docs/projects/controles-lents-decoupes-des-le-depart.md`).
+- **Limite hors cadre traitée** (« Traiter maintenant », 2026-11-18) : le test de QUA-217 dans `.githooks/engine.test.mjs` a le même défaut (0,27 s pour
+  « toute la suite du moteur »), corrigé.
+- **Suite** : attestations tombées par le changement de leurs contrôles (QUA-015, QUA-064, QUA-066, QUA-067,
+  QUA-150), puis `verify --evidence` et clôture.
