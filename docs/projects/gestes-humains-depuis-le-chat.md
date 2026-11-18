@@ -15,6 +15,12 @@ files:
   - packages/drwil/templates/common/tools/claude/.claude/hooks/attest-batch.mjs
   - .claude/hooks/attest-batch.mjs
   - docs/architecture.md
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/prepared-poll.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/accept-poll.mjs
+  - packages/drwil/templates/common/base/.githooks/state-polls.mjs
+  - .claude/hooks/prepared-poll.mjs
+  - .claude/hooks/accept-poll.mjs
+  - .githooks/state-polls.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/attest-poll.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/attest-adapters.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/portable-attest.mjs
