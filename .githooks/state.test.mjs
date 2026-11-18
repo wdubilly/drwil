@@ -41,7 +41,7 @@ import {
   validateState,
 } from "./state.mjs";
 
-import { accept, acceptanceCheck, criteriaFingerprint, recordAcceptance } from "./state-acceptance.mjs";
+import { accept, acceptanceCheck, acceptancePoll, acceptFromPoll, criteriaFingerprint, recordAcceptance } from "./state-acceptance.mjs";
 import { mainTip, writeProof } from "./pr-watch-main.mjs";
 import { close } from "./close.mjs";
 import { intentPath, limitChoice, recordLimits } from "./state-limits.mjs";
@@ -2310,6 +2310,69 @@ test("QUA-175 : accept refusé sans terminal interactif, ligne de commande compr
   assert.match(r.erreurs, /^✗ acceptance refused: only an interactive terminal/);
 });
 
+test("QUA-175 : le sondage drwil-accept se prépare sans rien écrire ; il ne s'enregistre que pour la fiche active aux critères du sondage", async () => {
+  const { racine } = depotCriteres();
+  assert.match(acceptancePoll(racine).message, /aucun chantier actif/);
+  let r = await capturer(() => main(["poll", "accept"], racine));
+  assert.equal(r.code, 1);
+  assert.match(r.erreurs, /^✗ acceptation impossible : aucun chantier actif/);
+  r = await capturer(() => main(["poll"], racine));
+  assert.equal(r.code, 2);
+  assert.match(r.erreurs, /^✗ utilisation : node \.githooks\/state\.mjs poll <accept>/);
+
+  assert.equal(start(racine, FICHE, { human: true }).code, 0);
+  writeFileSync(join(racine, FICHE), CRITERES().replace("Un critère", "Un critère modifié"));
+  const avant = readFileSync(join(racine, ".drwil", "evidence", "acceptance.json"), "utf8");
+  r = await capturer(() => main(["poll", "accept"], racine));
+  assert.equal(r.code, 0, r.erreurs);
+  const sondage = JSON.parse(r.sortie);
+  const q = sondage.questions[0];
+  assert.equal(q.header, "drwil-accept");
+  assert.equal(q.multiSelect, false);
+  assert.match(
+    q.question,
+    /^drwil-accept docs\/projects\/exemple\.md\nCritères de docs\/projects\/exemple\.md :\n- Un critère modifié sur deux lignes/,
+  );
+  assert.deepEqual(
+    q.options.map((o) => o.label),
+    ["Accepter", "Ne pas accepter"],
+  );
+  assert.ok(
+    q.options.every((o) => !/recommand/i.test(o.label + o.description)),
+    "aucune option recommandée",
+  );
+  assert.equal(readFileSync(join(racine, ".drwil", "evidence", "acceptance.json"), "utf8"), avant, "la préparation n'écrit rien");
+  const prepare = acceptancePoll(racine);
+  assert.deepEqual(prepare.poll, sondage);
+  prepare.poll.questions[0].options[0].label = "muté";
+  assert.equal(acceptancePoll(racine).poll.questions[0].options[0].label, "Accepter", "les textes partagés ne sont jamais mutés");
+
+  // Seules la fiche active et l'empreinte de ses critères au moment du sondage enregistrent.
+  const { data } = acceptancePoll(racine);
+  for (const faux of [undefined, { ...data, brief: "docs/projects/autre.md" }, { ...data, fingerprint: "sha256:0000000000000000" }])
+    assert.equal(acceptFromPoll(racine, faux), null);
+  assert.equal(readFileSync(join(racine, ".drwil", "evidence", "acceptance.json"), "utf8"), avant);
+  assert.equal(acceptanceCheck(racine, FICHE, readFileSync(join(racine, FICHE), "utf8")).kind, "changed");
+  // Un lien de preuve écrit entre la question et la réponse ne change pas les critères acceptés.
+  writeFileSync(join(racine, FICHE), readFileSync(join(racine, FICHE), "utf8").replace("contrat à créer", "`QUA-172`"));
+  assert.match(acceptFromPoll(racine, data), /^critères de docs\/projects\/exemple\.md acceptés \(empreinte sha256:/);
+  assert.equal(acceptanceCheck(racine, FICHE, readFileSync(join(racine, FICHE), "utf8")).kind, "same");
+
+  writeFileSync(join(racine, FICHE), "# Projet : Exemple\n");
+  assert.match(acceptancePoll(racine).message, /n'a aucun critère d'acceptation/);
+  assert.equal(acceptFromPoll(racine, data), null, "critères retirés pendant la question");
+
+  const en = depotCriteres({ lang: "en" }).racine;
+  start(en, FICHE, { human: true });
+  assert.deepEqual(
+    acceptancePoll(en).poll.questions[0].options.map((o) => o.label),
+    ["Accept", "Do not accept"],
+  );
+  assert.match(acceptancePoll(en).poll.questions[0].question, /\n\nAccept these criteria as they are\?$/);
+  r = await capturer(() => main(["poll", "autre"], en));
+  assert.match(r.erreurs, /^✗ usage : node \.githooks\/state\.mjs poll <accept>/);
+});
+
 test("QUA-175 : parmi les hooks et commandes du kit, seul state-acceptance.mjs écrit le fichier d'acceptation", () => {
   // Ce que l'humain vérifiait à chaque attestation, recensé ici : tout le code livré (gabarit, CLI, vue) est lu.
   const PAQUET = join(RACINE_DEPOT, "packages/drwil");
@@ -2336,6 +2399,8 @@ test("QUA-175 : parmi les hooks et commandes du kit, seul state-acceptance.mjs �
     [MODULE, "templates/common/base/.githooks/state.mjs"],
     "ses écrivains ne sont appelés que par state.mjs (start, move)",
   );
+  // L'acceptation depuis le chat : seul le hook du sondage drwil-accept, sur la réponse de l'humain, l'appelle.
+  assert.deepEqual(qui(/\bacceptFromPoll\b/), [MODULE, "templates/common/tools/claude/.claude/hooks/accept-poll.mjs"]);
   const module = readFileSync(join(PAQUET, MODULE), "utf8");
   assert.equal(module.match(/writeFileSync\(/g).length, 1, "une seule écriture, dans writeAll");
   assert.match(module, /function writeAll\(root, all\) \{\n\s+mkdirSync[^\n]+\n\s+writeFileSync\(/);

@@ -56,6 +56,7 @@ files:
   - .githooks/state-resume.mjs
   - .githooks/state-cli-commands.mjs
   - .githooks/state-acceptance.mjs
+  - .githooks/state-polls.mjs
   - .githooks/state-hooks.mjs
   - .githooks/engine-branch.mjs
   - .githooks/engine-launch.mjs

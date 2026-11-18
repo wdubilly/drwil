@@ -19,10 +19,11 @@ import { NOT_NOW_RE, humanAnswer, inPollOrder, parallelChosen, startPoll, worktr
 import { queueHook } from "./queue-poll.mjs";
 import { limitHook } from "./limit-poll.mjs";
 import { attestationHook } from "./attest-poll.mjs";
+import { acceptanceHook } from "./accept-poll.mjs";
 import { portableMain } from "./portable-polls.mjs";
 
 export { humanAnswer, inPollOrder, parallelChosen, startPoll, worktreeChosen };
-export { attestationHook };
+export { acceptanceHook, attestationHook };
 
 // The folder holding this hook's .claude/, never the current folder: it follows the agent's `cd`.
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -81,8 +82,11 @@ async function main() {
   } catch {
     return 0;
   }
-  const attestation = await attestationHook(input, { root: ROOT, tell });
-  if (attestation !== null) return attestation;
+  // Sondages préparés (QUA-235) : attestation, acceptation des critères (QUA-175).
+  for (const hook of [attestationHook, acceptanceHook]) {
+    const code = await hook(input, { root: ROOT, tell });
+    if (code !== null) return code;
+  }
   const poll = startPoll(input);
   const ctx = { root: ROOT, lang: language(), tell };
   if (!poll) return (await queueHook(input, ctx)) ?? (await limitHook(input, ctx)) ?? 0;

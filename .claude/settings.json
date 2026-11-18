@@ -154,6 +154,7 @@
       "Bash(gh run view:*)",
       "Bash(node .githooks/state.mjs)",
       "Bash(node .githooks/state.mjs reminder)",
+      "Bash(node .githooks/state.mjs poll:*)",
       "Bash(node .githooks/glossary.mjs:*)",
       "Bash(node .githooks/pr-watch.mjs:*)",
       "Bash(node .githooks/note.mjs:*)",

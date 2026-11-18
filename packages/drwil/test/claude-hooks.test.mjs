@@ -2,7 +2,18 @@
 // `npm run test:claude:coverage` (QUA-004). Les copies installées sont les mêmes fichiers (scopeMirrors).
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
@@ -524,6 +535,171 @@ test("QUA-235 : un contrôle devenu rouge pendant la réponse ne peut pas être 
     assert.match(output.join("\n"), /n'est pas attestable/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+const BASE_GITHOOKS = fileURLToPath(new URL("../templates/common/base/.githooks/", import.meta.url));
+const FICHE_ACCEPT = "docs/projects/exemple.md";
+const CRITERES_ACCEPT = "# Projet : Exemple\n\n## Critères d'acceptation\n\n- Un export vide est refusé — contrat à créer\n";
+
+/** Projet en BUILD sur une fiche à critères, avec les hooks git du gabarit : le hook du sondage drwil-accept s'y joue. */
+async function projetAcceptation(lang = "fr") {
+  const etat = { version: 1, activity: "BUILD", active_brief: FICHE_ACCEPT, active_request: null, since: "2026-11-18T10:00:00Z" };
+  const dir = projet({ lang }, { [FICHE_ACCEPT]: CRITERES_ACCEPT, ".drwil/state.json": JSON.stringify(etat) });
+  cpSync(BASE_GITHOOKS, join(dir, ".githooks"), { recursive: true });
+  const { acceptanceHook } = await load("prompt-hook.mjs");
+  const { acceptancePoll } = await import(pathToFileURL(join(dir, ".githooks/state-acceptance.mjs")).href);
+  const output = [];
+  const hook = (input) => acceptanceHook(input, { root: dir, tell: (text) => output.push(text) });
+  const prepare = () => ({
+    hook_event_name: "PreToolUse",
+    tool_name: "AskUserQuestion",
+    session_id: "session-fictive",
+    tool_use_id: "appel-fictif",
+    tool_input: acceptancePoll(dir).poll,
+  });
+  const post = (input, label = input.tool_input.questions[0].options[0].label) => {
+    const answers = { [input.tool_input.questions[0].question]: label };
+    return {
+      ...input,
+      hook_event_name: "PostToolUse",
+      tool_input: { ...input.tool_input, answers: { ...answers }, annotations: {} },
+      tool_response: { questions: input.tool_input.questions, answers, annotations: {} },
+    };
+  };
+  const accepted = () => {
+    try {
+      return JSON.parse(readFileSync(join(dir, ".drwil/evidence/acceptance.json"), "utf8"))[FICHE_ACCEPT] ?? null;
+    } catch {
+      return null;
+    }
+  };
+  return { dir, hook, prepare, post, accepted, output };
+}
+
+test("QUA-235 : sondage drwil-accept (QUA-175) — seule la réponse de l'humain au sondage préparé enregistre l'acceptation, une fois", async () => {
+  const { dir, hook, prepare, post, accepted, output } = await projetAcceptation();
+  try {
+    const input = prepare();
+    assert.match(input.tool_input.questions[0].question, /^drwil-accept docs\/projects\/exemple\.md\n/);
+    assert.equal(await hook(input), 0);
+    assert.equal(accepted(), null, "la question posée n'enregistre rien");
+    assert.equal(await hook(post(input)), 0);
+    assert.match(output.at(-1), /^✓ critères de docs\/projects\/exemple\.md acceptés \(empreinte sha256:[0-9a-f]{16}\)$/);
+    const first = accepted();
+    assert.match(first.fingerprint, /^sha256:/);
+    await hook(post(input));
+    assert.match(output.at(-1), /préparation absente/, "rejeu sans préparation refusé");
+    assert.deepEqual(accepted(), first);
+    assert.equal(await hook({ ...input, hook_event_name: "Autre" }), 0);
+    assert.equal(await hook({}), null, "un autre sondage n'est pas le sien");
+    assert.equal(await hook({ tool_input: { questions: [{ header: "drwil-attest" }] } }), null);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("QUA-235 : sondage drwil-accept (QUA-175) — refusé, cause dite, comme celui de l'attestation ; refus humain et critères changés", async () => {
+  const { dir, hook, prepare, post, accepted, output } = await projetAcceptation();
+  const errors = [];
+  const error = console.error;
+  console.error = (text) => errors.push(String(text));
+  const last = () => {
+    const said = [...errors, ...output].at(-1) ?? "";
+    errors.length = output.length = 0;
+    return said;
+  };
+  try {
+    const base = prepare();
+    const form = /sondage d'acceptation refusé — .* ; aucune acceptation enregistrée\. relancer `node \.githooks\/state\.mjs poll accept`/;
+    for (const [change, cause] of [
+      [(x) => (x.tool_input.metadata = { source: "agent" }), /champ inattendu \(tool_input\.metadata\)/],
+      [(x) => (x.tool_input.answers = { [x.tool_input.questions[0].question]: "Accepter" }), /champ inattendu \(tool_input\.answers\)/],
+      [(x) => (x.tool_input.questions[0].default = "Accepter"), /champ inattendu \(questions\[0\]\.default\)/],
+      [(x) => x.tool_input.questions.push({ header: "autre" }), /plusieurs questions \(2\)/],
+      [
+        (x) => (x.tool_input.questions[0].options[0].label += " (Recommended)"),
+        /recommandation dans l'option « Accepter \(Recommended\) »/,
+      ],
+      [(x) => (x.tool_input.questions[0].options[1].description += " (recommandé)"), /recommandation dans l'option « Ne pas accepter »/],
+      [
+        (x) => (x.tool_input.questions[0].question = x.tool_input.questions[0].question.replace("vide", "plein")),
+        /résumé différent .*plein/,
+      ],
+      [(x) => (x.tool_input.questions[0].question = "drwil-accept"), /résumé différent .*drwil-accept/],
+      [(x) => (x.tool_input.questions[0].multiSelect = true), /résumé différent .*multiSelect/],
+      [(x) => (x.tool_name = "Bash"), /appel non corrélable/],
+      [(x) => delete x.session_id, /appel non corrélable/],
+    ]) {
+      const input = structuredClone(base);
+      change(input);
+      assert.equal(await hook(input), 2);
+      const said = last();
+      assert.match(said, cause);
+      assert.match(said, form);
+      await hook(post(input));
+      last();
+      assert.equal(accepted(), null);
+    }
+    const kept = JSON.parse(readFileSync(join(dir, ".drwil/evidence/accept-poll-refused.json"), "utf8"));
+    assert.equal(kept.cause, "appel", "la dernière charge refusée est gardée");
+    await hook(post(base));
+    assert.match(last(), /préparation absente/);
+    for (const [change, cause] of [
+      [(x) => (x.tool_response.answers = {}), /réponse illisible/],
+      [(x) => delete x.tool_response, /réponse illisible/],
+      [(x) => (x.tool_response.answers[x.tool_input.questions[0].question] = "Oui"), /réponse illisible \(« Oui » ∉ options\)/],
+      [(x) => (x.session_id = "autre-session"), /préparation absente/],
+      [(x) => (x.tool_input.questions[0].question += "\nmodifié"), /résumé différent/],
+    ]) {
+      assert.equal(await hook(base), 0);
+      const response = structuredClone(post(base));
+      change(response);
+      await hook(response);
+      assert.match(last(), cause);
+      assert.equal(accepted(), null);
+    }
+    assert.equal(await hook(base), 0);
+    await hook(post(base, "Ne pas accepter"));
+    const human = last();
+    assert.match(human, /refus choisi par l'humain \(« Ne pas accepter »\) : aucune acceptation enregistrée/);
+    assert.doesNotMatch(human, /sondage d'acceptation refusé/, "le refus humain n'est pas un refus de forme");
+    assert.equal(await hook(base), 0);
+    const pendingFile = join(dir, ".drwil/evidence/accept-polls", readdirSync(join(dir, ".drwil/evidence/accept-polls"))[0]);
+    writeFileSync(pendingFile, JSON.stringify({ ...JSON.parse(readFileSync(pendingFile, "utf8")), askedAt: "2000-01-01T00:00:00Z" }));
+    await hook(post(base));
+    assert.match(last(), /préparation expirée/);
+    // Critères changés pendant la question : le sondage posé n'est plus celui de la fiche.
+    assert.equal(await hook(base), 0);
+    writeFileSync(join(dir, FICHE_ACCEPT), CRITERES_ACCEPT.replace("vide", "plein"));
+    await hook(post(base));
+    assert.match(last(), /critères ou chantier actif changés pendant la question/);
+    assert.equal(accepted(), null);
+    // Sans chantier actif, la préparation refaite échoue : son message est dit tel quel.
+    rmSync(join(dir, ".drwil/state.json"));
+    assert.equal(await hook(base), 2);
+    assert.match(last(), /sondage d'acceptation refusé — acceptation impossible : aucun chantier actif/);
+    assert.equal(accepted(), null);
+  } finally {
+    console.error = error;
+    rmSync(dir, { recursive: true, force: true });
+  }
+  const en = await projetAcceptation("en");
+  try {
+    const input = en.prepare();
+    assert.deepEqual(
+      input.tool_input.questions[0].options.map((o) => o.label),
+      ["Accept", "Do not accept"],
+    );
+    assert.equal(await en.hook(input), 0);
+    await en.hook(en.post(input, "Do not accept"));
+    assert.match(en.output.join("\n"), /refusal chosen by the human \(« Do not accept »\): no acceptance recorded/);
+    assert.equal(en.accepted(), null);
+    assert.equal(await en.hook(input), 0);
+    await en.hook(en.post(input));
+    assert.match(en.output.at(-1), /^✓ criteria of docs\/projects\/exemple\.md accepted/);
+  } finally {
+    rmSync(en.dir, { recursive: true, force: true });
   }
 });
 

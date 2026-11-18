@@ -200,23 +200,31 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-18) : lot 1 (attestation par lot) fait. `drwil attest-poll ID1 ID2 …` (Claude Code,
-  4 ID au plus : limite d'options d'`AskUserQuestion`) prépare un sondage `drwil-attest` à choix multiple, une option
-  par ID (libellé = l'ID, description = titre du contrat et essai déclaré) ; un seul ID garde l'ancienne forme
-  Attester/Refuser. La préparation vit dans le moteur (`prepareAttestationPoll` accepte `ids`, rend `snapshots` par
-  ID ; textes déplacés dans `packages/drwil/src/attest-texts.ts`, plafond QUA-001). Le hook
-  (`.claude/hooks/attest-poll.mjs`, à 200 lignes pile) lit la réponse et délègue le lot à
-  `.claude/hooks/attest-batch.mjs` : une attestation par ID coché, empreinte propre, preuve changée refusée pour le
-  seul ID, rien coché = refus humain. `drwil attest ID1 ID2 …` au terminal : `attestEach` (`packages/drwil/src/cli-attest.ts`).
-  `--tool` autre que claude avec plusieurs ID : refusé (lot 5). QUA-235 réécrit (champ « Modifié » du 2026-11-18),
-  recette `docs/recipes/attest-a-contract.md` à jour. Tests : `packages/drwil/test/claude-hooks.test.mjs`
-  (« attestation par lot » et « `drwil attest` à plusieurs ID ») ; pas dans les fichiers du kit, dont QUA-315 fige
-  l'inventaire.
-- **Ce que le lot 2 doit savoir** : `.claude/hooks/attest-poll.mjs` est au plafond de 200 lignes ; le module de sondage partagé du
-  lot 2 doit en sortir `pollDifference`, `keep` et les refus communs (préparation absente/expirée, recommandation,
-  champ inattendu, résumé modifié, réponse illisible) plutôt que d'y ajouter. Les options d'un sondage sont copiées
-  depuis les textes (un appelant qui modifie le sondage mutait les textes partagés : 10 tests portables tombaient).
-  QUA-236 (lisibilité du sondage, attesté) couvre `packages/drwil/src/attest.ts` : son attestation tombe avec ce lot,
-  une réattestation humaine sera à proposer en VERIFY. Ligne « Unreleased » du CHANGELOG : au dernier lot (consigne
-  du rappel d'état), elle doit citer l'attestation par lot.
-- **Prochaine étape** : lot 2 — acceptation des critères dans le chat.
+- **Dernier état** (2026-11-18) : lots 1 (attestation par lot) et 2 (acceptation des critères dans le chat) faits.
+  - Lot 1 : `drwil attest-poll ID1 ID2 …` (Claude Code, 4 ID au plus) prépare un sondage `drwil-attest` à choix
+    multiple, une option par ID ; le hook atteste chaque ID coché à part (`.claude/hooks/attest-batch.mjs`) ;
+    `drwil attest ID1 ID2 …` au terminal (`attestEach`, `packages/drwil/src/cli-attest.ts`). QUA-235 réécrit.
+  - Lot 2 : socle partagé `.claude/hooks/prepared-poll.mjs` (`pollDifference`, `readPoll`, `yesOrRefusal`, trace
+    refusée, `preparedPollHook` : préparation refaite en PreToolUse et liée à session + appel sous
+    `.drwil/evidence/<nom>s/`, consommée une fois, une heure au plus, réponse lue dans `tool_response.answers`
+    seulement, chaque refus nommé ; un sondage = un `spec` { header, pattern, name, texts, load, prepare, confirm }).
+    `.claude/hooks/attest-poll.mjs` n'est plus que le `spec` de l'attestation (≈ 70 lignes). Acceptation :
+    `node .githooks/state.mjs poll accept` (`.githooks/state-polls.mjs`, table `POLLS`, n'écrit rien) imprime le
+    sondage `drwil-accept` préparé par `acceptancePoll` (`.githooks/state-acceptance.mjs`, 198 lignes) ;
+    `.claude/hooks/accept-poll.mjs` le lit et seul appelle `acceptFromPoll` (fiche active et empreinte des critères
+    inchangées, sinon refus « critères ou chantier actif changés »). `accept` sans terminal renvoie au sondage.
+    Réglages : `Bash(node .githooks/state.mjs poll:*)` autorisé. QUA-175 réécrit (champ « Modifié »), QUA-235 cite
+    `.claude/hooks/prepared-poll.mjs` en source. Tests : `.githooks/state.test.mjs` (préparation, `acceptFromPoll`, recensement
+    étendu : `acceptFromPoll` appelé par le seul hook) ; `packages/drwil/test/claude-hooks.test.mjs`, deux tests
+    « QUA-235 : sondage drwil-accept (QUA-175) … » (nommés QUA-235 : le contrôle `tests-qua-175` ne lit que
+    `.githooks/state.test.mjs`).
+- **Ce que le lot 3 doit savoir** : le verdict de recette se branche comme l'acceptation : un `spec` dans un hook
+  `.claude/hooks/<geste>-poll.mjs`, ajouté à la boucle de `.claude/hooks/prompt-hook.mjs` (`for (const hook of [...])`), et une
+  entrée dans `POLLS` de `.githooks/state-polls.mjs` si la préparation vit dans `.githooks/` (sinon dans le module
+  optionnel `.githooks/release-verdict.mjs`, 188 lignes : sortir la préparation dans un module ajouté au scope). Tout nouveau
+  fichier de `.githooks/` livré doit aussi entrer au bloc `scope` de `docs/projects/kit-mechanics.md` (gabarit et dépôt), sans quoi
+  les tests du kit le voient hors cadrage. `.githooks/state-cli.mjs` est à 199 lignes, `.githooks/state-acceptance.mjs` à 198.
+  `.githooks/closure-proof.mjs` dit encore « dans un terminal (`node .githooks/state.mjs accept`) » : hors scope, limite
+  signalée. QUA-236 (lisibilité du sondage) : réattestation humaine à proposer en VERIFY. Ligne « Unreleased » du
+  CHANGELOG au dernier lot : attestation par lot et acceptation depuis le chat.
+- **Prochaine étape** : lot 3 — verdict de recette dans le chat.
