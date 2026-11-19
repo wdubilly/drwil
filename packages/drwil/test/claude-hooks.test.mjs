@@ -1281,7 +1281,7 @@ test("QUA-235 : Copilot CLI — chaque sondage préparé est refusé, cause dite
       [c.pre(muter((a) => (field(a).enumNames = ["Autoriser (Recommended)", "Non"]))), /champ inattendu \(questions\[0\]\.enumNames\)/],
       [c.pre(muter((a) => (field(a).title = "Transition"))), /champ inattendu \(questions\[0\]\.title\)/],
       [c.pre(muter((a) => (field(a).enum[0] += " (Recommended)"))), /recommandation dans l'option « Autoriser \(Recommended\) »/],
-      [c.pre(muter((a) => (a.message = a.message.replace("\n", "\nmodifié\n")))), /résumé différent .*modifié/],
+      [c.pre(muter((a) => (a.message = a.message.split("\n").toSpliced(1, 0, "modifié").join("\n")))), /résumé différent .*modifié/],
       [
         c.pre(
           muter(
