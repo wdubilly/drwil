@@ -28,6 +28,8 @@ files:
   - packages/drwil/src/guarantees-layers.ts
   - packages/drwil/test/coverage-merge.test.mjs
   - packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml
+  - packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml
+  - .github/workflows/ia-first.yml
   - packages/drwil/test/kit-ci.test.mjs
   - .githooks/run-checks-verdicts.mjs
   - packages/drwil/templates/common/base/.githooks/run-checks-verdicts.mjs
@@ -79,6 +81,10 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
 - Lot 5 : la CI GitLab livrée sauvegarde le cache des verdicts à chaque fusion sur la branche principale et le
   restaure sur une MR, comme la CI GitHub ; une MR dont le code des contrôles n'a pas changé reprend leurs verdicts.
   Éprouvé sur un vrai projet GitLab (`marinade-poulet` ou bac à sable) — `QUA-250`
+- Lot 5 : un pipeline GitLab de la branche principale dont l'arbre est celui qu'une MR verte a prouvé saute ses
+  contrôles et sauvegarde quand même ses verdicts, comme le push GitHub — `QUA-296`
+- Lot 5 : la CI GitHub et la CI GitLab livrées sont iso : chaque optimisation de l'une a son équivalent dans l'autre,
+  ou un écart déclaré avec sa raison ; un test compare les deux fichiers livrés étape par étape — contrat à créer
 
 ## Contrats modifiés
 
@@ -88,6 +94,8 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
 - `QUA-250` — ancien critère : la sauvegarde du cache à chaque fusion n'est corrigée que pour la CI GitHub livrée,
   la reprise GitLab jamais éprouvée — raison : `marinade-poulet` est sur GitLab (validé par le demandeur le
   2026-11-19)
+- `QUA-296` — ancien critère : le saut du push déjà prouvé et la sauvegarde de ses verdicts, CI GitHub seule —
+  raison : GitHub et GitLab doivent être iso (validé par le demandeur le 2026-11-19)
 - Le chantier dira si QUA-033 (règle du dépôt) devient la source livrée, ou s'il est seulement cité.
 
 ## 2. Hors périmètre
@@ -111,6 +119,7 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
 
 ## 4. Décisions
 
+- 2026-11-19 (demandeur) : GitHub et GitLab doivent être iso ; le lot 5 devient la parité de la CI livrée.
 - 2026-11-19 (demandeur) : couverture unique sur une couche à 100 % et cache des verdicts sur GitLab ajoutés
   (lots 4 et 5), constat `marinade-poulet`.
 - 2026-11-19 (demandeur) : P0, rangé dans la 0.11.2 avant la release, après le cadrage en BUILD et avant les tranches
@@ -130,8 +139,9 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
 - **Lot 3 — `doctor`** [IA] : avertissement des contrôles non groupés.
 - **Lot 4 — une seule couverture sur une couche à 100 %** [IA] : `drwil guarantees` fusionne aussi la paire d'une
   couche à 100 % ; `doctor` signale la paire modifiée à la main.
-- **Lot 5 — cache des verdicts sur GitLab** [IA] puis [humain] : reproduire (une MR rejoue-t-elle tout ?), dire la
-  cause, corriger la CI GitLab livrée ; essai réel sur GitLab.
+- **Lot 5 — parité GitHub et GitLab de la CI livrée** [IA] puis [humain] : reproduire (une MR rejoue-t-elle tout ?),
+  dire la cause, corriger ; saut du pipeline de la branche principale déjà prouvé ; test de parité des deux CI
+  livrées ; essai réel sur GitLab.
 - **Lot 6 — mesure** [humain] : temps de CI de `marinade-poulet` avant/après, au journal ; ligne « Unreleased » du
   CHANGELOG (dernier lot [IA] : le lot 5).
 
