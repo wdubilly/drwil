@@ -24,6 +24,13 @@ files:
   - .githooks/contract-tests.test.mjs
   - docs/recipes/adopt-the-kit.md
   - packages/drwil/src/doctor.ts
+  - packages/drwil/src/guarantees-merge.ts
+  - packages/drwil/src/guarantees-layers.ts
+  - packages/drwil/test/coverage-merge.test.mjs
+  - packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml
+  - packages/drwil/test/kit-ci.test.mjs
+  - .githooks/run-checks-verdicts.mjs
+  - packages/drwil/templates/common/base/.githooks/run-checks-verdicts.mjs
   - packages/drwil/test/kit-verify.test.mjs
   - docs/architecture.md
   - docs/contracts.md
@@ -66,10 +73,22 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
 - Lot 2 : sur un commit dont les contrôles viennent de passer, la seconde passe ne rejoue pas l'e2e ; la cause du
   rejeu est d'abord reproduite et dite (contrôle sans `paths`, ou passe qui ne reprend pas ses verdicts) — contrat à
   créer ou existant cité selon la cause
+- Lot 4 : sur une couche Node **à 100 %** (seuil déjà au maximum), la paire `coverage-<couche>` et
+  `coverage-diff-<couche>` exactement telle que le kit la génère est aussi fusionnée en un seul run ; une paire
+  modifiée à la main n'est jamais réécrite et `drwil doctor` la signale — `QUA-302`
+- Lot 5 : la CI GitLab livrée sauvegarde le cache des verdicts à chaque fusion sur la branche principale et le
+  restaure sur une MR, comme la CI GitHub ; une MR dont le code des contrôles n'a pas changé reprend leurs verdicts.
+  Éprouvé sur un vrai projet GitLab (`marinade-poulet` ou bac à sable) — `QUA-250`
 
 ## Contrats modifiés
 
-Aucun à ce jour ; le chantier dira si QUA-033 (règle du dépôt) devient la source livrée, ou s'il est seulement cité.
+- `QUA-302` — ancien critère : la fusion de la paire de couverture ne vise que la couche Node en dette ; une couche à
+  100 % garde ses deux runs — raison : une couche à 100 % paie aussi deux runs (constat `marinade-poulet`, environ
+  2 min 30 s) (validé par le demandeur le 2026-11-19)
+- `QUA-250` — ancien critère : la sauvegarde du cache à chaque fusion n'est corrigée que pour la CI GitHub livrée,
+  la reprise GitLab jamais éprouvée — raison : `marinade-poulet` est sur GitLab (validé par le demandeur le
+  2026-11-19)
+- Le chantier dira si QUA-033 (règle du dépôt) devient la source livrée, ou s'il est seulement cité.
 
 ## 2. Hors périmètre
 
@@ -92,6 +111,8 @@ Aucun à ce jour ; le chantier dira si QUA-033 (règle du dépôt) devient la so
 
 ## 4. Décisions
 
+- 2026-11-19 (demandeur) : couverture unique sur une couche à 100 % et cache des verdicts sur GitLab ajoutés
+  (lots 4 et 5), constat `marinade-poulet`.
 - 2026-11-19 (demandeur) : P0, rangé dans la 0.11.2 avant la release, après le cadrage en BUILD et avant les tranches
   dès le départ ; cadré dans la PR de cadrage #455.
 
@@ -106,8 +127,13 @@ Aucun à ce jour ; le chantier dira si QUA-033 (règle du dépôt) devient la so
   (verdict par ID, aucun test à l'ID refusé, un seul lancement par passe), recette d'adoption, contrat créé.
   Critère de sortie : tests verts ; `node .githooks/run-checks.mjs` sans échec.
 - **Lot 2 — e2e non rejoué dans la seconde passe** [IA] : reproduire, dire la cause, corriger.
-- **Lot 3 — `doctor` et mesure** [IA] puis [humain] : avertissement des contrôles non groupés ; mesure avant/après ;
-  ligne « Unreleased » du CHANGELOG.
+- **Lot 3 — `doctor`** [IA] : avertissement des contrôles non groupés.
+- **Lot 4 — une seule couverture sur une couche à 100 %** [IA] : `drwil guarantees` fusionne aussi la paire d'une
+  couche à 100 % ; `doctor` signale la paire modifiée à la main.
+- **Lot 5 — cache des verdicts sur GitLab** [IA] puis [humain] : reproduire (une MR rejoue-t-elle tout ?), dire la
+  cause, corriger la CI GitLab livrée ; essai réel sur GitLab.
+- **Lot 6 — mesure** [humain] : temps de CI de `marinade-poulet` avant/après, au journal ; ligne « Unreleased » du
+  CHANGELOG (dernier lot [IA] : le lot 5).
 
 ## 7. Reprise
 
