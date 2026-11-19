@@ -78,6 +78,10 @@ files:
   - packages/drwil/templates/common/tools/claude/.claude/hooks/verdict-poll.mjs
   - .githooks/release-verdict-poll.mjs
   - .claude/hooks/verdict-poll.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/move-poll.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/detour-poll.mjs
+  - .claude/hooks/move-poll.mjs
+  - .claude/hooks/detour-poll.mjs
 -->
 
 ## 1. Besoin
