@@ -51,6 +51,8 @@ ou modifiées voyagent sur la branche du chantier et fusionnent avec sa PR.
   demande plus la réponse « Noter en intention » à la clôture (validé par le demandeur le 2026-11-19, réponse
   « Traiter maintenant » au sondage des limites)
 - `.githooks/close-limits.mjs` — gardé à sa version de la branche (QUA-113) (validé par le demandeur le 2026-11-19)
+- `QUA-016` — champ Tests : ajout de `.githooks/scope-gate.test.mjs` (trois tests du cadrage en BUILD), règle inchangée
+  (validé par le demandeur le 2026-11-19)
 
 ## 2. Hors périmètre
 
