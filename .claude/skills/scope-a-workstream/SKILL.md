@@ -10,8 +10,14 @@ the current folder, that is of the main branch. The automatic merge is the defau
 no authorisation to ask for. Its guard is the proof — green CI, PR of the current branch, scheduling read
 back on the forge — carried by `.githooks/merge-auto.mjs`, never by the agent's memory.
 
-1. Read the state: `node .githooks/state.mjs`. Anything other than SCOPING: say so and stop (a
-   workstream's PR is set to automatic merge at its closing, as the state's instruction says).
+1. Read the state: `node .githooks/state.mjs`. In BUILD, a documentation scoping (a brief of
+   `docs/projects/`, an intention of `docs/intentions/`) is done in the workstream's folder, on its branch,
+   without a worktree: the scope gate commits it without changing the state or the active brief, nor
+   widening its scope; it travels and merges with the workstream's PR (no scoping branch or PR of its
+   own, nothing to schedule here); an intention it adds still needs, at closing, the « Record as intent »
+   answer of the limits poll (`drwil-limite`) for its path. The contracts registry stays out of it. Anything else than SCOPING or
+   BUILD: say so and stop (a workstream's PR is set to automatic merge at its closing, as the state's
+   instruction says). The steps below are those of a scoping made in SCOPING.
 2. The scoping is committed on its own branch, never on the main branch, pushed, and its PR opened
    (GitHub: `gh pr create --base <main branch>`; GitLab: its MR, `glab mr create --target-branch <main
    branch>`).

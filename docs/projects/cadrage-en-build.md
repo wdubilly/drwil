@@ -74,5 +74,7 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-12) : cadrage terminé, non commité.
-- **Prochaine étape** : [humain] `/drwil-start`.
+- **Dernier état** (2026-11-19) : lot 1 fait. Relevé : la barrière commitait déjà fiches et intentions en BUILD
+  (tests QUA-016 verts d'emblée) ; gênaient le skill `scope-a-workstream` (SCOPING exigé) et, hors cadre, la
+  clôture qui refuse une intention née sur la branche sans réponse « Noter en intention » (QUA-264).
+- **Prochaine étape** : sondage `drwil-limite` sur la limite QUA-264, puis VERIFY.

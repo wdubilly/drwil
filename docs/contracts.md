@@ -81,7 +81,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `.githooks/scope.mjs`, `docs/ia-first/7-scoping-reminder.md`.
 **Preuve** : `.githooks/check-docs.mjs` (hook + CI, sévérité selon le réglage) ; refus avant écriture côté agent : `.claude/hooks/scope-reminder.mjs`.
 **Contrôle** : `docs-references`, `tests-qua-016`
-**Tests** : `packages/drwil/test/kit-fiches.test.mjs`, `packages/drwil/test/kit-mise-a-jour.test.mjs`
+**Tests** : `packages/drwil/test/kit-fiches.test.mjs`, `packages/drwil/test/kit-mise-a-jour.test.mjs`, `.githooks/scope-gate.test.mjs`
 **Raison** : Du code détaché de tout chantier ne se retrouve plus.
 **Modifié** : 2026-11-16 — un fichier dérivé d'un fichier du scope (quatre cas fermés, jamais un fichier de règles) est couvert d'office ; ancien critère : « Tout fichier de code indexé est couvert par le bloc `scope` d'une fiche de `docs/projects/` » ; validé par le demandeur le 2026-11-13 (chantier « perimetre-prevu-au-cadrage »).
 

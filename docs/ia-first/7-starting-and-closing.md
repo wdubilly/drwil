@@ -35,6 +35,15 @@ queue.
 - **Close**: free as soon as the `drwil verify` evidence is valid (see
   above); closing removes rights, and accepting the work remains the human
   PR merge.
+- **Scoping during a workstream**: in BUILD, a brief (`docs/projects/`) or
+  an intention (`docs/intentions/`) is created or edited in the
+  workstream's folder, on its branch, without a worktree: the scope gate
+  commits it like any brief, without changing the state or the active
+  brief; its scope never covers the workstream (a code file outside the
+  active brief stays refused), and the contracts registry stays refused
+  outside the active brief's scope. The scoping merges with the
+  workstream's PR; an intent brief it adds still needs, at closing, the
+  « Record as intent » answer for its path (limits below).
 - **Limits outside the scope**: at the end of BUILD and
   before VERIFY, the human answers, per limit, a poll headed
   `drwil-limite` (« Handle now » or « Record as intent », read by the hook
