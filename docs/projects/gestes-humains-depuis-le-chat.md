@@ -84,6 +84,28 @@ files:
   - .claude/hooks/detour-poll.mjs
   - packages/drwil/templates/common/tools/claude/.claude/hooks/copilot-polls.mjs
   - .claude/hooks/copilot-polls.mjs
+  - packages/drwil/templates/common/base/.githooks/closure-proof.mjs
+  - .githooks/closure-proof.mjs
+  - .githooks/close.test.mjs
+  - packages/drwil/templates/common/base/.githooks/state-messages-fr.mjs
+  - packages/drwil/templates/common/base/.githooks/state-messages-en.mjs
+  - .githooks/state-messages-fr.mjs
+  - .githooks/state-messages-en.mjs
+  - packages/drwil/templates/common/base/AGENTS.md
+  - AGENTS.md
+  - packages/drwil/templates/common/base/docs/ia-first/8-conduct-rules.md
+  - docs/ia-first/8-conduct-rules.md
+  - packages/drwil/templates/common/base/docs/recipes/corriger-un-defaut.md
+  - docs/recipes/corriger-un-defaut.md
+  - packages/drwil/templates/common/base/docs/recipes/working-with-branches.md
+  - docs/recipes/working-with-branches.md
+  - .drwil/ia-first.json
+  - packages/drwil/src/attest-portable.ts
+  - packages/drwil/src/evidence.ts
+  - packages/drwil/src/index.ts
+  - packages/drwil/README.md
+  - packages/drwil/test/attest-guidance.test.mjs
+  - packages/drwil/test/cursor-acp.test.mjs
 -->
 
 ## 1. Besoin
@@ -137,7 +159,8 @@ Sous Copilot CLI, la réponse à un sondage posé par `ask_user` n'est pas toujo
 ## Contrats modifiés
 
 - `QUA-235` — ancien critère : un sondage préparé pour un seul ID, attestation seule — raison : le même mécanisme
-  porte l'attestation par lot et les autres gestes humains (validé par le demandeur le 2026-11-18)
+  porte l'attestation par lot et les autres gestes humains ; le protocole d'attestation à nonce de Copilot CLI, que
+  le CLI ne prépare plus, est retiré (validé par le demandeur le 2026-11-18 ; retrait du nonce le 2026-11-19)
 - `QUA-175` — ancien critère : acceptation des critères au seul terminal interactif — raison : aussi par le sondage du
   chat, lu par le hook, toujours sans chemin pour l'agent (validé par le demandeur le 2026-11-18)
 - `QUA-053` — ancien critère : verdict de recette au terminal — raison : aussi par le sondage du chat (validé par le
@@ -165,6 +188,18 @@ Sous Copilot CLI, la réponse à un sondage posé par `ask_user` n'est pas toujo
   demandeur le 2026-11-18)
 - `.githooks/state.test.mjs` — couvre l'acceptation et les transitions depuis le chat (validé par le demandeur le
   2026-11-18)
+- `QUA-174` — ancien critère : la clôture refusée sur critères modifiés jusqu'à l'acceptation au terminal — raison :
+  l'acceptation aussi par le sondage `drwil-accept` du chat (validé par le demandeur le 2026-11-19)
+- `QUA-050` — ancien critère : le oui au détour au terminal interactif seulement — raison : le oui au détour aussi par
+  le sondage `drwil-detour` du chat (validé par le demandeur le 2026-11-19)
+- `.githooks/closure-proof.mjs` — la clôture refusée sur critères modifiés cite aussi le sondage `drwil-accept`
+  (validé par le demandeur le 2026-11-19)
+- `.githooks/close.test.mjs` — couvre la clôture qui cite le sondage `drwil-accept` (validé par le demandeur le
+  2026-11-19)
+- `.githooks/state-messages-fr.mjs` — la transition humaine aussi depuis le chat : « terminal interactif ou sondage du
+  chat » (validé par le demandeur le 2026-11-19)
+- `.githooks/state-messages-en.mjs` — la transition humaine aussi depuis le chat : « interactive terminal or chat
+  poll » (validé par le demandeur le 2026-11-19)
 
 ## 2. Hors périmètre
 
