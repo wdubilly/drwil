@@ -125,9 +125,10 @@ d'un outil) la dit dans son statut.
 
 - **0.11.1** : publier « Unreleased » tel quel (montée de version sûre, contrôles lents en tranches) pour patcher drwil_walk.
 - **0.11.2, optimisation des tests** (décidée le 2026-11-11 ; chaque sujet est son propre chantier, une session chacun, la release les regroupe). **Ordre** (décidé le 2026-11-14 ; il suit celui de la section « Fiches cadrées » ci-dessous, seule source) : faits le 2026-11-14 — attestations qui ne tombent que pour leur objet (OPT-4), reprise de détour sans réécriture, un seul run de couverture ; doublon des tests des hooks abandonné (gain trop faible : `docs/intentions/suivi-ci-et-contexte.md`). **Réordonné le 2026-11-14 par le demandeur**, un sous-titre par thème dans la section (une nouvelle fiche se range sous le sien) : d'abord ce qui améliore le plus l'expérience au quotidien (périmètre prévu, refus d'attestation lisible, marque `[humain]`, limites, cadrage en BUILD, index par fiche, hook commit-msg, relecture critique), puis la mesure (Copilot CLI, coût par activité), la vitesse (tranches dès le départ, tests du kit, preuves fiables, temps des contrôles), enfin la fiabilité (audit, analyse d'urgence, sans sous-agent). Les chantiers sont lancés l'un après l'autre, le suivant après la fusion du précédent. Contraintes : un seul run de couverture avant les tranches (`doctor` et `guarantees` partagés) ; preuves fiables avant le temps des contrôles journalisé (`run-checks-verdicts`) ; la consommation de Copilot CLI avant le coût par activité ; la fiche sans sous-agent de chantier attend la mesure du coût par activité. La mesure de la durée du job `checks` sur une PR de documentation seule (gain du cache de verdicts, contre 8 min sur la PR #405) se fait sur la PR de ce cadrage (branche `cadrage/priorites-opt4-detour`).
+- **Périmètre de la 0.11.2 resserré** (décidé le 2026-11-19 par le demandeur) : quatre chantiers, dans cet ordre — gestes humains depuis le chat (fait le 2026-11-19, PR #456), cadrage en BUILD, contrôles de contrats groupés (ajouté le 2026-11-19 : CI de marinade-poulet), tranches dès le départ ; puis la release. Le reste des fiches étiquetées 0.11.2 passe en 0.11.3.
+- **0.11.3** : les fiches reportées de la 0.11.2, dans l'ordre de la section « Fiches cadrées » (limites classées par lien, index par fiche, fusion automatique perdue signalée, relecture critique, preuves fiables, temps des contrôles, journal sans entrée vide, durcissements de l'audit, analyse d'urgence, sans sous-agent).
 - **0.12.0, gouvernance crédible, et la campagne du mini-banc** (critères de décision écrits le 2026-11-09 dans `docs/intentions/campagne-mini-banc.md`, à insérer au protocole ; essai réel, budget et 12 passages : gestes humains) : attestation authentifiée, contrôle sauté dit « non exécuté », contournements
-  restants, clôture sans CI verte, pre-push, contrats à aligner, premier commit du kit, garanties ; le découpage des
-  contrôles lents dès le départ ; les trois fiches reportées (hook commit-msg, gitleaks, ordre du sondage) ; petites hygiènes.
+  restants, clôture sans CI verte, pre-push, contrats à aligner, premier commit du kit, garanties ; les trois fiches reportées (hook commit-msg, gitleaks, ordre du sondage) ; petites hygiènes.
 - **0.13.0, adoption, clôture et parallèle** : `init` sur projet réel, stack élargie, contrat modifiable par commande,
   worktrees et clôture, accueil de session, relecture avant fusion, CI éprouvée en réel (GitHub, GitLab, `merge-auto`).
 - **0.14.0, mesurer** : coût en tokens, tests de mutation, catalogue et profils, publication npm.
@@ -137,17 +138,17 @@ d'un outil) la dit dans son statut.
 
 ### Expérience au quotidien
 
-- [ ] [IA] [P0] (0.11.2) Une limite hors cadre dit son lien avec le problème (bloquant, lié, périphérique) et
+- [ ] [IA] [P0] (0.11.3) Une limite hors cadre dit son lien avec le problème (bloquant, lié, périphérique) et
   l'élargissement se compte au journal (cadré le 2026-11-13) — `docs/projects/limites-classees-par-lien.md`.
 - [ ] [IA] [P0] (0.11.2) Cadrer de la documentation depuis le dossier d'un chantier en BUILD (cadré le 2026-11-12) —
   `docs/projects/cadrage-en-build.md`.
-- [ ] [IA] [P0] (0.11.2) Un fichier d'index par fiche, sans conflit sur l'index commun (cadré le 2026-11-12) — `docs/projects/index-par-fiche.md`.
-- [ ] [IA] [P1] (0.11.2) Une fusion automatique qui n'est plus programmée est dite par `pr-watch`, avec la commande
+- [ ] [IA] [P0] (0.11.3) Un fichier d'index par fiche, sans conflit sur l'index commun (cadré le 2026-11-12) — `docs/projects/index-par-fiche.md`.
+- [ ] [IA] [P1] (0.11.3) Une fusion automatique qui n'est plus programmée est dite par `pr-watch`, avec la commande
   `merge-auto` à relancer ; après l'attente de fusion (cadré le 2026-11-15) —
   `docs/projects/fusion-auto-perdue-signalee.md`.
 - [ ] [IA] [P1] (0.12.0) Retirer le hook commit-msg et son refus « Co-Authored-By » (cadré le
   2026-11-06) — `docs/projects/retirer-le-hook-commit-msg.md`.
-- [ ] [IA] [P0] (0.11.2) Une relecture critique légère avant la clôture, sans frein au full auto (cadré le 2026-11-12) —
+- [ ] [IA] [P0] (0.11.3) Une relecture critique légère avant la clôture, sans frein au full auto (cadré le 2026-11-12) —
   `docs/projects/relecture-critique-avant-cloture.md`.
 
 ### Mesure
@@ -155,24 +156,27 @@ d'un outil) la dit dans son statut.
 
 ### Vitesse
 
+- [ ] [IA] [P0] (0.11.2) Les contrôles de contrats d'un projet lancent chaque fichier de tests une fois par passe, pas
+  une fois par contrat (Vitest, Jest, `node --test`) ; l'e2e n'est plus rejoué dans la seconde passe (cadré le
+  2026-11-19) — `docs/projects/controles-contrats-groupes.md`.
 - [ ] [IA] [P0] (0.11.2) Un contrôle lent est découpé en tranches dès sa déclaration chez tout adoptant : table des
   outils e2e, déclaré par `guarantees` et signalé par `drwil doctor` ; prêt, décisions D1 à D6 tranchées (cadré le
   2026-11-09) — `docs/projects/controles-lents-decoupes-des-le-depart.md`.
-- [ ] [IA] [P1] (0.11.2) Les rejeux d'une clôture sont mesurés et le pre-push juge le commit réellement poussé ; prêt,
+- [ ] [IA] [P1] (0.11.3) Les rejeux d'une clôture sont mesurés et le pre-push juge le commit réellement poussé ; prêt,
   D1 à D3 tranchées (cadré le 2026-11-11) — `docs/projects/preuves-fiables-rejeux-mesures.md`.
-- [ ] [IA] [P1] (0.11.2) Le temps passé dans les contrôles d'un chantier est journalisé à la clôture, dans
+- [ ] [IA] [P1] (0.11.3) Le temps passé dans les contrôles d'un chantier est journalisé à la clôture, dans
   `.drwil/usage.jsonl`, et livré aux projets ; prêt, D1 à D3 tranchées (cadré le 2026-11-11) —
   `docs/projects/temps-des-controles-journalise.md`.
 
 ### Fiabilité
 
-- [ ] [IA] [P1] (0.11.2) La clôture rattache sa preuve à l'entrée du journal écrite sur la branche, refusée sans
+- [ ] [IA] [P1] (0.11.3) La clôture rattache sa preuve à l'entrée du journal écrite sur la branche, refusée sans
   entrée reconnue ; plus d'entrée réduite au renvoi (cadré le 2026-11-17) — `docs/projects/journal-sans-entree-vide.md`.
-- [ ] [IA] [P1] (0.11.2) Durcissements de l'audit du 2026-11-12 : préfixes de code, preuve de file protégée,
+- [ ] [IA] [P1] (0.11.3) Durcissements de l'audit du 2026-11-12 : préfixes de code, preuve de file protégée,
   recette d'audit, jeton GitLab (cadré le 2026-11-13) — `docs/projects/durcissements-audit-2026-11-12.md`.
-- [ ] [IA] [P1] (0.11.2) Une fiche P0 passe d'abord une analyse d'urgence (cadré le 2026-11-12) —
+- [ ] [IA] [P1] (0.11.3) Une fiche P0 passe d'abord une analyse d'urgence (cadré le 2026-11-12) —
   `docs/projects/analyse-d-urgence-des-fiches.md`.
-- [ ] [IA] [P0] (0.11.2) Un chantier se mène dans la session principale, sans sous-agent : à affiner, attend la
+- [ ] [IA] [P0] (0.11.3) Un chantier se mène dans la session principale, sans sous-agent : à affiner, attend la
   mesure de cout-par-activite (cadré le 2026-11-12, suspendu le 2026-11-13) —
   `docs/projects/fin-des-sous-agents-de-chantier.md`.
 
@@ -270,7 +274,7 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] (0.12.0) Comprendre l'échec intermittent de la couverture des hooks
   (QUA-004) vu deux fois sous charge parallèle, jamais reproduit seul —
   `docs/intentions/couverture-paquet-100.md` (partie « ex-couverture-hooks-intermittente »).
-- [ ] [décision] (0.11.2) Surveiller qu'un contrôle ne lit que ses `paths` (reprise
+- [ ] [décision] (0.11.3) Surveiller qu'un contrôle ne lit que ses `paths` (reprise
   par contrôle, QUA-141) —
   `docs/intentions/reprise-par-controle-limites.md`.
 - [ ] [décision] (0.12.0) Les tests qui laissent des fichiers dans leur dossier
