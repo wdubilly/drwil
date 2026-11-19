@@ -506,13 +506,19 @@ is kept). Same interactive terminal, same typing of the identifier: no `--yes`.
 npx drwil attest-poll QUA-015 --tried "What the agent tried"
 ```
 
-Prints JSON to pass unchanged to `AskUserQuestion` by default, or `ask_user`
-with `--tool copilot` / `--tool gemini`, or Codex's `request_user_input`
-with `--tool codex`; never writes an attestation.
+Prints JSON to pass unchanged to `AskUserQuestion` by default (one to four
+contracts in one multiple-choice poll), or `ask_user` with `--tool gemini`,
+or Codex's `request_user_input` with `--tool codex`; never writes an attestation.
+With `--tool copilot` (one contract per poll), it prints Claude Code's poll in
+the real form of Copilot CLI's `ask_user` (`message`, and `requestedSchema`
+with one `enum` field named `drwil-attest`), converted by the project's
+`.claude/hooks/copilot-polls.mjs`: Copilot CLI's native hooks translate the call
+back and hand it to the same hook as Claude Code (session and native tool call,
+same named refusals), and only its `User responded: <label>` result is read.
 Requires local drwil and the selected tool's hooks (or dedicated Cursor client). The poll shows
 the criterion, automated results, the agent's declared trial and covered paths.
 Only the human's **Attest** response, read by the hook for the same session
-and tool call (Claude) or one-use nonce and exact poll (Copilot/Gemini/Codex),
+and tool call (Claude, Copilot) or one-use nonce and exact poll (Gemini/Codex),
 records the unchanged version-4 proof after rerunning the checks. Decline, no answer,
 prefilled or recommended choices, changed proofs and replays record nothing.
 Preparations expire after an hour; `--renew` deliberately prepares renewal.

@@ -121,6 +121,7 @@ export async function main(args, root, input = process.stdin) {
     return report(r, root);
   }
   if (args[0] === "lot") return (await import("./state-cli-lots.mjs")).lotCommand(args, root);
+  if (args[0] === "poll") return (await import("./state-polls.mjs")).pollCommand(args, root);
   if (args[0] === "reopen") {
     const r = reopen(root);
     return report(r, root);

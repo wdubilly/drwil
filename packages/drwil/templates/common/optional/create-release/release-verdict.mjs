@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Acceptance verdict on a candidate pre-release (QUA-053): a human gesture, like `drwil attest` —
-// an interactive terminal and the candidate's name typed back; an agent never runs it. Approved,
+// an interactive terminal and the candidate's name typed back, or the human's answer to the chat poll
+// (release-verdict-poll.mjs); an agent never runs it. Approved,
 // approved with reserves (each reserve cites its point of the sheet) or refused (each refused point
 // cited). Recorded on the GitHub pre-release (asset recette-verdict.json, summary added to its
 // note), never in a commit (QUA-017); keeps who gave it (GitHub identity only) and when. Each
@@ -102,15 +103,11 @@ export function asset(run, tag, name, dir) {
 
 const refused = (message) => ({ code: 1, message });
 
-/**
- * Records the verdict `opts` (parseArgs) on the candidate. `confirm(question, expected)` only in an
- * interactive terminal; `run` and `now` injected by the tests. Returns { code, message }.
- */
-export async function record(root, opts, { tty = false, confirm, run = runner(root), now = new Date() } = {}) {
+/** Checks before any confirmation (terminal or chat poll): a refusal { code, message }, or { code: 0, … } for `write`. */
+export function check(root, opts, run) {
   const T = verdictTexts(root);
   const { tag } = opts;
   if (!CANDIDATE_RE.test(tag)) return refused(fill(T.notCandidate, tag));
-  if (!tty || typeof confirm !== "function") return refused(T.human);
   let view = null;
   try {
     view = JSON.parse(run("gh", ["release", "view", tag, "--json", "isPrerelease,url,body"]) ?? "");
@@ -128,7 +125,12 @@ export async function record(root, opts, { tty = false, confirm, run = runner(ro
   const unknown = cited.filter(([, id]) => !known.has(id)).map(([, id]) => id);
   if (unknown.length) return refused(fill(T.unknown, tag, unknown.join(", ")));
   const kind = opts.refusals.length ? "refused" : opts.reserves.length ? "reserved" : "approved";
-  if (!(await confirm(fill(T.confirm, T.kinds[kind], tag), tag))) return refused(T.notGiven);
+  return { code: 0, T, tag, view, dir, sheet, known, cited, kind };
+}
+
+/** Records the verdict checked by `check` (`c`) on the candidate: issues, asset, note. Returns { code, message }. */
+export function write(c, opts, { run, now }) {
+  const { T, tag, view, dir, known, cited, kind } = c;
   const by = (run("gh", ["api", "user", "--jq", ".login"]) ?? "").trim();
   if (!by) return refused(T.noIdentity);
   const at = now.toISOString();
@@ -144,17 +146,24 @@ export async function record(root, opts, { tty = false, confirm, run = runner(ro
   const file = join(dir, VERDICT_ASSET);
   writeFileSync(file, `${JSON.stringify(verdict, null, 2)}\n`);
   if (run("gh", ["release", "upload", tag, file]) === null) return refused([...lines, fill(T.uploadFailed, tag)].join("\n"));
-  const summary = [
-    T.section,
-    "",
-    fill(T.by, T.kinds[kind], by, at),
-    ...points.map((p) => `- ${p.id} (${T[p.type]}) : ${p.issue ?? p.what}`),
-  ];
+  const listed = points.map((p) => `- ${p.id} (${T[p.type]}) : ${p.issue ?? p.what}`);
+  const summary = [T.section, "", fill(T.by, T.kinds[kind], by, at), ...listed];
   if (opts.note) summary.push("", fill(T.noteLine, opts.note));
   const notes = join(dir, "notes.md");
   writeFileSync(notes, `${view.body ?? ""}\n\n${summary.join("\n")}\n`);
   if (run("gh", ["release", "edit", tag, "--notes-file", notes]) === null) lines.push(fill(T.noteFailed, tag, VERDICT_ASSET));
   return { code: 0, message: [...lines, fill(T.recorded, T.kinds[kind], tag, by, at)].join("\n") };
+}
+
+/** Records `opts` (parseArgs) on the candidate; `confirm(question, expected)` in an interactive terminal only. */
+export async function record(root, opts, { tty = false, confirm, run = runner(root), now = new Date() } = {}) {
+  const T = verdictTexts(root);
+  if (!CANDIDATE_RE.test(opts.tag)) return refused(fill(T.notCandidate, opts.tag));
+  if (!tty || typeof confirm !== "function") return refused(T.human);
+  const c = check(root, opts, run);
+  if (c.code) return c;
+  if (!(await confirm(fill(T.confirm, T.kinds[c.kind], opts.tag), opts.tag))) return refused(T.notGiven);
+  return write(c, opts, { run, now });
 }
 
 /** Entry point; `deps` ({ run, now }) injected by the tests. Returns the exit code. */

@@ -137,9 +137,6 @@ d'un outil) la dit dans son statut.
 
 ### Expérience au quotidien
 
-- [ ] [IA] [P0] (0.11.2) Tout geste humain encore au terminal se fait aussi depuis le chat (acceptation des critères,
-  verdict de recette, transitions humaines, oui au détour), sous Claude Code et Copilot CLI, et l'attestation se fait
-  par lot (cadré le 2026-11-18) — `docs/projects/gestes-humains-depuis-le-chat.md`.
 - [ ] [IA] [P0] (0.11.2) Une limite hors cadre dit son lien avec le problème (bloquant, lié, périphérique) et
   l'élargissement se compte au journal (cadré le 2026-11-13) — `docs/projects/limites-classees-par-lien.md`.
 - [ ] [IA] [P0] (0.11.2) Cadrer de la documentation depuis le dossier d'un chantier en BUILD (cadré le 2026-11-12) —
@@ -247,9 +244,12 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
   (`QUA-197`) ; montée de P3 en P1 le 2026-11-09 : l'analyse externe y voit la
   faiblesse principale (une attestation se fabrique) —
   `docs/intentions/garanties-la-suite.md` (partie « ex-e2e-et-attestation-precises »).
-- [ ] [décision] [P1] (0.12.0) Les sondages posés sous Copilot CLI (`drwil-start`, `drwil-scope`, attestation) sont lus par le hook :
-  réponse sans effet constatée les 2026-11-08 et 2026-11-09, cause à reproduire (notes regroupées le 2026-11-09) —
+- [ ] [décision] [P1] (0.12.0) Les sondages posés sous Copilot CLI (`drwil-start`, `drwil-scope`) sont lus par le hook ;
+  pour l'attestation et les quatre autres sondages préparés, cause trouvée et corrigée le 2026-11-19 (journal
+  « gestes-humains-depuis-le-chat »), essai interactif réel laissé à l'usage par le demandeur —
   `docs/intentions/sondage-worktree-copilot-cli.md` (partie « ex-sondages-lus-sous-copilot-cli »).
+- [ ] [décision] Retirer le protocole d'attestation à nonce de Copilot CLI, devenu inutile (noté en intention le
+  2026-11-19, limite du chantier gestes-humains-depuis-le-chat) — `docs/intentions/retrait-nonce-copilot.md`.
 - [ ] [décision] [P1] (0.12.0) Un contrôle exigé sauté (job de la forge, branche principale déjà prouvée) se dit
   « non exécuté » au lieu d'être rapporté réussi (analyse externe du 2026-11-09) —
   `docs/intentions/garanties-la-suite.md` (partie « ex-controles-sautes-dits-non-executes »).

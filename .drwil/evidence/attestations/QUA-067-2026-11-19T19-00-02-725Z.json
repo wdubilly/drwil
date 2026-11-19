@@ -1,0 +1,36 @@
+{
+  "version": 4,
+  "contract": "QUA-067",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-19T19:00:02.725Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Essais réels laissés de côté par le demandeur le 2026-11-19. Copilot CLI : cause trouvée (ask_user prend message/requestedSchema) et corrigée, tests de forme réelle verts ; matrice : essai interactif « not tested ». Gemini CLI : banc relancé ce jour, non testé, API Google en 503 (surcharge) avant tout hook ; tests QUA-067 verts ; ligne Gemini inchangée (2026-10-19, 0.61.0).",
+  "fingerprint": "3c3b634a91838604054933239ffc2b60a00bdb99dbba278299aa4cf3f2e75897",
+  "proof": {
+    "tests-qua-067": "70919d124a9392dc4f3edcfa305b72855afdcb049897d064a1dfa8b245f92137"
+  },
+  "covers": [
+    ".githooks/state-cli.mjs",
+    ".claude/hooks/scope-reminder.mjs"
+  ],
+  "coverage": {
+    ".claude/hooks/scope-reminder.mjs": "31a1bb77674823907afc40defb5e0bf52272f2713abf1c5f5283c223caf3eed8",
+    ".githooks/state-cli.mjs": "3aab9ca8b2228aefe373ff48aa38d6f8d6db107c7a5bfbf579a8b5c7282c0c09"
+  },
+  "commit": "ebaae32141347614d39ff6d86b28f1e37dc8d38d",
+  "automated": [
+    {
+      "id": "tests-qua-067",
+      "status": "ok"
+    }
+  ],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "a190f2a6-bc6d-4196-ba6f-5674b92e2dc9",
+    "toolUseId": "toolu_01SfWK6G8jv6RbXABkPdn2Um",
+    "askedAt": "2026-11-19T18:58:26.868Z"
+  }
+}

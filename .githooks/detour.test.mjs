@@ -6,9 +6,9 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { PassThrough } from "node:stream";
 import { fileURLToPath } from "node:url";
-import { allow, main, open, resume, rulesFiles, weakenedTests } from "./detour.mjs";
+import { allow, allowFromPoll, detourPoll, main, open, resume, rulesFiles, weakenedTests } from "./detour.mjs";
 import { checkScope } from "./scope-gate.mjs";
-import { readState } from "./state.mjs";
+import { main as etatMain, readState } from "./state.mjs";
 
 // Voir scope-gate.test.mjs : des GIT_* hérités feraient agir les tests sur le dépôt qui les lance.
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
@@ -334,6 +334,71 @@ test("QUA-050 : un détour qui change les règles du jeu attend le oui de l'huma
   assert.equal(oui.code, 0);
   assert.equal(etat(racine).detour.human, true);
   assert.equal(checkScope(racine, { cfg, staged: [".githooks/x.mjs"] }).status, "ok");
+});
+
+test("QUA-117 : le oui au détour ou à la réouverture se donne aussi par le sondage drwil-detour du chat, pour ce qui l'attend encore", async () => {
+  const sans = depot();
+  assert.match(detourPoll(sans).message, /aucun détour en cours/);
+  assert.equal(allowFromPoll(sans, { reopened: false, name: BRANCHE }), null);
+  const racine = depot();
+  open(racine, "date-mal-lue", { title: "t", files: [".githooks/x.mjs"] });
+  const refus = await allow(racine);
+  assert.match(refus.message, /depuis le chat par le sondage `drwil-detour` \(`node \.githooks\/state\.mjs poll detour`, posé tel quel/);
+  assert.match(refus.message, /ou dans un terminal interactif/);
+  const r = await capturer(() => etatMain(["poll", "detour"], racine));
+  assert.equal(r.code, 0, r.erreurs);
+  const sondage = JSON.parse(r.sortie);
+  assert.deepEqual(sondage, detourPoll(racine).poll);
+  const q = sondage.questions[0];
+  assert.equal(q.header, "drwil-detour");
+  assert.equal(q.multiSelect, false);
+  assert.match(
+    q.question,
+    /^drwil-detour detour\/date-mal-lue\nLe détour detour\/date-mal-lue change les règles du jeu .*\n\nL'autoriser à changer les règles du jeu \?$/,
+  );
+  assert.deepEqual(
+    q.options.map((o) => o.label),
+    ["Autoriser", "Ne pas autoriser"],
+  );
+  assert.ok(
+    q.options.every((o) => !/recommand/i.test(o.label + o.description)),
+    "aucune option recommandée",
+  );
+  assert.equal(etat(racine).detour.human, undefined, "la préparation n'écrit rien");
+  const { data } = detourPoll(racine);
+  for (const faux of [undefined, { ...data, name: "detour/autre" }, { ...data, reopened: true }])
+    assert.equal(allowFromPoll(racine, faux), null);
+  assert.equal(etat(racine).detour.human, undefined);
+  const oui = allowFromPoll(racine, data);
+  assert.equal(oui.code, 0);
+  assert.equal(oui.message, "détour detour/date-mal-lue autorisé à changer les règles du jeu");
+  assert.equal(etat(racine).detour.human, true);
+
+  const rouvert = depot();
+  ecrire(rouvert, { ".drwil/state.json": JSON.stringify({ ...etat(rouvert), reopened: { pr: 42 } }) });
+  const reouverture = detourPoll(rouvert);
+  assert.match(
+    reouverture.poll.questions[0].question,
+    /^drwil-detour docs\/projects\/chantier\.md\nLe correctif de la réouverture de docs\/projects\/chantier\.md change les règles du jeu/,
+  );
+  assert.equal(allowFromPoll(rouvert, data), null, "le sondage d'un détour ne vaut pas pour une réouverture");
+  assert.match(allowFromPoll(rouvert, reouverture.data).message, /^réouverture de docs\/projects\/chantier\.md autorisée/);
+  assert.deepEqual(etat(rouvert).reopened, { pr: 42, human: true });
+
+  const en = depot({ lang: "en" });
+  open(en, "date-mal-lue", { title: "t" });
+  const anglais = detourPoll(en).poll.questions[0];
+  assert.deepEqual(
+    anglais.options.map((o) => o.label),
+    ["Allow", "Do not allow"],
+  );
+  assert.match(anglais.question, /\nDetour detour\/date-mal-lue changes the rules .*\n\nAllow it to change the rules\?$/);
+  assert.match((await allow(en)).message, /from the chat by the `drwil-detour` poll .* or in an interactive terminal/);
+  ecrire(en, { ".drwil/state.json": JSON.stringify({ ...etat(en), detour: undefined, reopened: { pr: 7 } }) });
+  assert.match(
+    detourPoll(en).poll.questions[0].question,
+    /\nThe fix of the reopening of docs\/projects\/detour-date-mal-lue\.md changes the rules/,
+  );
 });
 
 test("QUA-050 : les règles du jeu — registre des contrats, hooks, seuils, CI, et leurs sources du gabarit", () => {

@@ -8,6 +8,25 @@ release renames this section to its version.
 
 ### Added
 
+- Every human gesture can now be made from the chat, by a prepared poll
+  that only the hook reads, with the terminal still available: attestation
+  by batch (`drwil attest-poll ID1 ID2 …`, one multiple-choice poll under
+  Claude Code, one attestation per ticked contract with its own proof
+  fingerprint; `drwil attest ID1 ID2 …` asks them one by one in the
+  terminal), acceptance of the criteria (`node .githooks/state.mjs poll
+  accept`, `drwil-accept`), the acceptance verdict of a release candidate
+  (`node .githooks/release-verdict-poll.mjs`, `drwil-verdict`), the
+  transitions reserved to the human and the human's yes to a detour or a
+  reopening's fix (`state.mjs poll move` / `poll detour`, `drwil-move` /
+  `drwil-detour`). Each poll refuses, cause named, a missing or expired
+  preparation, a recommendation, an added field, a changed summary or an
+  unreadable answer. Under Copilot CLI, these five polls are read too:
+  `ask_user`'s real form (`message`, `requestedSchema`, `toolCalls` before
+  the call) is translated by `.claude/hooks/copilot-polls.mjs`, which also
+  converts a preparation (`attest-poll --tool copilot`, or a pipe); its real
+  interactive trial is still pending. The refusals of a
+  human transition outside a terminal and of a closing on changed criteria
+  now name the chat poll as well as the terminal.
 - `node .githooks/pr-watch.mjs` no longer says « green » while the PR's
   automatic merge is scheduled: it waits for the merge, within the same
   30 minutes, and sees it as soon as the PR's head is contained in the

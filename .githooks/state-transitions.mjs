@@ -129,10 +129,10 @@ export function prepareTransition(read, to, { brief, request, now }, root) {
 }
 
 /**
- * Applies a transition and writes the state. `{ code: 0 | 1, message }`. `confirm(question)` is only called if a
- * human is required, and only in front of an interactive terminal: without a terminal, a human transition is refused.
+ * Applies a transition and writes the state. `{ code: 0 | 1, message }`. A human transition needs `human` (the chat poll's
+ * answer, read by the hook, QUA-117) or `confirm(question)` in an interactive terminal; else refused, the poll said.
  */
-export async function move(root, { to, brief, request }, { tty = false, confirm, now = new Date().toISOString() } = {}) {
+export async function move(root, { to, brief, request }, { tty = false, confirm, human = false, now = new Date().toISOString() } = {}) {
   const T = texts(root);
   const read = readState(root);
   const resumed = read.problems.length ? fill(T.resumed, read.problems.join(" ; ")) : "";
@@ -164,8 +164,9 @@ export async function move(root, { to, brief, request }, { tty = false, confirm,
   ) {
     return { code: 1, message: resumed + fill(T.stillThere, read.state.active_brief) };
   }
-  if (requiresHuman(from, to, config(root).transitions)) {
-    if (!tty || typeof confirm !== "function") return { code: 1, message: resumed + fill(T.humanDecision, from, to) };
+  if (requiresHuman(from, to, config(root).transitions) && !human) {
+    const hint = async () => (await import("./state-polls.mjs")).moveHint(root, to, { brief, request });
+    if (!tty || typeof confirm !== "function") return { code: 1, message: resumed + fill(T.humanDecision, from, to) + (await hint()) };
     if (!(await confirm(fill(T.confirm, from, to)))) return { code: 1, message: T.confirmRefused };
   }
   writeState(root, prep.state);

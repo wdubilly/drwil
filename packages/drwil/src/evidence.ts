@@ -115,9 +115,13 @@ export interface Attestation {
   coverage?: Coverage;
   commit: string | null;
   automated: { id: string; status: string }[];
-  /** QUA-235 : corrélation locale, jamais une identité forte ni un faux identifiant d'appel. */
+  /**
+   * QUA-235 : corrélation locale, jamais une identité forte ni un faux identifiant d'appel. `copilot-poll` a deux formes :
+   * celle du socle de Claude Code (session et appel natifs, sans nonce), que prépare `attest-poll --tool copilot`, et
+   * celle du protocole à nonce, sans identifiant d'appel.
+   */
   origin?:
-    | { source: "claude-poll"; sessionId: string; toolUseId: string; askedAt: string }
+    | { source: "claude-poll" | "copilot-poll"; sessionId: string; toolUseId: string; askedAt: string }
     | { source: "codex-poll" | "cursor-poll"; sessionId: string; toolUseId: string; nonce: string; pollHash: string; askedAt: string }
     | { source: "copilot-poll" | "gemini-poll"; sessionId: string; nonce: string; pollHash: string; askedAt: string };
 }

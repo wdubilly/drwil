@@ -44,9 +44,16 @@ Relevé dans les notes du 2026-10-29 au 2026-11-09 :
   alors que cela fonctionne d'habitude ; la réponse au sondage `drwil-scope` de la session du 2026-11-09 n'a pas non plus
   ramené de message `[drwil]`.
 
+**Traité en partie** (chantier « gestes-humains-depuis-le-chat », lot 5, 2026-11-19) : la cause des lectures
+manquées de l'attestation est trouvée dans les journaux de session de Copilot CLI (`~/.copilot/session-state`, 2026-11-14
+et 15) : `ask_user` prend `message` et `requestedSchema`, et le preToolUse natif porte `toolCalls[]`, pas `toolName` /
+`toolArgs` ; l'ancien adaptateur ne préparait donc jamais le sondage. Corrigé par `.claude/hooks/copilot-polls.mjs` pour
+les cinq sondages préparés (attestation, acceptation, verdict, transition, détour). Les journaux montrent aussi que les
+sondages `drwil-start` y sont lus (branche du chantier créée juste après la réponse). L'essai réel de ces cinq sondages
+sous Copilot CLI reste [humain] ; la matrice le dit « not tested » jusque-là.
+
 **Questions** :
 
-- [décision] Cause : hooks Copilot CLI non actifs dans la session, ou réponse `ask_user` non interceptée ? À reproduire
-  d'abord, avec un essai réel et une trace du hook.
-- [décision] Adapter le hook (forme de la réponse de `ask_user`) ou le format des sondages préparés pour Copilot ?
+- [décision] Cause des lectures manquées de `drwil-start` / `drwil-scope` du 2026-11-09 : non reproduite (les journaux
+  n'enregistrent pas la sortie des hooks) ; hooks non actifs dans la session ?
 - [décision] Un signal visible quand les hooks ne sont pas actifs (aujourd'hui l'agent ne le voit que par l'absence de message).

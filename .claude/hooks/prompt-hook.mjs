@@ -19,10 +19,14 @@ import { NOT_NOW_RE, humanAnswer, inPollOrder, parallelChosen, startPoll, worktr
 import { queueHook } from "./queue-poll.mjs";
 import { limitHook } from "./limit-poll.mjs";
 import { attestationHook } from "./attest-poll.mjs";
+import { acceptanceHook } from "./accept-poll.mjs";
+import { verdictHook } from "./verdict-poll.mjs";
+import { moveHook } from "./move-poll.mjs";
+import { detourHook } from "./detour-poll.mjs";
 import { portableMain } from "./portable-polls.mjs";
 
 export { humanAnswer, inPollOrder, parallelChosen, startPoll, worktreeChosen };
-export { attestationHook };
+export { acceptanceHook, attestationHook, detourHook, moveHook, verdictHook };
 
 // The folder holding this hook's .claude/, never the current folder: it follows the agent's `cd`.
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -81,8 +85,12 @@ async function main() {
   } catch {
     return 0;
   }
-  const attestation = await attestationHook(input, { root: ROOT, tell });
-  if (attestation !== null) return attestation;
+  // Sondages préparés (QUA-235) : attestation, acceptation des critères (QUA-175), verdict de recette (QUA-053),
+  // transition réservée à l'humain et oui au détour (QUA-117).
+  for (const hook of [attestationHook, acceptanceHook, verdictHook, moveHook, detourHook]) {
+    const code = await hook(input, { root: ROOT, tell });
+    if (code !== null) return code;
+  }
   const poll = startPoll(input);
   const ctx = { root: ROOT, lang: language(), tell };
   if (!poll) return (await queueHook(input, ctx)) ?? (await limitHook(input, ctx)) ?? 0;

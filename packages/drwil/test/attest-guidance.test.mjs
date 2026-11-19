@@ -98,6 +98,10 @@ test("QUA-267 : skill drwil, règles, consigne de drwil-checks et AGENTS.md livr
     sondageDAbord(gestes, `règle « Human gestures » (${lang})`);
     assert.ok(gestes.includes(RECETTE));
     assert.match(gestes, /never the terminal alone/);
+    // Tout geste humain a aussi son sondage du chat, lu par le hook (QUA-175, QUA-053, QUA-117).
+    for (const sondage of ["drwil-accept", "drwil-verdict", "drwil-move", "drwil-detour"])
+      assert.ok(gestes.includes(`\`${sondage}\``), sondage);
+    assert.match(gestes, /only the hook reads/);
     const checks = plat(lire(dir, ".claude/agents/drwil-checks.md"));
     assert.match(
       checks,
@@ -107,6 +111,7 @@ test("QUA-267 : skill drwil, règles, consigne de drwil-checks et AGENTS.md livr
     assert.ok(agents.split("\n").length <= 100, "AGENTS.md reste un aiguillage de 100 lignes au plus");
     assert.match(agents, /\| a human attestation awaited \(`MANUAL`\) \| .* \| `docs\/recipes\/attest-a-contract\.md` \|/);
     assert.match(agents, /an awaited attestation is proposed first as the chat poll, the terminal as fallback/);
+    assert.match(agents, /Every human gesture \(.*\) has its chat poll, read by the hook/);
     assert.ok(
       plat(lire(dir, ".claude/skills/start-a-workstream/SKILL.md")).includes(RECETTE),
       "le skill de lancement renvoie à la recette",

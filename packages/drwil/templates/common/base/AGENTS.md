@@ -28,7 +28,7 @@ lines in when it is scoped (`docs/recipes/adopt-the-kit.md`, step 0).
 - **Review remark**: verify it in the code before applying it; say so if it is wrong or out of scope.
 - **Limits during the workstream**: a limit within the scope is handled on the spot; outside it, the human chooses by a `drwil-limite` poll, at the end of BUILD and before VERIFY; only « Record as intent » makes it an intent brief in `docs/intentions/`, never a workstream brief (the closing refuses any other).
 - **Closing in one gesture**: journal entry, then `node .githooks/close.mjs` (`--check` for the report alone).
-- **Detour**: a defect outside the brief's scope → `node .githooks/detour.mjs open`; a detour that changes the rules waits for the human.
+- **Detour**: a defect outside the brief's scope → `node .githooks/detour.mjs open`; a detour that changes the rules waits for the human's yes (terminal or chat poll).
 - **Defect revealed after the closing**: in CLOSING, a defect of the open PR → `node .githooks/state.mjs reopen`, never a rewritten history.
 - **Queue of workstreams**: one after the other, each merged before the next; stop at the first that needs a human.
 - **One session per workstream**: once closed and back in SCOPING, the next one starts in a new session.
@@ -87,7 +87,7 @@ their own instructions". Remove otherwise.)*
 - Know whether the work is verified: `npx drwil verify --agent` (only `GOVERNANCE: PASS` counts as validation).
 - Live, read-only view of the project: `npx drwil serve --welcome` (starts it if needed, prints the link to give the human; never start it with `--host` nor handle its token).
 - Long checks in a subagent if the tool allows it (Claude Code: `drwil-checks`); say « verified » only on the copied `GOVERNANCE: …` line.
-- `drwil attest` and the release verdict (`.githooks/release-verdict.mjs` (if present)) are **human** gestures: an agent never runs them; an awaited attestation is proposed first as the chat poll, the terminal as fallback.
+- `drwil attest` and the release verdict (`.githooks/release-verdict.mjs` (if present)) are **human** gestures: an agent never runs them; an awaited attestation is proposed first as the chat poll, the terminal as fallback. Every human gesture (attestation, criteria acceptance, release verdict, reserved transition, yes to a detour) has its chat poll, read by the hook (section 8).
 - Enable hooks (once per clone): `git config core.hooksPath .githooks`
 
 ## Conventions

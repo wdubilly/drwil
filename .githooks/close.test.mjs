@@ -1050,6 +1050,8 @@ test("QUA-174 : un critère modifié depuis l'acceptation refuse la clôture san
     /^clôture refusée : la preuve de clôture ne peut pas être écrite — les critères de la fiche ne sont plus ceux que l'humain a acceptés/,
   );
   assert.match(r.message, /node \.githooks\/state\.mjs accept/);
+  // L'acceptation se donne aussi depuis le chat : le refus cite le sondage drwil-accept et sa préparation.
+  assert.match(r.message, /sondage `drwil-accept` du chat \(`node \.githooks\/state\.mjs poll accept`, posé tel quel\)/);
   assert.ok(
     existsSync(join(racine, FICHE)) && !existsSync(join(racine, "docs/preuves/exemple.md")),
     "ni fiche supprimée, ni preuve écrite",
@@ -1061,7 +1063,9 @@ test("QUA-174 : un critère modifié depuis l'acceptation refuse la clôture san
   git(anglais, "add", "-A");
   git(anglais, "commit", "-q", "-m", "critère modifié");
   ecrireEvidence(anglais);
-  assert.match(close(anglais, { logs: journaux() }).message, /no longer those the human accepted at the start/);
+  const refusAnglais = close(anglais, { logs: journaux() }).message;
+  assert.match(refusAnglais, /no longer those the human accepted at the start/);
+  assert.match(refusAnglais, /the chat's `drwil-accept` poll \(`node \.githooks\/state\.mjs poll accept`, asked unchanged\)/);
 
   const retires = depot({ criteres: "- Un critère — `QUA-001`" });
   recordAcceptance(retires, FICHE);

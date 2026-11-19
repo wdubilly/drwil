@@ -56,6 +56,7 @@ files:
   - .githooks/state-resume.mjs
   - .githooks/state-cli-commands.mjs
   - .githooks/state-acceptance.mjs
+  - .githooks/state-polls.mjs
   - .githooks/state-hooks.mjs
   - .githooks/engine-branch.mjs
   - .githooks/engine-launch.mjs
@@ -112,6 +113,7 @@ files:
   - .githooks/acceptance-sheet-texts.mjs
   - .githooks/acceptance-sheet-works.mjs
   - .githooks/release-verdict.mjs
+  - .githooks/release-verdict-poll.mjs
   - .githooks/promote-release.mjs
   - .githooks/recette-note.mjs
   - .githooks/recette-note-texts.mjs
