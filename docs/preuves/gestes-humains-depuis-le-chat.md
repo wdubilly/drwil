@@ -1,7 +1,7 @@
 # Preuve de clôture — gestes-humains-depuis-le-chat
 
 **Clos le** : 2026-11-19
-**Commit vérifié** : `1372bff1f7` — verdict `drwil verify` : PASS
+**Commit vérifié** : `100e595cce` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:49b5e8d1ff7d9b8f`, acceptés par l'humain au lancement le 2026-11-18
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
