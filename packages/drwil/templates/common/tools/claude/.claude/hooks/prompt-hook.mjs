@@ -20,10 +20,11 @@ import { queueHook } from "./queue-poll.mjs";
 import { limitHook } from "./limit-poll.mjs";
 import { attestationHook } from "./attest-poll.mjs";
 import { acceptanceHook } from "./accept-poll.mjs";
+import { verdictHook } from "./verdict-poll.mjs";
 import { portableMain } from "./portable-polls.mjs";
 
 export { humanAnswer, inPollOrder, parallelChosen, startPoll, worktreeChosen };
-export { acceptanceHook, attestationHook };
+export { acceptanceHook, attestationHook, verdictHook };
 
 // The folder holding this hook's .claude/, never the current folder: it follows the agent's `cd`.
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -82,8 +83,8 @@ async function main() {
   } catch {
     return 0;
   }
-  // Sondages préparés (QUA-235) : attestation, acceptation des critères (QUA-175).
-  for (const hook of [attestationHook, acceptanceHook]) {
+  // Sondages préparés (QUA-235) : attestation, acceptation des critères (QUA-175), verdict de recette (QUA-053).
+  for (const hook of [attestationHook, acceptanceHook, verdictHook]) {
     const code = await hook(input, { root: ROOT, tell });
     if (code !== null) return code;
   }

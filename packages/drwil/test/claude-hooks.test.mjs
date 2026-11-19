@@ -703,6 +703,175 @@ test("QUA-235 : sondage drwil-accept (QUA-175) — refusé, cause dite, comme ce
   }
 });
 
+const MODULE_RELEASE = fileURLToPath(new URL("../templates/common/optional/create-release/", import.meta.url));
+const CANDIDATE = "v1.1.0-rc.1";
+
+/** Projet avec le module de release et un gh simulé : le hook du sondage drwil-verdict (QUA-053) s'y joue. */
+async function projetVerdict(lang = "fr") {
+  const dir = projet({ lang });
+  cpSync(BASE_GITHOOKS, join(dir, ".githooks"), { recursive: true });
+  cpSync(MODULE_RELEASE, join(dir, ".githooks"), { recursive: true });
+  const githook = (name) => import(pathToFileURL(join(dir, ".githooks", name)).href);
+  const { renderSheet, sheetTexts } = await githook("acceptance-sheet.mjs");
+  const { verdictPoll } = await githook("release-verdict-poll.mjs");
+  const point = (n, what) => ({ id: `v1.1.0-P${n}`, kind: "human", what, how: "Lire", work: null });
+  const base = { tag: CANDIDATE, version: "v1.1.0", commit: "0123456789", from: "v1.0.0", repo: null, verdict: null };
+  const vide = { proven: [], os: [], tarballs: null, packages: null };
+  const sheet = (what = "Lisible") => renderSheet({ ...base, points: [point(1, what), point(2, "Lente")], ...vide }, sheetTexts(dir));
+  const gh = { sheet: sheet(), verdict: null, upload: true, appels: [] };
+  const run = (_cmd, args) => {
+    gh.appels.push(args);
+    if (args[0] === "release" && args[1] === "view")
+      return JSON.stringify({ isPrerelease: true, url: "https://exemple.invalid/r", body: "" });
+    if (args[1] === "download") {
+      const nom = args[args.indexOf("--pattern") + 1];
+      const texte = nom === "recette-verdict.json" ? gh.verdict : gh.sheet;
+      if (texte === null) return null;
+      writeFileSync(join(args[args.indexOf("--dir") + 1], nom), texte);
+      return "";
+    }
+    if (args[0] === "api") return "recetteuse";
+    if (args[0] === "issue") return "https://exemple.invalid/i/1";
+    if (args[1] === "upload") {
+      gh.recorded = gh.upload ? JSON.parse(readFileSync(args[3], "utf8")) : null;
+      return gh.upload ? "" : null;
+    }
+    return "";
+  };
+  const output = [];
+  const { verdictHook } = await load("prompt-hook.mjs");
+  const hook = (input) => verdictHook(input, { root: dir, tell: (text) => output.push(text), run });
+  const prepare = (args = [CANDIDATE, "--reserve", "P1"]) => ({
+    hook_event_name: "PreToolUse",
+    tool_name: "AskUserQuestion",
+    session_id: "session-fictive",
+    tool_use_id: "appel-fictif",
+    tool_input: verdictPoll(dir, args, { run }).poll,
+  });
+  const post = (input, label = input.tool_input.questions[0].options[0].label) => {
+    const answers = { [input.tool_input.questions[0].question]: label };
+    return {
+      ...input,
+      hook_event_name: "PostToolUse",
+      tool_input: { ...input.tool_input, answers: { ...answers }, annotations: {} },
+      tool_response: { questions: input.tool_input.questions, answers, annotations: {} },
+    };
+  };
+  return { dir, gh, sheet, hook, prepare, post, output };
+}
+
+test("QUA-235 : sondage drwil-verdict (QUA-053) — seule la réponse de l'humain au sondage préparé enregistre le verdict sur la candidate, une fois", async () => {
+  const { dir, gh, hook, prepare, post, output } = await projetVerdict();
+  try {
+    const input = prepare();
+    assert.match(input.tool_input.questions[0].question, /^drwil-verdict v1\.1\.0-rc\.1 \["--reserve","P1"\]\n/);
+    assert.equal(await hook(input), 0);
+    assert.equal(gh.recorded, undefined, "la question posée n'enregistre rien");
+    assert.ok(!gh.appels.some((a) => a[0] === "issue" || a[0] === "api"));
+    assert.equal(await hook(post(input)), 0);
+    assert.match(
+      output.at(-1),
+      /^✓ issue ouverte pour v1\.1\.0-P1[\s\S]*verdict « approuvée avec réserves » enregistré sur v1\.1\.0-rc\.1 par recetteuse/,
+    );
+    assert.equal(gh.recorded.verdict, "reserved");
+    assert.equal(gh.recorded.by, "recetteuse");
+    delete gh.recorded;
+    await hook(post(input));
+    assert.match(output.at(-1), /préparation absente/, "rejeu sans préparation refusé");
+    assert.equal(gh.recorded, undefined);
+    assert.equal(await hook({}), null, "un autre sondage n'est pas le sien");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("QUA-235 : sondage drwil-verdict (QUA-053) — refusé, cause dite, comme celui de l'attestation ; refus humain, fiche changée, refus du module", async () => {
+  const { dir, gh, sheet, hook, prepare, post, output } = await projetVerdict();
+  const errors = [];
+  const error = console.error;
+  console.error = (text) => errors.push(String(text));
+  const last = () => {
+    const said = [...errors, ...output].at(-1) ?? "";
+    errors.length = output.length = 0;
+    return said;
+  };
+  try {
+    const base = prepare();
+    const form =
+      /sondage de verdict refusé — .* ; aucun verdict enregistré\. relancer `node \.githooks\/release-verdict-poll\.mjs v1\.1\.0-rc\.1 …`/;
+    for (const [change, cause] of [
+      [(x) => (x.tool_input.metadata = {}), /champ inattendu \(tool_input\.metadata\)/],
+      [
+        (x) => (x.tool_input.questions[0].options[0].label += " (Recommended)"),
+        /recommandation dans l'option « Donner le verdict \(Recommended\) »/,
+      ],
+      [
+        (x) => (x.tool_input.questions[0].question = x.tool_input.questions[0].question.replace("Lisible", "Illisible")),
+        /résumé différent .*Illisible/,
+      ],
+      [(x) => (x.tool_input.questions[0].question = x.tool_input.questions[0].question.replace("P1", "P2")), /résumé différent/],
+      [(x) => delete x.tool_use_id, /appel non corrélable/],
+    ]) {
+      const input = structuredClone(base);
+      change(input);
+      assert.equal(await hook(input), 2);
+      const said = last();
+      assert.match(said, cause);
+      assert.match(said, form);
+    }
+    // Arguments illisibles dans la première ligne : la préparation refaite échoue, l'usage dit tel quel.
+    const illisible = structuredClone(base);
+    illisible.tool_input.questions[0].question = illisible.tool_input.questions[0].question.replace('["--reserve","P1"]', "[1]");
+    assert.equal(await hook(illisible), 2);
+    assert.match(last(), /sondage de verdict refusé — usage : node \.githooks\/release-verdict-poll\.mjs/);
+    assert.equal(await hook(base), 0);
+    await hook(post(base, "Oui"));
+    assert.match(last(), /réponse illisible \(« Oui » ∉ options\)/);
+    assert.equal(await hook(base), 0);
+    await hook(post(base, "Ne pas le donner"));
+    const human = last();
+    assert.match(human, /refus choisi par l'humain \(« Ne pas le donner »\) : aucun verdict enregistré sur la candidate/);
+    assert.doesNotMatch(human, /sondage de verdict refusé/);
+    // Fiche de la candidate changée pendant la question.
+    assert.equal(await hook(base), 0);
+    gh.sheet = sheet("Illisible");
+    await hook(post(base));
+    assert.match(last(), /fiche de recette de la candidate changée pendant la question/);
+    gh.sheet = sheet();
+    // Refus du module à l'écriture : son message est dit tel quel.
+    assert.equal(await hook(base), 0);
+    gh.upload = false;
+    await hook(post(base));
+    assert.match(last(), /sondage de verdict refusé — [\s\S]*verdict non enregistré sur v1\.1\.0-rc\.1/);
+    // Un verdict déjà donné : la préparation refaite échoue, son message est dit.
+    gh.verdict = "{}";
+    assert.equal(await hook(base), 2);
+    assert.match(last(), /sondage de verdict refusé — v1\.1\.0-rc\.1 a déjà un verdict/);
+    assert.equal(gh.recorded, null);
+    // Module de release absent (projet sans lui) : la préparation ne peut se faire.
+    const sans = projet();
+    const { verdictHook } = await load("prompt-hook.mjs");
+    assert.equal(await verdictHook(base, { root: sans, tell: (t) => output.push(t) }), 2);
+    assert.match(last(), /sondage de verdict refusé — erreur/);
+    rmSync(sans, { recursive: true, force: true });
+  } finally {
+    console.error = error;
+    rmSync(dir, { recursive: true, force: true });
+  }
+  const en = await projetVerdict("en");
+  try {
+    const input = en.prepare([CANDIDATE, "--approve"]);
+    assert.equal(await en.hook(input), 0);
+    await en.hook(en.post(input, "Do not give it"));
+    assert.match(en.output.join("\n"), /refusal chosen by the human \(« Do not give it »\): no verdict recorded on the candidate/);
+    assert.equal(await en.hook(input), 0);
+    await en.hook(en.post(input));
+    assert.match(en.output.at(-1), /^✓ verdict "approved" recorded on v1\.1\.0-rc\.1 by recetteuse/);
+  } finally {
+    rmSync(en.dir, { recursive: true, force: true });
+  }
+});
+
 function run(name, input) {
   return spawnSync(process.execPath, [join(HOOKS, name)], {
     input: typeof input === "string" ? input : JSON.stringify(input),

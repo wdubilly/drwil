@@ -113,6 +113,7 @@ files:
   - .githooks/acceptance-sheet-texts.mjs
   - .githooks/acceptance-sheet-works.mjs
   - .githooks/release-verdict.mjs
+  - .githooks/release-verdict-poll.mjs
   - .githooks/promote-release.mjs
   - .githooks/recette-note.mjs
   - .githooks/recette-note-texts.mjs

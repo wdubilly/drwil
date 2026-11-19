@@ -165,6 +165,7 @@ files:
   - .githooks/release-review.test.mjs
   - .githooks/acceptance-sheet.mjs
   - .githooks/release-verdict.mjs
+  - .githooks/release-verdict-poll.mjs
   - .githooks/promote-release.mjs
   - .githooks/recette-note.mjs
   - .github/workflows/ia-first.yml

@@ -24,6 +24,9 @@ without an extra PR.
 - `release-verdict.mjs`: records the acceptance verdict on a candidate — a
   **human** gesture (interactive terminal, the candidate's name typed back);
   an agent never runs it.
+- `release-verdict-poll.mjs`: prepares, with the same checks and writing
+  nothing, the same verdict as a `drwil-verdict` chat poll; only the
+  human's answer, read by the Claude Code hook, records it.
 - `promote-release.mjs`: promotes an approved candidate to the final release.
 - `recette-note.mjs`: writes the acceptance note of a version into the
   repository through a dedicated branch and a PR (a candidate's promotion, or
@@ -70,6 +73,9 @@ not read the repository:
    `recette-verdict.json`, summary added to its note) — never in a commit.
    Each reserve and each refusal becomes a GitHub issue, sorted afterwards
    as a defect to fix or an intent (recipe « fix a defect »).
+   From the chat (Claude Code): the agent prepares the same verdict with
+   `node .githooks/release-verdict-poll.mjs vX.Y.Z-rc.N <same options>` and
+   asks the printed poll as is; only the human's answer records it.
 3. `node .githooks/promote-release.mjs vX.Y.Z-rc.N` (`--dry-run` to
    preview) refuses a candidate without a verdict or refused; approved, with
    or without reserves, it tags the same commit `vX.Y.Z` and publishes the

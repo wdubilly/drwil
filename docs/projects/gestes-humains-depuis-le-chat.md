@@ -205,7 +205,8 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-18) : lots 1 (attestation par lot) et 2 (acceptation des critères dans le chat) faits.
+- **Dernier état** (2026-11-19) : lots 1 (attestation par lot), 2 (acceptation des critères dans le chat) et 3
+  (verdict de recette dans le chat) faits.
   - Lot 1 : `drwil attest-poll ID1 ID2 …` (Claude Code, 4 ID au plus) prépare un sondage `drwil-attest` à choix
     multiple, une option par ID ; le hook atteste chaque ID coché à part (`.claude/hooks/attest-batch.mjs`) ;
     `drwil attest ID1 ID2 …` au terminal (`attestEach`, `packages/drwil/src/cli-attest.ts`). QUA-235 réécrit.
@@ -223,13 +224,26 @@ Aucun.
     étendu : `acceptFromPoll` appelé par le seul hook) ; `packages/drwil/test/claude-hooks.test.mjs`, deux tests
     « QUA-235 : sondage drwil-accept (QUA-175) … » (nommés QUA-235 : le contrôle `tests-qua-175` ne lit que
     `.githooks/state.test.mjs`).
-- **Ce que le lot 3 doit savoir** : le verdict de recette se branche comme l'acceptation : un `spec` dans un hook
-  `.claude/hooks/<geste>-poll.mjs`, ajouté à la boucle de `.claude/hooks/prompt-hook.mjs` (`for (const hook of [...])`), et une
-  entrée dans `POLLS` de `.githooks/state-polls.mjs` si la préparation vit dans `.githooks/` (sinon dans le module
-  optionnel `.githooks/release-verdict.mjs`, 188 lignes : sortir la préparation dans un module ajouté au scope). Tout nouveau
-  fichier de `.githooks/` livré doit aussi entrer au bloc `scope` de `docs/projects/kit-mechanics.md` (gabarit et dépôt), sans quoi
-  les tests du kit le voient hors cadrage. `.githooks/state-cli.mjs` est à 199 lignes, `.githooks/state-acceptance.mjs` à 198.
-  `.githooks/closure-proof.mjs` dit encore « dans un terminal (`node .githooks/state.mjs accept`) » : hors scope, limite
-  signalée. QUA-236 (lisibilité du sondage) : réattestation humaine à proposer en VERIFY. Ligne « Unreleased » du
-  CHANGELOG au dernier lot : attestation par lot et acceptation depuis le chat.
-- **Prochaine étape** : lot 3 — verdict de recette dans le chat.
+  - Lot 3 : verdict de recette dans le chat. `node .githooks/release-verdict-poll.mjs <vX.Y.Z-rc.N> <options du
+    terminal>` (module optionnel de release, n'écrit rien) imprime le sondage `drwil-verdict` : première ligne
+    `drwil-verdict <tag> <JSON des arguments, ordre canonique>` (le hook refait la préparation depuis elle), verdict,
+    points cités et leur libellé, note. `.claude/hooks/verdict-poll.mjs` (un `spec` du socle, branché dans
+    `.claude/hooks/prompt-hook.mjs`) seul appelle `verdictFromPoll` : mêmes contrôles qu'au terminal, fiche de la candidate
+    inchangée (empreinte sha256), puis la même écriture (`check` / `write` sortis de `record` dans
+    `.githooks/release-verdict.mjs`, 197 lignes). `ctx.run` (gh simulé) n'est passé que par les tests. Réglages :
+    `Bash(node .githooks/release-verdict-poll.mjs:*)` autorisé. QUA-053 réécrit (champ « Modifié »). Recette
+    `docs/recipes/create-a-release.md` (gabarit et dépôt), README du module, skill `create-a-release`, carte. Tests :
+    `.githooks/release-verdict.test.mjs` (3 tests QUA-053) ; `packages/drwil/test/claude-hooks.test.mjs`, deux tests
+    « QUA-235 : sondage drwil-verdict (QUA-053) … ».
+- **Ce que le lot 4 doit savoir** : même branchement que `drwil-accept` : préparation dans `POLLS` de
+  `.githooks/state-polls.mjs` (`state.mjs poll move|detour`), un `spec` par geste dans `.claude/hooks/<geste>-poll.mjs`
+  ajouté à la boucle de `.claude/hooks/prompt-hook.mjs`. Les données liées à la réponse se re-vérifient dans le
+  `confirm` (état, fiche active inchangés), sinon refus nommé. `.githooks/state-cli.mjs` est à 199 lignes,
+  `.githooks/state-acceptance.mjs` à 198 : sortir dans un module ajouté au scope (et au bloc `scope` de
+  `docs/projects/kit-mechanics.md`, gabarit et dépôt). L'en-tête `drwil-verdict` a 13 caractères (les autres en ont
+  12 au plus) : Claude Code 2.1.326 ne semble pas imposer de limite (texte « max 12 chars » absent du binaire), essai
+  réel à faire en VERIFY. `docs/ia-first/8-conduct-rules.md` et `AGENTS.md` disent encore le verdict au seul terminal
+  (hors scope, limite signalée). `.githooks/closure-proof.mjs` dit encore « dans un terminal » pour `accept` (hors
+  scope). QUA-236 (lisibilité du sondage) : réattestation humaine à proposer en VERIFY. Ligne « Unreleased » du
+  CHANGELOG au dernier lot : attestation par lot, acceptation et verdict de recette depuis le chat.
+- **Prochaine étape** : lot 4 — transitions humaines et oui au détour dans le chat.

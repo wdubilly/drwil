@@ -113,6 +113,14 @@ before the final release.
    recorded on the pre-release with who gave it and when (no commit); each
    reserve and each refusal becomes an issue, which the agent sorts with
    the recipe « fix a defect » (defect to fix or intent).
+   From the chat (Claude Code), the human gives the same verdict by
+   answering a poll: the agent prepares it with
+   `node .githooks/release-verdict-poll.mjs vX.Y.Z-rc.N` and the same
+   options (it runs the same checks and writes nothing), then asks the
+   printed `drwil-verdict` poll unchanged, with no answer, default or
+   recommendation. Only the human's answer, read by the hook, records the
+   verdict, as in the terminal; a sheet changed during the question records
+   nothing. The terminal stays possible.
 3. Promotion: `node .githooks/promote-release.mjs vX.Y.Z-rc.N --dry-run`,
    then without `--dry-run` (same green light as a release). Refused
    without a verdict or when refused; otherwise the final release `vX.Y.Z`
