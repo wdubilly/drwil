@@ -757,6 +757,60 @@ test("QUA-213 : pas d'avertissement sans changement du bloc scope (texte de la f
   );
 });
 
+test("QUA-016 : en BUILD, une fiche ou une intention créée ou modifiée se commite sans changer l'état ni la fiche active ; au rejeu de la branche aussi", () => {
+  const racine = depot(["src/a.js"]);
+  git(racine, "checkout", "-q", "-b", "chantier");
+  ecrireEtat(racine, "BUILD");
+  const avant = readFileSync(join(racine, ".drwil/state.json"), "utf8");
+  const cadrage = ["docs/projects/nouvelle.md", "docs/intentions/idee.md", "docs/projects/autre.md"];
+  ecrire(racine, cadrage[0], fiche(["src/b.js"]));
+  ecrire(racine, cadrage[1], "# Intention : idée\n");
+  ecrire(racine, cadrage[2], "# Projet : autre\n");
+  git(racine, "add", ...cadrage);
+  const r = checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: cadrage });
+  assert.equal(r.status, "ok");
+  assert.deepEqual(r.problems, [], "aucun refus, aucun avertissement d'élargissement : la fiche active n'est pas touchée");
+  git(racine, "commit", "-q", "-m", "cadrage en BUILD\n\nDrwil-Brief: docs/projects/exemple.md");
+  ecrire(racine, cadrage[1], "# Intention : idée\n\nPrécisée.\n");
+  git(racine, "add", cadrage[1]);
+  assert.deepEqual(checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: [cadrage[1]] }).problems, [], "intention modifiée");
+  git(racine, "commit", "-q", "-m", "intention précisée\n\nDrwil-Brief: docs/projects/exemple.md");
+  assert.equal(readFileSync(join(racine, ".drwil/state.json"), "utf8"), avant, "état inchangé");
+  assert.equal(readState(racine).state.active_brief, FICHE, "fiche active inchangée");
+  const rejeu = checkScope(racine, { cfg: { scopeGate: "blocking" }, env: { DRWIL_BASE: "main" } });
+  assert.equal(rejeu.status, "ok", rejeu.problems.join("\n"));
+});
+
+test("QUA-016 : le cadrage commité en BUILD ne couvre pas le chantier : un code cadré par la nouvelle fiche reste refusé, au commit comme au rejeu", () => {
+  const racine = depot(["src/a.js"]);
+  git(racine, "checkout", "-q", "-b", "chantier");
+  ecrireEtat(racine, "BUILD");
+  ecrire(racine, "docs/projects/nouvelle.md", fiche(["src/b.js"]));
+  git(racine, "add", ".");
+  git(racine, "commit", "-q", "-m", "cadrage en BUILD\n\nDrwil-Brief: docs/projects/exemple.md");
+  ecrire(racine, "src/b.js", "b\n");
+  git(racine, "add", "src/b.js");
+  const r = checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: ["src/b.js"] });
+  assert.equal(r.status, "fail");
+  assert.match(r.problems.join("\n"), /src\/b\.js : hors du cadrage de docs\/projects\/exemple\.md/);
+  git(racine, "commit", "-q", "-m", "code de la fiche cadrée\n\nDrwil-Brief: docs/projects/exemple.md");
+  const rejeu = checkScope(racine, { cfg: { scopeGate: "blocking" }, env: { DRWIL_BASE: "main" } });
+  assert.equal(rejeu.status, "fail");
+  assert.match(rejeu.problems.join("\n"), /src\/b\.js hors du cadrage de docs\/projects\/exemple\.md/);
+});
+
+test("QUA-016 : en BUILD, le registre des contrats reste refusé hors du périmètre, même commité avec une fiche de cadrage", () => {
+  const racine = depot(["src/a.js"]);
+  ecrireEtat(racine, "BUILD");
+  ecrire(racine, "docs/projects/nouvelle.md", fiche(["src/b.js"]));
+  ecrire(racine, "docs/contracts.md", "## QUA-900 — Nouveau\n");
+  git(racine, "add", ".");
+  const r = checkScope(racine, { cfg: { scopeGate: "blocking" }, staged: ["docs/projects/nouvelle.md", "docs/contracts.md"] });
+  assert.equal(r.status, "fail");
+  assert.equal(r.problems.length, 1, r.problems.join("\n"));
+  assert.match(r.problems[0], /docs\/contracts\.md : hors du cadrage/);
+});
+
 test("QUA-214 : la consigne du compte rendu de fin de tâche cite les chemins ajoutés au bloc scope, dépôt et gabarit ; l'avertissement la rappelle", () => {
   const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
   const gabarit = "packages/drwil/templates/common/base/";

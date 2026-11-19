@@ -71,6 +71,16 @@ release renames this section to its version.
   request (`glab mr merge --auto-merge`) through `glab`, and a merge request
   merged by squash is recognised when deleting branches, resuming a detour or
   reopening a workstream. The state reminder says « MR !n » on GitLab.
+- Scoping during a workstream: in `BUILD`, a brief (`docs/projects/`) or an
+  intention (`docs/intentions/`) is created or edited in the workstream's
+  folder, on its branch, with no worktree; it is committed without changing
+  the state or the active brief, never widens the workstream's scope, and
+  merges with its PR (`/drwil-scope` and section 7 of the description say
+  so). The contracts registry stays refused outside the active brief's scope.
+  An intention added by such a scoping commit (briefs and intents only, the
+  active brief untouched) no longer needs, at closing, the « Record as
+  intent » answer of the limits poll; one answered « Handle now » is still
+  refused.
 
 ### Changed
 

@@ -1,6 +1,6 @@
 # Intention : cadrer pendant qu'un agent construit sur le même poste
 
-**Statut** : cadrée le 2026-11-12 — `docs/projects/cadrage-en-build.md` et `docs/projects/index-par-fiche.md`.
+**Statut** : cadrée le 2026-11-12 ; revue le 2026-11-19 — le cadrage de documentation en BUILD est livré (journal, chantier « cadrage-en-build ») ; reste l'index par fiche, `docs/projects/index-par-fiche.md`.
 
 ## Besoin
 

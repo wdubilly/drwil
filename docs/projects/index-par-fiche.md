@@ -40,7 +40,7 @@ fichier d'index par fiche supprime le conflit.
 ## 2. Hors périmètre
 
 - Le journal des chantiers (`docs/projects/journal.md`), conservé tel quel : son conflit éventuel est hors de ce chantier.
-- Le cadrage en BUILD lui-même : `docs/projects/cadrage-en-build.md`.
+- Le cadrage en BUILD lui-même : livré par le chantier « cadrage-en-build » (journal, 2026-11-19).
 
 ## 3. Contraintes
 

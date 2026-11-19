@@ -140,8 +140,6 @@ d'un outil) la dit dans son statut.
 
 - [ ] [IA] [P0] (0.11.3) Une limite hors cadre dit son lien avec le problème (bloquant, lié, périphérique) et
   l'élargissement se compte au journal (cadré le 2026-11-13) — `docs/projects/limites-classees-par-lien.md`.
-- [ ] [IA] [P0] (0.11.2) Cadrer de la documentation depuis le dossier d'un chantier en BUILD (cadré le 2026-11-12) —
-  `docs/projects/cadrage-en-build.md`.
 - [ ] [IA] [P0] (0.11.3) Un fichier d'index par fiche, sans conflit sur l'index commun (cadré le 2026-11-12) — `docs/projects/index-par-fiche.md`.
 - [ ] [IA] [P1] (0.11.3) Une fusion automatique qui n'est plus programmée est dite par `pr-watch`, avec la commande
   `merge-auto` à relancer ; après l'attente de fusion (cadré le 2026-11-15) —

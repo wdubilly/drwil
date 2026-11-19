@@ -4686,3 +4686,18 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 ## gestes-humains-depuis-le-chat
 
 - **Preuve de clôture** : `docs/preuves/gestes-humains-depuis-le-chat.md`.
+
+## 2026-11-19 — Le cadrage de documentation se fait dans le dossier d'un chantier en BUILD (cadrage-en-build)
+
+- **Ce qui change** : en BUILD, une fiche (`docs/projects/`) ou une intention (`docs/intentions/`) se crée ou se modifie dans le dossier du chantier, sur sa branche, sans worktree, et fusionne avec sa PR. Le skill `scope-a-workstream` et la section 7 (`docs/ia-first/7-starting-and-closing.md`) le décrivent ; ligne « Unreleased » au changelog.
+- **Cause relevée** : la barrière de périmètre commitait déjà fiches et intentions en BUILD (pre-commit réel sur une fiche et une intention d'essai : code 0) ; gênaient le skill, qui exigeait SCOPING, et la clôture, qui refusait toute intention née sur la branche sans réponse « Noter en intention » (QUA-264).
+- **Contrats modifiés** : QUA-016, champ Tests (ajout de `.githooks/scope-gate.test.mjs`, trois tests : état et fiche active inchangés, code de la nouvelle fiche refusé, registre refusé hors périmètre), validé par le demandeur le 2026-11-19 ; QUA-264, une intention ajoutée par un commit de cadrage (fiches et intentions seules, sans la fiche active) est exceptée, « Traiter maintenant » restant refusé (champ « Modifié »).
+- **Limite hors cadre traitée** (« Traiter maintenant », 2026-11-19) : l'exception de QUA-264 (`.githooks/close-limits.mjs`, gabarit compris), test rouge avant, vert après.
+- **Intention couverte** : en partie, `docs/intentions/cadrer-pendant-un-chantier.md` (mise à jour ; reste l'index par fiche, `docs/projects/index-par-fiche.md`).
+- **Décisions clés** : 2026-11-12, cadrage de documentation dans le dossier du chantier, sans worktree dédié (P0, 0.11.2).
+- **Critères et preuves** : `.githooks/scope-gate.test.mjs` (57 tests), `.githooks/close-limits.test.mjs` (5 tests) ; `node .githooks/run-checks.mjs` OK ; `drwil verify --evidence` : `GOVERNANCE: PASS (CI pending)` (278 PASS, 21 ATTESTED, 0 FAIL, 0 MANUAL).
+- **Limites connues** : l'exception de QUA-264 se fonde sur la forme du commit ; une limite commitée seule dans un commit de fiches et d'intentions y échapperait (dit dans le contrat, retenue par la relecture). Le critère « test rouge avant » du lot 1 n'a pas pu l'être pour la barrière, qui acceptait déjà.
+
+## cadrage-en-build
+
+- **Preuve de clôture** : `docs/preuves/cadrage-en-build.md`.

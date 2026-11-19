@@ -171,3 +171,38 @@ test("QUA-264 : le refus est dit en quittant BUILD (ce qui ferait échouer la cl
   const sans = depot({ lang: "en" });
   assert.match(close(sans, { check: true }).message, /intent brief added by the branch without the human's « Record as intent » answer/);
 });
+
+test("QUA-264 : une intention ajoutée par un commit de cadrage (fiches et intentions seules, sans la fiche active) ne demande pas la réponse ; ailleurs, si", () => {
+  const racine = depot({ limits: [{ intent: LIMITE, choice: "note" }] });
+  const CADREE = "docs/intentions/cadree.md";
+  ecrire(racine, {
+    "docs/projects/autre.md": "# Projet : autre\n",
+    "docs/projects/pending.md":
+      "# Index\n\n- [ ] [IA] Exemple — `docs/projects/exemple.md`.\n- [ ] [IA] Autre — `docs/projects/autre.md`.\n",
+    [CADREE]: INTENTION("cadrée en BUILD"),
+  });
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "cadrage en BUILD\n\nDrwil-Brief: docs/projects/exemple.md");
+  ecrire(racine, { [CADREE]: INTENTION("cadrée en BUILD, précisée") });
+  const texte = readFileSync(join(racine, FICHE), "utf8");
+  assert.deepEqual(limitProblems(racine, texte), [], "cadrage commité, puis modifié dans l'arbre de travail");
+  assert.doesNotMatch(close(racine, { check: true }).message, /cadree\.md/);
+
+  // Le même ajout, commité avec du code, ou avec la fiche active : une limite, jugée comme avant.
+  for (const [nom, autre] of [
+    ["avec-code.md", { "src/a.mjs": "export const a = 1;\n" }],
+    ["avec-fiche.md", { [FICHE]: `${texte}\nRemarque.\n` }],
+  ]) {
+    ecrire(racine, { [`docs/intentions/${nom}`]: INTENTION(nom), ...autre });
+    git(racine, "add", "-A");
+    git(racine, "commit", "-q", "-m", `intention ${nom}`);
+  }
+  const signaux = limitProblems(racine, texte).join("\n");
+  assert.match(signaux, /`docs\/intentions\/avec-code\.md` : fiche d'intention ajoutée par la branche/);
+  assert.match(signaux, /`docs\/intentions\/avec-fiche\.md` : fiche d'intention ajoutée par la branche/);
+  assert.doesNotMatch(signaux, /cadree\.md/);
+
+  // Une limite répondue « Traiter maintenant » reste refusée, même commitée comme un cadrage.
+  etat(racine, "CLOSING", [{ intent: CADREE, choice: "now" }]);
+  assert.match(limitProblems(racine, texte).join("\n"), /`docs\/intentions\/cadree\.md` : limite répondue « Traiter maintenant »/);
+});
