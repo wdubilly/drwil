@@ -146,7 +146,7 @@ Sous Copilot CLI, la réponse à un sondage posé par `ask_user` n'est pas toujo
 - Chaque sondage préparé refuse, cause dite, ce que refuse déjà celui de l'attestation : préparation absente ou
   expirée, option recommandée, champ inattendu, résumé modifié, réponse illisible ; le terminal reste possible pour
   chaque geste — `QUA-235`
-- Sous Copilot CLI, ces sondages et celui de l'attestation sont lus par le hook ; la cause de la lecture manquée est
+- [human] Sous Copilot CLI, ces sondages et celui de l'attestation sont lus par le hook ; la cause de la lecture manquée est
   trouvée et corrigée, ou dite si elle tient à l'outil ; la matrice de compatibilité le dit avec sa date d'essai —
   `QUA-063`
 - Tests : un test par sondage (réponse humaine acceptée, chaque refus), attestation par lot (tout coché, rien coché,
