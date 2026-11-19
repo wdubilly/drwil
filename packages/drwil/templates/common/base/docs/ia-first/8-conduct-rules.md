@@ -197,7 +197,18 @@ read at every request. The full text of each rule is here, read by section
   terminal `drwil attest <ID>` as fallback, never the terminal alone
   (`docs/recipes/attest-a-contract.md`). Likewise, the acceptance verdict
   on a candidate release (`.githooks/release-verdict.mjs` (if present),
-  release module) is a **human** gesture: an agent never runs it.
+  release module) is a **human** gesture: an agent never runs it. Every
+  human gesture is also given from the chat, by a poll the tool prepares
+  without writing anything and that only the hook reads: the attestation
+  (`drwil-attest`), the acceptance of the criteria (`drwil-accept`,
+  `node .githooks/state.mjs poll accept`), the release verdict
+  (`drwil-verdict`, `node .githooks/release-verdict-poll.mjs` (if
+  present)), a transition reserved to the human (`drwil-move`,
+  `node .githooks/state.mjs poll move <ACTIVITY>`) and the yes to a detour
+  or a reopening's fix (`drwil-detour`, `node .githooks/state.mjs poll
+  detour`). The agent asks the prepared poll unchanged, with no answer,
+  default or recommendation; only the human's answer writes the gesture;
+  the terminal stays available.
 - **Project language** (`lang` in `.drwil/ia-first.json`): reply, and write
   briefs, intents, journal entries and commit messages, in that language,
   even though the kit's own files are in English. What a visitor reads

@@ -120,7 +120,7 @@ export const MESSAGES_EN = {
   closingRefused: `closing refused: {0}`,
   closingSignals: "What would make the closing fail, to fix while code can still change (`node .githooks/state.mjs move BUILD`):",
   stillThere: `back to SCOPING refused: {0} says it is done but is still there — condense it into docs/projects/journal.md, delete it and remove its index line ("Closing" recipe)`,
-  humanDecision: `{0} → {1} is a human decision: interactive terminal required ("transitions" setting: human)`,
+  humanDecision: `{0} → {1} is a human decision: interactive terminal or chat poll ("transitions" setting: human)`,
   confirm: `To move from {0} to {1}, type the target activity again ({1}): `,
   confirmRefused: "confirmation refused: state unchanged",
   noBriefs: "(no scoped brief: scope block committed and brief not finished)",

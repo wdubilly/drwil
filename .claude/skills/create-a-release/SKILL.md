@@ -14,7 +14,9 @@ green light given at launch for that version (recipe, « Publication
 green light ») — never on a guess, never for an npm publication.
 With an acceptance team, publish a candidate instead
 (`--candidate`, recipe « Acceptance before publication »); the verdict
-(`.githooks/release-verdict.mjs` (if present)) is a human gesture an agent never runs, and the
+(`.githooks/release-verdict.mjs` (if present)) is a human gesture an agent never runs — propose it
+first as the `drwil-verdict` chat poll (`.githooks/release-verdict-poll.mjs` (if present), asked
+unchanged; only the human answers it), the terminal as fallback — and the
 promotion (`.githooks/promote-release.mjs` (if present), `--dry-run` first) needs the same yes as
 a release.
 Both the promotion and a direct release also open a PR carrying the

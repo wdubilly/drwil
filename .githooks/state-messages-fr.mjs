@@ -121,7 +121,7 @@ export const MESSAGES_FR = {
   closingRefused: `clôture refusée : {0}`,
   closingSignals: "Ce qui ferait échouer la clôture, à corriger tant que le code peut changer (`node .githooks/state.mjs move BUILD`) :",
   stillThere: `retour en SCOPING refusé : {0} se dit terminée mais est encore là — la condenser dans docs/projects/journal.md, la supprimer et retirer sa ligne de l'index (recette « Clôturer »)`,
-  humanDecision: `{0} → {1} est une décision humaine : terminal interactif requis (réglage « transitions » : human)`,
+  humanDecision: `{0} → {1} est une décision humaine : terminal interactif ou sondage du chat (réglage « transitions » : human)`,
   confirm: `Pour passer de {0} à {1}, retapez l'activité visée ({1}) : `,
   confirmRefused: "confirmation refusée : état inchangé",
   noBriefs: "(aucune fiche cadrée : bloc scope commité et fiche non terminée)",

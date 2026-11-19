@@ -115,6 +115,7 @@
       "paths": [
         "outils/tests-par-fichier.mjs",
         "packages/drwil/src/attest.ts",
+        "packages/drwil/src/attest-texts.ts",
         "packages/drwil/src/attest-portable.ts",
         "packages/drwil/src/cli-attest.ts",
         "packages/drwil/src/cli-cursor.ts",
@@ -124,6 +125,13 @@
         "packages/drwil/src/evidence.ts",
         "packages/drwil/src/index.ts",
         "packages/drwil/templates/common/tools/claude/.claude/hooks/**",
+        "packages/drwil/templates/common/base/.githooks/state-polls.mjs",
+        "packages/drwil/templates/common/base/.githooks/state-acceptance.mjs",
+        "packages/drwil/templates/common/base/.githooks/state-transitions.mjs",
+        "packages/drwil/templates/common/base/.githooks/detour.mjs",
+        "packages/drwil/templates/common/base/.githooks/detour-texts.mjs",
+        "packages/drwil/templates/common/optional/create-release/release-verdict.mjs",
+        "packages/drwil/templates/common/optional/create-release/release-verdict-poll.mjs",
         "packages/drwil/templates/common/tools/copilot/.github/hooks/**",
         "packages/drwil/templates/common/tools/gemini/.gemini/settings.json",
         "packages/drwil/templates/common/tools/codex/.codex/hooks.json",
@@ -1766,14 +1774,18 @@
     {
       "id": "tests-qua-117",
       "name": "tests de QUA-117, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-117 .githooks/scope-gate.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-117 .githooks/scope-gate.test.mjs .githooks/state.test.mjs .githooks/detour.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
+        "packages/drwil/**",
         ".githooks/**",
+        "package.json",
+        "package-lock.json",
         ".drwil/ia-first.json"
       ],
-      "degradable": false
+      "degradable": false,
+      "needsBuild": true
     },
     {
       "id": "tests-qua-118",

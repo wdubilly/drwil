@@ -125,7 +125,7 @@ d'un outil) la dit dans son statut.
 
 - **0.11.1** : publier « Unreleased » tel quel (montée de version sûre, contrôles lents en tranches) pour patcher drwil_walk.
 - **0.11.2, optimisation des tests** (décidée le 2026-11-11 ; chaque sujet est son propre chantier, une session chacun, la release les regroupe). **Ordre** (décidé le 2026-11-14 ; il suit celui de la section « Fiches cadrées » ci-dessous, seule source) : faits le 2026-11-14 — attestations qui ne tombent que pour leur objet (OPT-4), reprise de détour sans réécriture, un seul run de couverture ; doublon des tests des hooks abandonné (gain trop faible : `docs/intentions/suivi-ci-et-contexte.md`). **Réordonné le 2026-11-14 par le demandeur**, un sous-titre par thème dans la section (une nouvelle fiche se range sous le sien) : d'abord ce qui améliore le plus l'expérience au quotidien (périmètre prévu, refus d'attestation lisible, marque `[humain]`, limites, cadrage en BUILD, index par fiche, hook commit-msg, relecture critique), puis la mesure (Copilot CLI, coût par activité), la vitesse (tranches dès le départ, tests du kit, preuves fiables, temps des contrôles), enfin la fiabilité (audit, analyse d'urgence, sans sous-agent). Les chantiers sont lancés l'un après l'autre, le suivant après la fusion du précédent. Contraintes : un seul run de couverture avant les tranches (`doctor` et `guarantees` partagés) ; preuves fiables avant le temps des contrôles journalisé (`run-checks-verdicts`) ; la consommation de Copilot CLI avant le coût par activité ; la fiche sans sous-agent de chantier attend la mesure du coût par activité. La mesure de la durée du job `checks` sur une PR de documentation seule (gain du cache de verdicts, contre 8 min sur la PR #405) se fait sur la PR de ce cadrage (branche `cadrage/priorites-opt4-detour`).
-- **Périmètre de la 0.11.2 resserré** (décidé le 2026-11-19 par le demandeur) : trois chantiers encore, dans cet ordre — gestes humains depuis le chat (en cours), cadrage en BUILD, tranches dès le départ ; puis la release. Le reste des fiches étiquetées 0.11.2 passe en 0.11.3.
+- **Périmètre de la 0.11.2 resserré** (décidé le 2026-11-19 par le demandeur) : trois chantiers encore, dans cet ordre — gestes humains depuis le chat (fait le 2026-11-19, PR #456), cadrage en BUILD, tranches dès le départ ; puis la release. Le reste des fiches étiquetées 0.11.2 passe en 0.11.3.
 - **0.11.3** : les fiches reportées de la 0.11.2, dans l'ordre de la section « Fiches cadrées » (limites classées par lien, index par fiche, fusion automatique perdue signalée, relecture critique, preuves fiables, temps des contrôles, journal sans entrée vide, durcissements de l'audit, analyse d'urgence, sans sous-agent).
 - **0.12.0, gouvernance crédible, et la campagne du mini-banc** (critères de décision écrits le 2026-11-09 dans `docs/intentions/campagne-mini-banc.md`, à insérer au protocole ; essai réel, budget et 12 passages : gestes humains) : attestation authentifiée, contrôle sauté dit « non exécuté », contournements
   restants, clôture sans CI verte, pre-push, contrats à aligner, premier commit du kit, garanties ; les trois fiches reportées (hook commit-msg, gitleaks, ordre du sondage) ; petites hygiènes.
@@ -138,9 +138,6 @@ d'un outil) la dit dans son statut.
 
 ### Expérience au quotidien
 
-- [ ] [IA] [P0] (0.11.2) Tout geste humain encore au terminal se fait aussi depuis le chat (acceptation des critères,
-  verdict de recette, transitions humaines, oui au détour), sous Claude Code et Copilot CLI, et l'attestation se fait
-  par lot (cadré le 2026-11-18) — `docs/projects/gestes-humains-depuis-le-chat.md`.
 - [ ] [IA] [P0] (0.11.3) Une limite hors cadre dit son lien avec le problème (bloquant, lié, périphérique) et
   l'élargissement se compte au journal (cadré le 2026-11-13) — `docs/projects/limites-classees-par-lien.md`.
 - [ ] [IA] [P0] (0.11.2) Cadrer de la documentation depuis le dossier d'un chantier en BUILD (cadré le 2026-11-12) —
@@ -248,9 +245,12 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
   (`QUA-197`) ; montée de P3 en P1 le 2026-11-09 : l'analyse externe y voit la
   faiblesse principale (une attestation se fabrique) —
   `docs/intentions/garanties-la-suite.md` (partie « ex-e2e-et-attestation-precises »).
-- [ ] [décision] [P1] (0.12.0) Les sondages posés sous Copilot CLI (`drwil-start`, `drwil-scope`, attestation) sont lus par le hook :
-  réponse sans effet constatée les 2026-11-08 et 2026-11-09, cause à reproduire (notes regroupées le 2026-11-09) —
+- [ ] [décision] [P1] (0.12.0) Les sondages posés sous Copilot CLI (`drwil-start`, `drwil-scope`) sont lus par le hook ;
+  pour l'attestation et les quatre autres sondages préparés, cause trouvée et corrigée le 2026-11-19 (journal
+  « gestes-humains-depuis-le-chat »), essai interactif réel laissé à l'usage par le demandeur —
   `docs/intentions/sondage-worktree-copilot-cli.md` (partie « ex-sondages-lus-sous-copilot-cli »).
+- [ ] [décision] Retirer le protocole d'attestation à nonce de Copilot CLI, devenu inutile (noté en intention le
+  2026-11-19, limite du chantier gestes-humains-depuis-le-chat) — `docs/intentions/retrait-nonce-copilot.md`.
 - [ ] [décision] [P1] (0.12.0) Un contrôle exigé sauté (job de la forge, branche principale déjà prouvée) se dit
   « non exécuté » au lieu d'être rapporté réussi (analyse externe du 2026-11-09) —
   `docs/intentions/garanties-la-suite.md` (partie « ex-controles-sautes-dits-non-executes »).

@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { init, preparePortableAttestationPoll, prepareAttestationPoll, formatPortableAttestationPoll, verify } from "../dist/index.js";
 import { portableAttestationHook, portableAttestationMain } from "../templates/common/tools/claude/.claude/hooks/portable-attest.mjs";
 import { nativeAttestationEvent, portableIdentity, serialise } from "../templates/common/tools/claude/.claude/hooks/attest-adapters.mjs";
+import { portableMain } from "../templates/common/tools/claude/.claude/hooks/portable-polls.mjs";
 
 const CLI = fileURLToPath(new URL("../bin/drwil.js", import.meta.url));
 const hash = (v) => createHash("sha256").update(serialise(v)).digest("hex");
@@ -82,7 +83,8 @@ for (const tool of ["copilot", "gemini", "codex"]) {
         encoding: "utf8",
       });
       assert.equal(r.status, 0, r.stderr);
-      const args = JSON.parse(r.stdout);
+      // Copilot CLI : le CLI rend le sondage du socle (test suivant) ; le protocole à nonce reste celui de l'API.
+      const args = tool === "copilot" ? await p.prepare() : JSON.parse(r.stdout);
       assert.equal((await p.contract()).status, "MANUAL", "préparer n'atteste pas");
       const other = await p.prepare();
       assert.notEqual(portableIdentity(args).nonce, portableIdentity(other).nonce);
@@ -434,6 +436,79 @@ for (const tool of ["copilot", "gemini", "codex"]) {
     }
   });
 }
+
+test("QUA-235 : copilot, `attest-poll --tool copilot` rend le sondage du socle en ask_user, lu par l'entrée native installée sous la forme réelle", async () => {
+  const p = await projet("copilot");
+  try {
+    const r = spawnSync(process.execPath, [CLI, "attest-poll", "APP-009", "--tool", "copilot", "--tried", "Essai fictif."], {
+      cwd: p.root,
+      encoding: "utf8",
+    });
+    assert.equal(r.status, 0, r.stderr);
+    const args = JSON.parse(r.stdout);
+    assert.match(args.message, /^drwil-attest APP-009\n/);
+    assert.deepEqual(Object.keys(args.requestedSchema.properties), ["drwil-attest"]);
+    const label = args.requestedSchema.properties["drwil-attest"].enum[0];
+    const cmd = (pre) =>
+      JSON.parse(readFileSync(join(p.root, ".github/hooks/drwil.json"), "utf8")).hooks[pre ? "preToolUse" : "postToolUse"][0].bash;
+    const invoke = (event, pre) => {
+      const options = { cwd: p.root, input: JSON.stringify(event), encoding: "utf8" };
+      if (process.platform === "win32")
+        return spawnSync(
+          process.execPath,
+          [join(process.cwd(), p.root, ".claude/hooks/prompt-hook.mjs"), "copilot", pre ? "pre" : "post"],
+          options,
+        );
+      return spawnSync(cmd(pre), { ...options, shell: true });
+    };
+    // Forme relevée dans les journaux de session de Copilot CLI (2026-11-15), valeurs fictives.
+    const pre = (a) => ({ sessionId: "session-fictive", cwd: p.root, toolCalls: [{ id: "toolu_fictif", name: "ask_user", args: a }] });
+    const post = (a, texte) => ({
+      sessionId: "session-fictive",
+      timestamp: Date.now(),
+      cwd: p.root,
+      toolCallId: "toolu_fictif",
+      toolName: "ask_user",
+      toolArgs: a,
+      toolResult: { textResultForLlm: texte, resultType: "success" },
+    });
+    const ajout = { ...args, choices: ["Attester"] };
+    const refus = invoke(pre(ajout), true);
+    assert.equal(refus.status, 0, "Copilot refuse par sa réponse JSON");
+    const deny = JSON.parse(refus.stdout.trim().split("\n").at(-1));
+    assert.equal(deny.permissionDecision, "deny");
+    assert.match(deny.permissionDecisionReason, /sondage d'attestation refusé — champ inattendu \(tool_input\.choices\)/);
+    // Même refus dans ce processus (couverture) : la cause va dans la raison du refus natif.
+    const sorties = [];
+    const [log, error] = [console.log, console.error];
+    console.log = console.error = (m) => sorties.push(m);
+    try {
+      assert.equal(await portableMain({ root: p.root, tool: "copilot", phase: "pre", raw: JSON.stringify(pre(ajout)) }), 0);
+    } finally {
+      [console.log, console.error] = [log, error];
+    }
+    assert.match(JSON.parse(sorties.at(-1)).permissionDecisionReason, /champ inattendu \(tool_input\.choices\)/);
+    assert.equal(invoke(pre(args), true).stdout, "");
+    assert.equal((await p.contract()).status, "MANUAL", "la question posée n'atteste pas");
+    const lu = invoke(post(args, `User responded: ${label}`), false);
+    assert.equal(lu.status, 0, lu.stderr);
+    assert.match(JSON.parse(lu.stdout).additionalContext, /^\[drwil\] ✓ .*APP-009 attesté/);
+    const k = await p.contract();
+    assert.equal(k.status, "ATTESTED");
+    assert.equal(k.attestation.origin.source, "copilot-poll");
+    assert.equal(k.attestation.origin.toolUseId, "toolu_fictif");
+    const rejeu = invoke(post(args, `User responded: ${label}`), false);
+    assert.match(JSON.parse(rejeu.stdout).additionalContext, /préparation absente/);
+    const plusieurs = spawnSync(process.execPath, [CLI, "attest-poll", "APP-009", "APP-010", "--tool", "copilot", "--tried", "Essai"], {
+      cwd: p.root,
+      encoding: "utf8",
+    });
+    assert.equal(plusieurs.status, 2);
+    assert.match(plusieurs.stderr, /--tool claude only with several contracts/);
+  } finally {
+    p.dispose();
+  }
+});
 
 test("QUA-235 : un nonce réservé par Copilot ne peut pas être réarmé sous Gemini, même dans une autre session", async () => {
   const p = await projet("copilot");

@@ -8,8 +8,10 @@ import { PassThrough } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { renderSheet, sheetTexts } from "./acceptance-sheet.mjs";
 import { asset, main, parseArgs, record, sheetAsset, VERDICT_ASSET } from "./release-verdict.mjs";
+import * as sondage from "./release-verdict-poll.mjs";
 
 const SCRIPT = fileURLToPath(new URL("./release-verdict.mjs", import.meta.url));
+const SCRIPT_SONDAGE = fileURLToPath(new URL("./release-verdict-poll.mjs", import.meta.url));
 let dossiers = [];
 afterEach(() => {
   for (const d of dossiers) rmSync(d, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
@@ -249,3 +251,113 @@ test("QUA-053 : ligne de commande — usage, terminal interactif, en anglais ; l
   assert.equal(lance.status, 1);
   assert.match(lance.stderr, /geste humain|human gesture/);
 });
+
+test("QUA-053 : sondage drwil-verdict — préparé avec les contrôles du terminal, sans rien écrire ; arguments relus de sa première ligne", () => {
+  const racine = tmp();
+  const { run, appels } = gh({ assets: avec });
+  const r = sondage.verdictPoll(racine, [TAG, "--note", "vu en recette", "--refuse", "P2", "--reserve", "p1"], { run });
+  assert.equal(r.code, 0, r.message);
+  const [q] = r.poll.questions;
+  assert.equal(r.poll.questions.length, 1);
+  assert.equal(q.header, "drwil-verdict");
+  assert.equal(q.multiSelect, false);
+  assert.equal(
+    q.question,
+    [
+      `drwil-verdict ${TAG} ["--reserve","p1","--refuse","P2","--note","vu en recette"]`,
+      "Verdict de recette « refusée » sur v1.1.0-rc.1 — https://exemple.invalid/r",
+      "- v1.1.0-P1 (réserve) : Lisible",
+      "- v1.1.0-P2 (refus) : Lente",
+      "Note : vu en recette",
+      "",
+      "Donner ce verdict ? Il est enregistré sur la pré-release avec votre identité GitHub (gh) et l'heure ; chaque réserve et chaque refus devient une issue.",
+    ].join("\n"),
+  );
+  assert.deepEqual(
+    q.options.map((o) => o.label),
+    ["Donner le verdict", "Ne pas le donner"],
+  );
+  assert.ok(!q.options.some((o) => /recommand/i.test(o.label + o.description)), "aucune option recommandée");
+  assert.deepEqual(r.data.args, [TAG, "--reserve", "p1", "--refuse", "P2", "--note", "vu en recette"]);
+  assert.match(r.data.sheet, /^sha256:[0-9a-f]{64}$/);
+  assert.ok(!appels.some((a) => a[0] === "issue" || a[1] === "upload" || a[1] === "edit" || a[0] === "api"), "la préparation n'écrit rien");
+  // Le hook refait la préparation depuis la première ligne du sondage posé : le même sondage.
+  const [, tag, json] = /^drwil-verdict (\S+) (\[.*\])\n/.exec(q.question);
+  assert.deepEqual(sondage.verdictPoll(racine, sondage.pollArgs(tag, json), { run }).poll, r.poll);
+  const approuvee = sondage.verdictPoll(racine, [TAG, "--approve"], { run });
+  assert.match(approuvee.poll.questions[0].question, /^drwil-verdict v1\.1\.0-rc\.1 \["--approve"\]\nVerdict de recette « approuvée » sur/);
+  // Refus du terminal repris tels quels.
+  assert.match(sondage.verdictPoll(racine, ["v1.1.0", "--approve"], { run }).message, /n'est pas une candidate/);
+  assert.match(sondage.verdictPoll(racine, [TAG, "--reserve", "P9"], { run }).message, /point inconnu de la fiche/);
+  const deja = gh({ assets: { ...avec, [VERDICT_ASSET]: "{}" } }).run;
+  assert.match(sondage.verdictPoll(racine, [TAG, "--approve"], { run: deja }).message, /a déjà un verdict/);
+  for (const args of [null, [TAG], [TAG, "--approve", "--refuse", "P1"]]) {
+    const u = sondage.verdictPoll(racine, args, { run });
+    assert.equal(u.code, 2);
+    assert.match(u.message, /^usage : node \.githooks\/release-verdict-poll\.mjs/);
+  }
+  assert.deepEqual(sondage.pollArgs(TAG, '["--approve"]'), [TAG, "--approve"]);
+  for (const json of ["{}", "[1]", "[", '"--approve"']) assert.equal(sondage.pollArgs(TAG, json), null, json);
+});
+
+test("QUA-053 : verdict depuis le sondage — enregistré sur la candidate comme au terminal ; fiche changée ou refus du terminal, rien d'écrit", () => {
+  const racine = tmp();
+  const prepare = sondage.verdictPoll(racine, [TAG, "--reserve", "P1"], { run: gh({ assets: avec }).run });
+  const { run, appels } = gh({ assets: avec });
+  const r = sondage.verdictFromPoll(racine, prepare.data, { run, now });
+  assert.equal(r.code, 0, r.message);
+  assert.equal(appels.verdict.verdict, "reserved");
+  assert.equal(appels.verdict.by, "recetteuse");
+  assert.equal(appels.verdict.at, "2026-10-19T10:00:00.000Z");
+  assert.deepEqual(
+    appels.verdict.points.map((p) => p.id),
+    ["v1.1.0-P1"],
+  );
+  assert.match(appels.notes, /## Verdict de recette\n\n« approuvée avec réserves », donné par @recetteuse/);
+  assert.match(r.message, /verdict « approuvée avec réserves » enregistré sur v1\.1\.0-rc\.1 par recetteuse/);
+  // La fiche de la candidate a changé pendant la question : rien n'est écrit.
+  const autre = gh({ assets: { [sheetAsset(TAG)]: FICHE.replace("Lisible", "Illisible") } });
+  assert.equal(sondage.verdictFromPoll(racine, prepare.data, { run: autre.run, now }), null);
+  assert.ok(!autre.appels.some((a) => a[0] === "issue" || a[1] === "upload"));
+  // Un verdict donné entre-temps : refusé, cause dite, rien d'écrit.
+  const deja = gh({ assets: { ...avec, [VERDICT_ASSET]: "{}" } });
+  assert.match(sondage.verdictFromPoll(racine, prepare.data, { run: deja.run, now }).message, /a déjà un verdict/);
+  assert.ok(!deja.appels.some((a) => a[1] === "upload"));
+  for (const data of [undefined, {}, { args: [TAG] }]) assert.equal(sondage.verdictFromPoll(racine, data, { run, now }), null);
+});
+
+test("QUA-053 : préparation du sondage en ligne de commande — JSON sur la sortie, refus et usage, en anglais", () => {
+  const racine = tmp();
+  let r = capturerSync(() => sondage.main([TAG, "--approve"], racine, { run: gh({ assets: avec }).run }));
+  assert.equal(r.code, 0, r.erreurs);
+  assert.equal(JSON.parse(r.sortie).questions[0].header, "drwil-verdict");
+  r = capturerSync(() => sondage.main([TAG, "--approve"], racine, { run: gh({ view: null }).run }));
+  assert.equal(r.code, 1);
+  assert.match(r.erreurs, /^✗ v1\.1\.0-rc\.1 : pré-release introuvable/);
+  mkdirSync(join(racine, ".drwil"));
+  writeFileSync(join(racine, ".drwil", "ia-first.json"), JSON.stringify({ lang: "en" }));
+  r = capturerSync(() => sondage.main([TAG, "--approve"], racine, { run: gh({ assets: avec }).run }));
+  const q = JSON.parse(r.sortie).questions[0];
+  assert.match(q.question, /\nAcceptance verdict "approved" on v1\.1\.0-rc\.1 — /);
+  assert.deepEqual(
+    q.options.map((o) => o.label),
+    ["Give the verdict", "Do not give it"],
+  );
+  r = capturerSync(() => sondage.main([], racine));
+  assert.equal(r.code, 2);
+  assert.match(r.erreurs, /^usage: node \.githooks\/release-verdict-poll\.mjs/);
+  const lance = spawnSync(process.execPath, [SCRIPT_SONDAGE], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  assert.equal(lance.status, 2, "sans argument, l'usage, sans appeler gh");
+});
+
+function capturerSync(fn) {
+  const { log, error } = console;
+  const sortie = [];
+  const erreurs = [];
+  Object.assign(console, { log: (m) => sortie.push(m), error: (m) => erreurs.push(m) });
+  try {
+    return { code: fn(), sortie: sortie.join("\n"), erreurs: erreurs.join("\n") };
+  } finally {
+    Object.assign(console, { log, error });
+  }
+}

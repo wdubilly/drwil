@@ -7,8 +7,9 @@
 // - `resume` (detour-resume.mjs, re-exported): back to the workstream's branch brought up to the fixed main
 //   branch without ever rewriting a pushed branch, the work restored, the state pointed back at the
 //   workstream's brief; refused without losing anything if any step fails.
-// - `allow` (human, interactive terminal): the yes a detour, or a reopened workstream's fix (QUA-117),
-//   that changes the rules needs; until then the scope gate refuses its commits touching them (`rulesFiles`).
+// - `allow` (human, interactive terminal, or the `drwil-detour` chat poll read by the hook): the yes a detour, or a
+//   reopened workstream's fix (QUA-117), that changes the rules needs; until then the scope gate refuses its commits
+//   touching them (`rulesFiles`).
 // It never commits, pushes nor opens the PR; the state is written by `setDetour` (state.mjs) only.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, realpathSync, writeFileSync } from "node:fs";
@@ -75,6 +76,19 @@ export function open(root, name, { title, files = [], now = new Date().toISOStri
   return done(report.join("\n"));
 }
 
+/** What awaits the human's yes: the detour's branch, or the reopened workstream's brief; null without either. */
+function awaited(state) {
+  if (state.detour) return { reopened: false, name: state.detour.branch };
+  return state.reopened ? { reopened: true, name: state.active_brief } : null;
+}
+
+/** Records the human's yes (terminal or chat poll). */
+function grant(root, state, { reopened, name }) {
+  if (reopened) writeState(root, { ...state, reopened: { ...state.reopened, human: true } });
+  else setDetour(root, state.active_brief, { ...state.detour, human: true });
+  return done(fill(reopened ? texts(root).reopenAllowed : texts(root).allowed, name));
+}
+
 /**
  * The human's yes for a detour, or a reopened workstream's fix (QUA-117), that changes the rules;
  * `confirm(question)` only in an interactive terminal.
@@ -82,14 +96,32 @@ export function open(root, name, { title, files = [], now = new Date().toISOStri
 export async function allow(root, { tty = false, confirm } = {}) {
   const T = texts(root);
   const { state } = readState(root);
-  const reopened = !state.detour && state.reopened;
-  if (!state.detour && !reopened) return refused(T.noDetour);
+  const target = awaited(state);
+  if (!target) return refused(T.noDetour);
   if (!tty || typeof confirm !== "function") return refused(T.human);
-  const name = reopened ? state.active_brief : state.detour.branch;
-  if (!(await confirm(fill(reopened ? T.reopenConfirm : T.confirm, name)))) return refused(T.refused);
-  if (reopened) writeState(root, { ...state, reopened: { ...state.reopened, human: true } });
-  else setDetour(root, state.active_brief, { ...state.detour, human: true });
-  return done(fill(reopened ? T.reopenAllowed : T.allowed, name));
+  if (!(await confirm(fill(target.reopened ? T.reopenConfirm : T.confirm, target.name)))) return refused(T.refused);
+  return grant(root, state, target);
+}
+
+/** The `drwil-detour` poll of the yes awaited, to ask as is in the chat (QUA-117); writes nothing. */
+export function detourPoll(root) {
+  const T = texts(root);
+  const target = awaited(readState(root).state);
+  if (!target) return refused(T.noDetour);
+  const question = [`drwil-detour ${target.name}`, fill(target.reopened ? T.reopenAsk : T.ask, target.name)].join("\n");
+  const options = T.options.map((o) => ({ ...o }));
+  return { ...done(""), poll: { questions: [{ header: "drwil-detour", question, multiSelect: false, options }] }, data: target };
+}
+
+/**
+ * Records the yes the human gave by answering the poll, called by the hook only (QUA-117): the same detour, or the
+ * same reopening, must still await it. `{ code, message }`, or null (nothing recorded).
+ */
+export function allowFromPoll(root, data) {
+  const { state } = readState(root);
+  const target = awaited(state);
+  if (!target || target.name !== data?.name || target.reopened !== data.reopened) return null;
+  return grant(root, state, target);
 }
 
 /** Value of the `--name value` option in `args`, or undefined. */

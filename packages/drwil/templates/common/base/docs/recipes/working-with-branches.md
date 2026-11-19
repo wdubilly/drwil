@@ -189,7 +189,8 @@ that folder only):
   commit; commit the fix and push normally (no history rewritten). A fix
   that changes the rules (an existing contract modified or removed, hook,
   threshold, gate, CI) waits for the human's yes, like a detour
-  (`node .githooks/detour.mjs allow`, interactive terminal). Then Evidence,
+  (`node .githooks/detour.mjs allow`, interactive terminal, or the chat's
+  `drwil-detour` poll, `node .githooks/state.mjs poll detour`). Then Evidence,
   Verify and Closing as the first time: update the workstream's journal
   entry (a second entry citing the same proof makes the closing fail),
   `node .githooks/close.mjs` rewrites the proof on the new verified commit
