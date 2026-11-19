@@ -254,6 +254,9 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
   `docs/intentions/sondage-worktree-copilot-cli.md` (partie « ex-sondages-lus-sous-copilot-cli »).
 - [ ] [décision] Retirer le protocole d'attestation à nonce de Copilot CLI, devenu inutile (noté en intention le
   2026-11-19, limite du chantier gestes-humains-depuis-le-chat) — `docs/intentions/retrait-nonce-copilot.md`.
+- [ ] [décision] [P1] (0.11.3) Un gain fait pour le dépôt est pesé pour le livrable : critère à ajouter à QUA-018, et
+  cinq gains non reportés à trier (audit des dépendances, YAML de la CI, inventaire des attestations, analyse
+  statique, matrice multi-OS) (noté le 2026-11-19) — `docs/intentions/qua-018-gain-non-reporte.md`.
 - [ ] [décision] [P1] (0.12.0) Un contrôle exigé sauté (job de la forge, branche principale déjà prouvée) se dit
   « non exécuté » au lieu d'être rapporté réussi (analyse externe du 2026-11-09) —
   `docs/intentions/garanties-la-suite.md` (partie « ex-controles-sautes-dits-non-executes »).
