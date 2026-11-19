@@ -1,8 +1,8 @@
 # Intention : retirer le protocole d'attestation à nonce de Copilot CLI, devenu inutile
 
 **Statut** : proposée le 2026-11-19 — limite hors cadre du chantier « tout geste humain se fait aussi depuis le
-chat, et l'attestation se fait par lot » (`docs/projects/gestes-humains-depuis-le-chat.md`, lot 5), notée en
-intention par le demandeur au sondage des limites.
+chat, et l'attestation se fait par lot » (lot 5, Copilot CLI ; son entrée dans `docs/projects/journal.md`), notée
+en intention par le demandeur au sondage des limites.
 
 ## Besoin
 
