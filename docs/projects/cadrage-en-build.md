@@ -20,6 +20,10 @@ files:
   - docs/projects/pending.md
   - docs/projects/journal.md
   - packages/drwil/CHANGELOG.md
+  - .githooks/close-limits.mjs
+  - .githooks/close-limits.test.mjs
+  - packages/drwil/templates/common/base/.githooks/close-limits.mjs
+  - docs/ia-first/7-starting-and-closing.md
 -->
 
 ## 1. Besoin
@@ -43,6 +47,10 @@ ou modifiées voyagent sur la branche du chantier et fusionnent avec sa PR.
 - `.githooks/scope-gate.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 - `.githooks/scope-gate-kit.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
 - `.githooks/scope-gate-texts.mjs` — gardé à sa version de la branche (QUA-113) (validé le 2026-11-13)
+- `QUA-264` — une intention ajoutée par un commit de cadrage (fiches et intentions seules, sans la fiche active) ne
+  demande plus la réponse « Noter en intention » à la clôture (validé par le demandeur le 2026-11-19, réponse
+  « Traiter maintenant » au sondage des limites)
+- `.githooks/close-limits.mjs` — gardé à sa version de la branche (QUA-113) (validé par le demandeur le 2026-11-19)
 
 ## 2. Hors périmètre
 
