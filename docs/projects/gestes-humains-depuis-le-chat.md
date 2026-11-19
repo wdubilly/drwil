@@ -82,6 +82,8 @@ files:
   - packages/drwil/templates/common/tools/claude/.claude/hooks/detour-poll.mjs
   - .claude/hooks/move-poll.mjs
   - .claude/hooks/detour-poll.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/copilot-polls.mjs
+  - .claude/hooks/copilot-polls.mjs
 -->
 
 ## 1. Besoin
