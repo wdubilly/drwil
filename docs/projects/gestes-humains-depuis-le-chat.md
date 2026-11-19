@@ -100,12 +100,9 @@ files:
   - packages/drwil/templates/common/base/docs/recipes/working-with-branches.md
   - docs/recipes/working-with-branches.md
   - .drwil/ia-first.json
-  - packages/drwil/src/attest-portable.ts
   - packages/drwil/src/evidence.ts
-  - packages/drwil/src/index.ts
   - packages/drwil/README.md
   - packages/drwil/test/attest-guidance.test.mjs
-  - packages/drwil/test/cursor-acp.test.mjs
 -->
 
 ## 1. Besoin
@@ -159,8 +156,7 @@ Sous Copilot CLI, la réponse à un sondage posé par `ask_user` n'est pas toujo
 ## Contrats modifiés
 
 - `QUA-235` — ancien critère : un sondage préparé pour un seul ID, attestation seule — raison : le même mécanisme
-  porte l'attestation par lot et les autres gestes humains ; le protocole d'attestation à nonce de Copilot CLI, que
-  le CLI ne prépare plus, est retiré (validé par le demandeur le 2026-11-18 ; retrait du nonce le 2026-11-19)
+  porte l'attestation par lot et les autres gestes humains (validé par le demandeur le 2026-11-18)
 - `QUA-175` — ancien critère : acceptation des critères au seul terminal interactif — raison : aussi par le sondage du
   chat, lu par le hook, toujours sans chemin pour l'agent (validé par le demandeur le 2026-11-18)
 - `QUA-053` — ancien critère : verdict de recette au terminal — raison : aussi par le sondage du chat (validé par le
@@ -327,8 +323,17 @@ Aucun.
   `ask_user`, répondre une fois le oui, une fois le refus ; observer le geste écrit (attestation, acceptation, état,
   verdict) et la ligne `[drwil]` ; un sondage modifié doit être refusé avant affichage, cause dite. Dater l'essai et la
   version dans la matrice et la ligne de QUA-063.
-- **Limites hors cadre (lot 5)** : le protocole à nonce de Copilot (`packages/drwil/src/attest-portable.ts` forme
-  `question` / `choices`, branche Copilot de `.claude/hooks/attest-adapters.mjs` et `.claude/hooks/portable-attest.mjs`, leurs tests)
-  n'est plus préparé par le CLI : à retirer ; le type `origin` de `packages/drwil/src/evidence.ts` ne décrit pas
-  la provenance `copilot-poll` sans nonce ; `packages/drwil/README.md` dit encore `--tool copilot` « native ask_user ».
-- **Prochaine étape** : sondage des limites hors cadre, puis VERIFY (essai [humain] ci-dessus, QUA-236 à réattester).
+- **Limites hors cadre (2026-11-19)** : réponse « Traiter maintenant » au sondage `drwil-limite` pour 10 d'entre
+  elles, traitées (scope élargi par un commit de fiche séparé) : contrôle `tests-qua-235` (`paths` :
+  `packages/drwil/src/attest-texts.ts`, modules des sondages du gabarit) et `tests-qua-117` (lit aussi
+  `.githooks/state.test.mjs`, `.githooks/detour.test.mjs`, build requis) dans `.drwil/ia-first.json` ; refus de
+  clôture sur critères modifiés qui cite aussi le sondage `drwil-accept` (`.githooks/closure-proof.mjs`, test QUA-174
+  de `.githooks/close.test.mjs`) ; QUA-174 et QUA-050 réécrits (champ « Modifié ») ; règle « Human gestures »
+  (section 8) et `AGENTS.md` (gabarit et dépôt) : tout geste humain a son sondage du chat ; recettes
+  `docs/recipes/corriger-un-defaut.md` et `docs/recipes/working-with-branches.md` ; message `humanDecision` :
+  « terminal interactif ou sondage du chat » ; type `origin` de `packages/drwil/src/evidence.ts` (`copilot-poll` du
+  socle, avec `toolUseId`, sans nonce) ; `packages/drwil/README.md` (`attest-poll --tool copilot`) ; changelog. Test :
+  `packages/drwil/test/attest-guidance.test.mjs` (sondages de la règle et d'`AGENTS.md`). Le retrait du protocole à
+  nonce de Copilot n'est pas traité : décision de l'humain, notée en intention (`docs/intentions/retrait-nonce-copilot.md`).
+- **Prochaine étape** : VERIFY (essai [humain] ci-dessus, QUA-236 à réattester) ; le marquage [human] du critère
+  Copilot reste une décision humaine.
