@@ -120,7 +120,9 @@ before the final release.
    printed `drwil-verdict` poll unchanged, with no answer, default or
    recommendation. Only the human's answer, read by the hook, records the
    verdict, as in the terminal; a sheet changed during the question records
-   nothing. The terminal stays possible.
+   nothing. The terminal stays possible. Under Copilot CLI, the printed
+   poll goes through `node .claude/hooks/copilot-polls.mjs` (pipe) and its
+   output is given to `ask_user` as is.
 3. Promotion: `node .githooks/promote-release.mjs vX.Y.Z-rc.N --dry-run`,
    then without `--dry-run` (same green light as a release). Refused
    without a verdict or when refused; otherwise the final release `vX.Y.Z`

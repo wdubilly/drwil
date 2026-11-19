@@ -218,7 +218,10 @@ QUA-304, non recopiées ici.
   `.claude/hooks/prompt-hook.mjs` et `.claude/hooks/attest-poll.mjs` lisent seuls
   la réponse de l'outil (QUA-235). Les préparations locales sont dans
   le sous-dossier local attest-polls de `.drwil/evidence/`, hors git ; les attestations restent versionnées.
-- Les modes portables `--tool copilot|gemini|codex` passent par cette même entrée ;
+- Sous Copilot CLI, `--tool copilot` rend le même sondage dans la forme réelle d'`ask_user` et
+  `.claude/hooks/copilot-polls.mjs` en ramène les événements natifs au socle de Claude Code, comme les quatre autres
+  sondages préparés (préparation passée par ce module en tube).
+- Les modes portables `--tool gemini|codex` passent par cette même entrée ;
   les garanties et limites restent dans QUA-235 (frontière du sondage préparé).
   Codex seul reçoit les scripts partagés, sans réglages ni agents Claude.
   Cursor seul reçoit aussi les scripts partagés ; `--tool cursor` prépare son format,

@@ -41,11 +41,13 @@ export function registerAttest(program: Command): void {
         // Le choix multiple n'est lu que par le hook de Claude Code pour l'instant : ailleurs, un contrat par sondage.
         if (ids.length > 1 && opts.tool !== "claude") throw new Error("--tool claude only with several contracts in one poll");
         const options = { targetDir: process.cwd(), ids, id: ids[0], tried: opts.tried, renew: opts.renew };
-        const r =
-          opts.tool === "claude"
-            ? await prepareAttestationPoll(options)
-            : await preparePortableAttestationPoll({ ...options, tool: opts.tool });
-        if ("poll" in r) console.log(JSON.stringify(r.poll, null, 2));
+        // Copilot CLI : le sondage de Claude Code, rendu en `ask_user` par le hook du projet qui le lira (QUA-235).
+        const socle = opts.tool === "claude" || opts.tool === "copilot";
+        const r = socle ? await prepareAttestationPoll(options) : await preparePortableAttestationPoll({ ...options, tool: opts.tool });
+        if ("poll" in r && opts.tool === "copilot") {
+          const hooks = pathToFileURL(join(process.cwd(), ".claude", "hooks", "copilot-polls.mjs")).href;
+          console.log(JSON.stringify((await import(hooks)).copilotArgs(r.poll), null, 2));
+        } else if ("poll" in r) console.log(JSON.stringify(r.poll, null, 2));
         else console.error(`✗ ${r.message}`);
         process.exit(r.code);
       } catch (e) {

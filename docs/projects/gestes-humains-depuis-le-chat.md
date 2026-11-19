@@ -211,8 +211,9 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-19) : lots 1 (attestation par lot), 2 (acceptation des critères dans le chat), 3
-  (verdict de recette dans le chat) et 4 (transitions humaines et oui au détour dans le chat) faits.
+- **Dernier état** (2026-11-19) : lots [IA] 1 (attestation par lot), 2 (acceptation des critères dans le chat), 3
+  (verdict de recette dans le chat), 4 (transitions humaines et oui au détour dans le chat) et 5 (Copilot CLI) faits ;
+  reste l'essai réel [humain] du lot 5 sous Copilot CLI, en VERIFY.
   - Lot 1 : `drwil attest-poll ID1 ID2 …` (Claude Code, 4 ID au plus) prépare un sondage `drwil-attest` à choix
     multiple, une option par ID ; le hook atteste chaque ID coché à part (`.claude/hooks/attest-batch.mjs`) ;
     `drwil attest ID1 ID2 …` au terminal (`attestEach`, `packages/drwil/src/cli-attest.ts`). QUA-235 réécrit.
@@ -269,4 +270,30 @@ Aucun.
   `.githooks/closure-proof.mjs`). QUA-236 (lisibilité du sondage) : réattestation humaine à proposer en VERIFY. Ligne
   « Unreleased » du CHANGELOG au dernier lot : attestation par lot, acceptation, verdict de recette, transitions
   humaines et oui au détour depuis le chat.
-- **Prochaine étape** : lot 5 — Copilot CLI.
+  - Lot 5 : cause trouvée dans les journaux de session de Copilot CLI (`~/.copilot/session-state/*/events.jsonl`,
+    2026-11-14 et 15, CLI installée 1.0.112) : `ask_user` prend `message` et `requestedSchema` (pas `question` /
+    `choices`), le preToolUse natif porte `toolCalls[{id, name, args}]` (pas `toolName` / `toolArgs`), le postToolUse
+    `toolCallId`, `toolArgs`, `toolResult.textResultForLlm` « User responded: <valeur> » ; l'attestation portable ne
+    préparait donc jamais rien. `.claude/hooks/copilot-polls.mjs` : `copilotArgs` (sondage préparé → `ask_user` :
+    question, ligne vide, « libellé : description » par option ; un champ `enum` nommé par l'en-tête ; choix multiple
+    refusé), `claudeEvent` (événement natif → forme Claude, tout ajout devenant un champ que le socle refuse),
+    `copilotPollHook` (les cinq sondages par le socle, provenance `copilot-poll`) ; entrée en tube
+    `<préparation> | node .claude/hooks/copilot-polls.mjs`. `portableMain` (portable-polls.mjs) l'appelle pour
+    Copilot, refus en `permissionDecision: "deny"` avec la cause ; le socle reçoit `deny` et `source`.
+    `drwil attest-poll <ID> --tool copilot` rend désormais le sondage du socle converti (un ID par sondage). QUA-235 et
+    QUA-063 réécrits (champ « Modifié ») ; matrice : section « Prepared polls under Copilot CLI », ligne Copilot de
+    l'attestation toujours « not tested ». Tests : `packages/drwil/test/claude-hooks.test.mjs` (trois tests « QUA-235 : Copilot CLI … »),
+    `packages/drwil/test/portable-attest.test.mjs` (CLI `--tool copilot` et commande native installée). Note du 2026-11-07 retirée de
+    `docs/intentions/notes.md`, intention Copilot mise à jour. Ligne « Unreleased » du CHANGELOG pour tout le chantier.
+- **Essai [humain] sous Copilot CLI (VERIFY)** : dans un projet de bac à sable installé avec `--tools copilot`, dossier
+  de confiance, hooks actifs : pour chacun des cinq sondages, préparer (`npx drwil attest-poll <ID> --tried "…" --tool
+  copilot` ; `node .githooks/state.mjs poll accept|detour|move <ACTIVITE> | node .claude/hooks/copilot-polls.mjs` ;
+  `node .githooks/release-verdict-poll.mjs <tag> … | node .claude/hooks/copilot-polls.mjs`), le poser tel quel par
+  `ask_user`, répondre une fois le oui, une fois le refus ; observer le geste écrit (attestation, acceptation, état,
+  verdict) et la ligne `[drwil]` ; un sondage modifié doit être refusé avant affichage, cause dite. Dater l'essai et la
+  version dans la matrice et la ligne de QUA-063.
+- **Limites hors cadre (lot 5)** : le protocole à nonce de Copilot (`packages/drwil/src/attest-portable.ts` forme
+  `question` / `choices`, branche Copilot de `.claude/hooks/attest-adapters.mjs` et `.claude/hooks/portable-attest.mjs`, leurs tests)
+  n'est plus préparé par le CLI : à retirer ; le type `origin` de `packages/drwil/src/evidence.ts` ne décrit pas
+  la provenance `copilot-poll` sans nonce ; `packages/drwil/README.md` dit encore `--tool copilot` « native ask_user ».
+- **Prochaine étape** : sondage des limites hors cadre, puis VERIFY (essai [humain] ci-dessus, QUA-236 à réattester).

@@ -34,7 +34,7 @@ in a trusted workspace):
 | Tool | Preparation | Poll asked with |
 |---|---|---|
 | Claude Code | `npx drwil attest-poll <ID> --tried "…"` | `AskUserQuestion`, the JSON as its input |
-| Copilot CLI | `… --tool copilot` | `ask_user`, the JSON as its input |
+| Copilot CLI | `… --tool copilot` (one contract per poll) | `ask_user`, the JSON as its input |
 | Gemini CLI | `… --tool gemini` | `ask_user`, the JSON as its input |
 | Codex | `… --tool codex` | `request_user_input`, the JSON as its input (hooks reviewed in `/hooks`; never add the option Codex recommends by default) |
 | Cursor | `… --tool cursor` | its native question, inside the dedicated client the human opens with `npx drwil cursor-acp` |

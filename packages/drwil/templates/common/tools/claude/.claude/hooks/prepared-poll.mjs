@@ -124,8 +124,9 @@ function english(root) {
  * Hook d'un sondage préparé : `spec` = { header, pattern, name, texts: {fr, en}, load(), prepare(mod, match, root),
  * confirm(ctx) }. PreToolUse : la préparation refaite doit être le sondage posé, gardée liée à l'appel. PostToolUse :
  * consommée une fois, une heure au plus ; `confirm` ne reçoit que le libellé lu dans `tool_response.answers`.
+ * `deny` reçoit le refus d'avant affichage, `source` nomme l'outil dans la provenance (copilot-polls.mjs).
  */
-export async function preparedPollHook(input, { root, tell }, spec) {
+export async function preparedPollHook(input, { root, tell, deny = console.error, source = "claude-poll" }, spec) {
   const poll = readPoll(input, spec.header, spec.pattern);
   if (!poll) return null;
   const pre = input.hook_event_name === "PreToolUse";
@@ -134,7 +135,7 @@ export async function preparedPollHook(input, { root, tell }, spec) {
   const T = { ...COMMON[en ? "en" : "fr"], ...spec.texts[en ? "en" : "fr"] };
   let redact = null;
   const say = (message) => {
-    if (pre) console.error(`[drwil] ${message}`);
+    if (pre) deny(`[drwil] ${message}`);
     else tell(`✗ ${message}`);
     return pre ? 2 : 0;
   };
@@ -184,7 +185,7 @@ export async function preparedPollHook(input, { root, tell }, spec) {
     const keys = answer && typeof answer === "object" ? Object.keys(answer) : [];
     if (keys.length !== 1 || keys[0] !== question.question)
       return refuse({ cause: "illisible", detail: `tool_response.answers: ${keys.length}` });
-    const origin = { source: "claude-poll", sessionId: input.session_id, toolUseId: input.tool_use_id, askedAt: pending.askedAt };
+    const origin = { source, sessionId: input.session_id, toolUseId: input.tool_use_id, askedAt: pending.askedAt };
     const ctx = { mod, match: poll.match, label: answer[question.question], question, data: pending.data, origin, root };
     return await spec.confirm({ ...ctx, refuse, tell, T, en });
   } catch (e) {

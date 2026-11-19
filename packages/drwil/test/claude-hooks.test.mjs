@@ -19,6 +19,8 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { cli, contrat, projetVerify } from "./kit-commun.mjs";
+// Import statique : un `await` au niveau du module laisserait la racine temporaire de kit-commun se fermer trop tôt.
+import { claudeEvent, copilotArgs, copilotPollHook } from "../templates/common/tools/claude/.claude/hooks/copilot-polls.mjs";
 
 const HOOKS = fileURLToPath(new URL("../templates/common/tools/claude/.claude/hooks/", import.meta.url));
 const GITHOOKS = fileURLToPath(new URL("../../../.githooks/", import.meta.url));
@@ -1019,7 +1021,7 @@ async function projetVerdict(lang = "fr") {
       tool_response: { questions: input.tool_input.questions, answers, annotations: {} },
     };
   };
-  return { dir, gh, sheet, hook, prepare, post, output };
+  return { dir, gh, sheet, hook, prepare, post, output, run };
 }
 
 test("QUA-235 : sondage drwil-verdict (QUA-053) — seule la réponse de l'humain au sondage préparé enregistre le verdict sur la candidate, une fois", async () => {
@@ -1157,6 +1159,227 @@ const GLOSSAIRE = `export const glossary = () => [{ id: "QUA-001", label: "Un li
 export const cited = (text) => (text.includes("QUA-001") ? [{ id: "QUA-001", label: "Un libellé" }] : []);
 export const unlabelled = (text) => (text.includes("QUA-001") ? [{ id: "QUA-001", label: "Un libellé" }] : []);
 `;
+
+/**
+ * Sondage préparé posé sous Copilot CLI, à la forme relevée dans ses journaux de session (2026-11-14 et 15, valeurs
+ * fictives) : `ask_user` prend `message` et `requestedSchema` ; le preToolUse natif porte `toolCalls[]`, le
+ * postToolUse `toolCallId`, `toolArgs` et `toolResult` (« User responded: <valeur> »).
+ */
+function copilote(dir, poll, ctx = {}) {
+  const args = copilotArgs(poll);
+  const output = [];
+  const denied = [];
+  const pre = (a = args, extra = {}) => ({
+    sessionId: "session-fictive",
+    cwd: dir,
+    toolCalls: [{ id: "toolu_fictif", name: "ask_user", args: a }],
+    ...extra,
+  });
+  const post = (texte, a = args, extra = {}) => ({
+    sessionId: "session-fictive",
+    timestamp: 1794785046314,
+    cwd: dir,
+    toolCallId: "toolu_fictif",
+    toolName: "ask_user",
+    toolArgs: a,
+    toolResult: {
+      textResultForLlm: texte,
+      resultType: "success",
+      sessionLog: texte.replace("User responded: ", "User responded:\n"),
+      toolTelemetry: { properties: { elicitation_action: "accept", elicitation_field_types: '["enum"]' } },
+    },
+    ...extra,
+  });
+  const hook = (event, phase) =>
+    copilotPollHook(event, { root: dir, phase, tell: (t) => output.push(t), deny: (m) => denied.push(m), ...ctx });
+  return { args, pre, post, hook, output, denied };
+}
+
+test("QUA-235 : Copilot CLI — les cinq sondages préparés, sous la forme réelle de ask_user, passent par le socle ; seule la réponse de l'humain applique le geste", async () => {
+  const move = await sondageTransition();
+  try {
+    const c = copilote(move.dir, move.prepare().tool_input);
+    assert.match(
+      c.args.message,
+      /^drwil-move EXPECTATION \{"brief":"docs\/projects\/exemple\.md"\}\n[\s\S]*\n\nAutoriser : L'état passe de SCOPING à EXPECTATION\.\nNe pas autoriser : L'état ne change pas\.$/,
+    );
+    assert.deepEqual(c.args.requestedSchema, {
+      type: "object",
+      properties: { "drwil-move": { type: "string", title: "drwil-move", enum: ["Autoriser", "Ne pas autoriser"] } },
+    });
+    assert.equal(await c.hook(c.pre(), "pre"), 0);
+    assert.equal(move.state(), null, "la question posée n'écrit rien");
+    assert.equal(await c.hook(c.post("User responded: Autoriser"), "post"), 0);
+    assert.equal(c.output.at(-1), "✓ SCOPING → EXPECTATION");
+    assert.equal(move.state().activity, "EXPECTATION");
+    await c.hook(c.post("User responded: Autoriser"), "post");
+    assert.match(c.output.at(-1), /préparation absente/, "rejeu sans préparation refusé");
+  } finally {
+    rmSync(move.dir, { recursive: true, force: true });
+  }
+  const detour = await sondageDetour();
+  try {
+    const c = copilote(detour.dir, detour.prepare().tool_input);
+    assert.equal(await c.hook(c.pre(), "pre"), 0);
+    assert.equal(await c.hook(c.post("User responded: Autoriser"), "post"), 0);
+    assert.equal(c.output.at(-1), "✓ réouverture de docs/projects/exemple.md autorisée à changer les règles du jeu");
+    assert.deepEqual(detour.state().reopened, { pr: 42, human: true });
+  } finally {
+    rmSync(detour.dir, { recursive: true, force: true });
+  }
+  const accept = await projetAcceptation();
+  try {
+    const c = copilote(accept.dir, accept.prepare().tool_input);
+    assert.equal(await c.hook(c.pre(), "pre"), 0);
+    assert.equal(accept.accepted(), null);
+    assert.equal(await c.hook(c.post(`User responded: ${c.args.requestedSchema.properties["drwil-accept"].enum[0]}`), "post"), 0);
+    assert.match(c.output.at(-1), /^✓ critères de docs\/projects\/exemple\.md acceptés/);
+    assert.match(accept.accepted().fingerprint, /^sha256:/);
+  } finally {
+    rmSync(accept.dir, { recursive: true, force: true });
+  }
+  const verdict = await projetVerdict();
+  try {
+    const c = copilote(verdict.dir, verdict.prepare().tool_input, { run: verdict.run });
+    assert.equal(await c.hook(c.pre(), "pre"), 0);
+    assert.equal(verdict.gh.recorded, undefined, "la question posée n'enregistre rien");
+    assert.equal(await c.hook(c.post("User responded: Donner le verdict"), "post"), 0);
+    assert.match(c.output.at(-1), /verdict « approuvée avec réserves » enregistré sur v1\.1\.0-rc\.1 par recetteuse/);
+    assert.equal(verdict.gh.recorded.verdict, "reserved");
+  } finally {
+    rmSync(verdict.dir, { recursive: true, force: true });
+  }
+  const attest = await projetAttestation();
+  try {
+    const c = copilote(attest.dir, (await attest.prepare()).tool_input);
+    assert.equal(await c.hook(c.pre(), "pre"), 0);
+    assert.equal((await attest.contract()).status, "MANUAL", "la question posée n'atteste pas");
+    assert.equal(await c.hook(c.post(`User responded: ${c.args.requestedSchema.properties["drwil-attest"].enum[0]}`), "post"), 0);
+    assert.match(c.output.at(-1), /APP-009 attesté/);
+    const k = await attest.contract();
+    assert.equal(k.status, "ATTESTED");
+    assert.equal(k.attestation.origin.source, "copilot-poll");
+    assert.equal(k.attestation.origin.toolUseId, "toolu_fictif");
+  } finally {
+    rmSync(attest.dir, { recursive: true, force: true });
+  }
+});
+
+test("QUA-235 : Copilot CLI — chaque sondage préparé est refusé, cause dite, comme sous Claude Code ; annulation, mode autonome et réponse libre ne confirment pas", async () => {
+  const s = await sondageTransition();
+  try {
+    const c = copilote(s.dir, s.prepare().tool_input);
+    const field = (a) => a.requestedSchema.properties["drwil-move"];
+    const avant = JSON.stringify(s.state());
+    const muter = (fn) => {
+      const a = structuredClone(c.args);
+      fn(a);
+      return a;
+    };
+    for (const [event, cause] of [
+      [c.pre(muter((a) => (field(a).default = "Autoriser"))), /champ inattendu \(questions\[0\]\.default\)/],
+      [c.pre(muter((a) => (field(a).enumNames = ["Autoriser (Recommended)", "Non"]))), /champ inattendu \(questions\[0\]\.enumNames\)/],
+      [c.pre(muter((a) => (field(a).title = "Transition"))), /champ inattendu \(questions\[0\]\.title\)/],
+      [c.pre(muter((a) => (field(a).enum[0] += " (Recommended)"))), /recommandation dans l'option « Autoriser \(Recommended\) »/],
+      [c.pre(muter((a) => (a.message = a.message.replace("\n", "\nmodifié\n")))), /résumé différent .*modifié/],
+      [
+        c.pre(
+          muter(
+            (a) =>
+              (a.requestedSchema.properties["drwil-move"] = {
+                type: "array",
+                items: { type: "string", enum: ["Autoriser", "Ne pas autoriser"] },
+              }),
+          ),
+        ),
+        /résumé différent .*multiSelect/,
+      ],
+      [c.pre(muter((a) => (a.requestedSchema.properties.autre = { type: "string", enum: ["a", "b"] }))), /plusieurs questions \(2\)/],
+      // Forme posée le 2026-11-15 : un champ « choice » ; l'en-tête n'est que dans le message.
+      [c.pre(muter((a) => (a.requestedSchema.properties = { choice: field(a) }))), /plusieurs questions \(2\)/],
+      [c.pre(muter((a) => (a.choices = ["Autoriser", "Ne pas autoriser"]))), /champ inattendu \(tool_input\.choices\)/],
+      [c.pre(muter((a) => (a.requestedSchema.required = ["drwil-move"]))), /champ inattendu \(tool_input\.requestedSchema\.required\)/],
+      [
+        c.pre(c.args, {
+          toolCalls: [
+            { id: "a", name: "ask_user", args: c.args },
+            { id: "b", name: "ask_user", args: c.args },
+          ],
+        }),
+        /plusieurs questions \(2\)/,
+      ],
+      [c.pre(c.args, { sessionId: undefined }), /appel non corrélable/],
+      // Ancienne forme lue (toolName / toolArgs en preToolUse) : sans identifiant d'appel, rien n'est préparé.
+      [{ sessionId: "session-fictive", toolName: "ask_user", toolArgs: c.args }, /appel non corrélable/],
+    ]) {
+      assert.equal(await c.hook(event, "pre"), 2);
+      assert.match(c.denied.at(-1), cause);
+      assert.match(c.denied.at(-1), /^\[drwil\] sondage de transition refusé — /);
+      assert.equal(JSON.stringify(s.state()), avant);
+    }
+    for (const [event, cause] of [
+      [c.post("User cancelled the request."), /réponse illisible \(tool_response\.answers: 0\)/],
+      [c.post("The user is not available to respond and will review your work later. Work autonomously."), /réponse illisible/],
+      [
+        c.post("User responded: Autoriser", c.args, {
+          toolResult: { resultType: "failure", textResultForLlm: "User responded: Autoriser" },
+        }),
+        /réponse illisible/,
+      ],
+      [c.post("", c.args, { toolResult: { resultType: "success" } }), /réponse illisible \(tool_response\.answers: 0\)/],
+      [c.post("User responded: donne moi les commandes"), /réponse illisible \(« donne moi les commandes » ∉ options\)/],
+      [c.post("User responded: Autoriser", c.args, { toolCallId: "toolu_autre" }), /préparation absente/],
+      [c.post("User responded: Ne pas autoriser"), /refus choisi par l'humain \(« Ne pas autoriser »\) : état inchangé\./],
+    ]) {
+      assert.equal(await c.hook(c.pre(), "pre"), 0);
+      assert.equal(await c.hook(event, "post"), 0);
+      assert.match(c.output.at(-1), cause);
+      assert.equal(JSON.stringify(s.state()), avant);
+    }
+    // Ni un autre sondage, ni un autre outil, ni une autre phase : ce n'est pas le sien.
+    const lancement = {
+      message: "drwil-start : quelle fiche ?",
+      requestedSchema: { properties: { fiche: { type: "string", enum: ["a.md"] } } },
+    };
+    assert.equal(await c.hook(c.pre(lancement), "pre"), null);
+    assert.equal(await c.hook({ sessionId: "s", toolCalls: [{ id: "x", name: "bash", args: { command: "ls" } }] }, "pre"), null);
+    assert.equal(await c.hook({ sessionId: "s", toolCalls: [{ id: "x", name: "ask_user", args: {} }] }, "pre"), null);
+    assert.equal(await c.hook(c.post("User responded: Autoriser"), "autre"), null);
+    assert.equal(claudeEvent(null, "post"), null);
+    assert.equal(claudeEvent({ toolCalls: "x" }, "pre"), null);
+    assert.equal(
+      claudeEvent(c.pre({ ...c.args, message: undefined, requestedSchema: { properties: { "drwil-move": { enum: "x" } } } }), "pre")
+        .tool_input.questions[0].options.length,
+      0,
+    );
+  } finally {
+    rmSync(s.dir, { recursive: true, force: true });
+  }
+});
+
+test("QUA-235 : Copilot CLI — la préparation se convertit en arguments de ask_user, par module ou par tube ; le choix multiple est refusé", async () => {
+  const s = await sondageTransition();
+  try {
+    const poll = s.prepare().tool_input;
+    const r = spawnSync(process.execPath, [join(HOOKS, "copilot-polls.mjs")], { input: JSON.stringify(poll), encoding: "utf8" });
+    assert.equal(r.status, 0, r.stderr);
+    assert.deepEqual(JSON.parse(r.stdout), copilotArgs(poll));
+    const vide = spawnSync(process.execPath, [join(HOOKS, "copilot-polls.mjs")], { input: "", encoding: "utf8" });
+    assert.equal(vide.status, 2);
+    assert.match(vide.stderr, /copilot-polls : .* — passer la sortie d'une préparation drwil/);
+    const q = poll.questions[0];
+    assert.throws(() => copilotArgs({ questions: [{ ...q, multiSelect: true }] }), /choix multiple non lu sous Copilot CLI/);
+    assert.throws(() => copilotArgs({ questions: [q, q] }), /une seule question/);
+    assert.throws(() => copilotArgs({ questions: [{ ...q, header: "drwil-start" }] }), /une seule question/);
+    assert.throws(() => copilotArgs(null), /une seule question/);
+    assert.deepEqual(
+      copilotArgs({ questions: [{ header: "drwil-move", question: "q" }] }).requestedSchema.properties["drwil-move"].enum,
+      [],
+    );
+  } finally {
+    rmSync(s.dir, { recursive: true, force: true });
+  }
+});
 
 test("read-guard : refuse la lecture entière du registre, laisse passer une plage, une autre cible et une entrée illisible", async () => {
   const g = await load("read-guard.mjs");

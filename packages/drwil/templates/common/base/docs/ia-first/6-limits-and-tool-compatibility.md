@@ -89,11 +89,13 @@ and to offer the human a new conversation; the next workstream starts there
 
 The five tools selectable by `init --tools` are all targets for chat
 attestation, not just Claude Code. This is **not delivered parity**:
-`attest-poll` prepares Claude Code's question by default and each native
-`ask_user` with `--tool copilot` or `--tool gemini`, and Codex's
+`attest-poll` prepares Claude Code's question by default, the same question
+in Copilot CLI's `ask_user` form with `--tool copilot` (see "Prepared polls
+under Copilot CLI"), Gemini's native `ask_user` with `--tool gemini`, and Codex's
 `request_user_input` with `--tool codex`, or the dedicated Cursor client with
 `--tool cursor` and `drwil cursor-acp`. Claude keeps its
-session/tool-call check and `tool_response.answers`. The four portable adapters
+session/tool-call check and `tool_response.answers`, which Copilot CLI shares
+through a translation. The Gemini, Codex and Cursor adapters
 use a visible random nonce bound to the exact poll and native session instead
 of inventing a missing call identifier. A terminal attestation remains
 available to the human, but does not fulfil chat parity.
@@ -104,7 +106,7 @@ trial**. The earlier hook/write bench above did not test attestation.
 | Tool | Delivered attestation adapter | Native human channel investigated | Fictitious attestation events tested | Real chat attestation trial |
 |---|---|---|---|---|
 | Claude Code | `AskUserQuestion`, `PreToolUse` / `PostToolUse`; session + tool-call correlation, one-use preparation | `tool_response.answers`, never answers in `tool_input` | yes, Claude-shaped fixtures only | yes, 2026-11-07, Claude Code 2.1.319: one real attestation through the chat poll (`origin.source` `claude-poll`), after the hook accepted the `answers` / `annotations` keys Claude Code adds to `tool_input` |
-| Copilot CLI | native `preToolUse` / `postToolUse`; one-use nonce, exact poll, native session and subagent context | `ask_user` arguments `question` / `choices`; `sessionId`, `toolArgs`, success `toolResult.textResultForLlm`; only the exact `User responded: <positive choice>` result is accepted | yes, documented-shape fictitious events and installed hook commands only | not tested |
+| Copilot CLI | native `preToolUse` / `postToolUse` translated to Claude Code's form (copilot-polls.mjs), same socle as Claude Code: session + tool-call correlation, one-use preparation, named refusals | `ask_user` arguments `message` / `requestedSchema` (one `enum` field named by the header); `sessionId`, `toolCalls[].id` before, `toolCallId` after, success `toolResult.textResultForLlm` `User responded: <label>` (shape read in real session logs, 2026-11-14 and 15) | yes, real-shape fictitious events and installed hook commands only | not tested |
 | Gemini CLI | native `BeforeTool` / `AfterTool` declarations for `ask_user`; same portable protocol | `session_id`, `tool_input.questions`; JSON string in `tool_response.llmContent`, only `answers["0"]` with the exact positive choice, no error | yes, documented-shape fictitious events and installed hook commands only | not tested |
 | Codex | native `PreToolUse` / `PostToolUse` for `request_user_input`; shared scripts only, one-use nonce plus native session, call and agent context | official 0.166.0 handler and registry: `tool_input.questions` with fixed ID `drwil_attest`; JSON string `tool_response`, only `answers["drwil_attest"].answers` with exactly one positive choice | yes, official-source-shaped fictitious events and installed hook command only; no binary launched | not tested |
 | Cursor | dedicated `drwil cursor-acp` human TTY client; not the usual Cursor chat or a native hook | official `agent acp` stdio JSON-RPC, `cursor/ask_question`, native session and `toolCallId`; client displays the exact nonce-bound poll and returns human-chosen `questionId` / `selectedOptionIds` | yes, local fake ACP subprocess plus controlled fictitious UI; no Cursor binary launched | not tested |
@@ -127,7 +129,8 @@ trial**. The earlier hook/write bench above did not test attestation.
   hook code and local evidence files, just like the Claude adapter. A crash
   can leave a session occupied: inspect it and open a fresh native session,
   never manufacture an answer or delete nonce tombstones to reuse a poll.
-- Copilot CLI and Gemini CLI: perform the real interactive trial below.
+- Gemini CLI: perform the real interactive trial below (Copilot CLI: see
+  "Prepared polls under Copilot CLI").
   A version exposing neither documented native session field is refused;
   no fabricated session, environment-derived guess or call identifier is used.
   Copilot denials use native `permissionDecision: "deny"` with exit 0.
@@ -201,6 +204,34 @@ The official [Cursor install script](https://cursor.com/install) identifies
 the inspected [CLI distribution](https://downloads.cursor.com/lab/2026.10.22-27dcf5f/linux/x64/agent-cli-package.tar.gz);
 only its schema/dispatch code was read statically, never installed or run.
 
+## Prepared polls under Copilot CLI
+
+Cause of the missed reads (found 2026-11-19 in Copilot CLI session logs of
+2026-11-14 and 15, the installed CLI being 1.0.112): `ask_user` takes
+`message` and `requestedSchema`, not `question` / `choices`, and the native
+`preToolUse` carries `toolCalls[]`, not `toolName` / `toolArgs`. The attestation
+hook therefore never prepared the poll, and the answer was refused or ignored.
+The five prepared polls (`drwil-attest`, `drwil-accept`, `drwil-verdict`,
+`drwil-move`, `drwil-detour`) are now asked under Copilot CLI by passing their
+preparation through the converter, then giving its output to `ask_user` as is:
+
+```
+npx drwil attest-poll <ID> --tried "<trial>" --tool copilot
+node .githooks/state.mjs poll accept | node .claude/hooks/copilot-polls.mjs
+node .githooks/state.mjs poll move <ACTIVITY> | node .claude/hooks/copilot-polls.mjs
+node .githooks/state.mjs poll detour | node .claude/hooks/copilot-polls.mjs
+node .githooks/release-verdict-poll.mjs <tag> <options> | node .claude/hooks/copilot-polls.mjs
+```
+
+The native entry (the .github/hooks folder) translates the call into Claude
+Code's form and hands it to the same socle, with the same refusals (denied by
+`permissionDecision: "deny"`, the cause in its reason) and the same writing on
+the human's answer only. One contract per attestation poll (multiple choice is
+not read). Fictitious events of the real shape and installed hook commands
+only: **no real interactive trial** of these five polls yet; whether Copilot CLI
+shows the `[drwil]` line given after the answer (`additionalContext`) is to be
+seen in that trial.
+
 ## Limits poll parity
 
 The limits poll (`drwil-limite`) is read by the hook under every tool, with
@@ -236,7 +267,7 @@ obeys the instruction is "not tested": no trial has measured it. A new
 mechanism is added to the parity test's list of mechanisms in the
 workstream that creates it.
 
-Declared gap: chat attestation has Claude Code, Copilot CLI, Gemini CLI and Codex adapters,
+Declared gap: chat attestation has Claude Code, Copilot CLI, Gemini CLI and Codex adapters (Copilot CLI's through Claude Code's socle),
 and a dedicated Cursor ACP client, with local fictitious tests; Claude Code has
 one real interactive trial (2026-11-07), the four others no real interactive trial. Cursor requires the extra human client, not the usual chat.
 The "Human attestation parity" table records each unverified real channel;

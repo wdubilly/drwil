@@ -2,12 +2,14 @@
 // and Cursor's dedicated ACP client (`cursor/ask_question`) ask it in their native form; it is translated here into
 // Claude Code's form and handed to the same hook (limit-poll.mjs), so the same refusals apply and only the human's
 // answer, read from the tool's native result, is recorded. No merge poll: the automatic merge is the default (QUA-163).
-// Copilot CLI reads it through `.claude/settings.json` (prompt-hook.mjs without argument): its native entry stays
-// the attestation's. Any other question goes on to the attestation hook, unchanged.
+// Copilot CLI reads it through `.claude/settings.json` (prompt-hook.mjs without argument); its native entry reads the
+// prepared polls (attestation, acceptance, verdict, transition, detour: copilot-polls.mjs). Any other question goes on
+// to the portable attestation hook, unchanged.
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { nativeAttestationEvent } from "./attest-adapters.mjs";
+import { copilotPollHook } from "./copilot-polls.mjs";
 import { limitHook } from "./limit-poll.mjs";
 import { portableAttestationMain } from "./portable-attest.mjs";
 
@@ -92,12 +94,24 @@ export async function portablePollHook(input, { root, tool, phase, tell }) {
   return limitHook(claude, ctx);
 }
 
-/** Native entry of `prompt-hook.mjs <tool> [phase]`: the limits poll of Gemini and Codex, else the attestation. */
+/** Native entry of `prompt-hook.mjs <tool> [phase]`: the limits poll of Gemini and Codex, Copilot's prepared polls, else the attestation. */
 export async function portableMain({ root = ROOT, tool = process.argv[2], phase = process.argv[3], raw = readFileSync(0, "utf8") } = {}) {
   let input = null;
   try {
     input = JSON.parse(raw);
   } catch {}
+  if (tool === "copilot") {
+    // Copilot denies by its JSON answer (exit 0), like the portable attestation; the reason is the socle's cause.
+    let reason = "";
+    const deny = (message) => {
+      reason = message;
+      console.error(message);
+    };
+    const said = (message) => console.log(JSON.stringify({ additionalContext: `[drwil] ${message}` }));
+    const code = await copilotPollHook(input, { root, phase, tell: said, deny });
+    if (code === 2) console.log(JSON.stringify({ permissionDecision: "deny", permissionDecisionReason: reason }));
+    if (code !== null) return 0;
+  }
   const tell = (message) =>
     console.log(
       JSON.stringify({
