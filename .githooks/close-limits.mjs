@@ -1,7 +1,8 @@
 // The closing refuses an intent brief born on the branch without the human's choice (QUA-264): a limit outside
 // the brief's scope becomes an intent brief only on the « Record as intent » answer to the limits poll
 // (`drwil-limite`, recorded in the state by .githooks/state-limits.mjs, QUA-253); a limit answered « Handle now »
-// is handled in the workstream, never written as an intent. Its texts live here: state-messages-fr.mjs is full.
+// is handled in the workstream, never written as an intent. An intent added by a scoping commit (briefs and intents
+// only, the active brief untouched: scoping done in the workstream's folder during BUILD) is no limit: not judged. Its texts live here: state-messages-fr.mjs is full.
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join, posix } from "node:path";
@@ -33,6 +34,22 @@ function addedIntents(root, dir) {
 }
 
 /**
+ * True when the commit that added intent `f` is a scoping commit: only briefs and intents, the active brief untouched
+ * (scoping done in the workstream's folder during BUILD, never a limit of the workstream). A limit written at closing
+ * stays in the working tree, or comes with the brief or the code: still judged. Git unreadable: false, judged.
+ */
+function scopingAdd(root, f, dir, active) {
+  // A failed git call outputs nothing: no commit, or a list without `f` — the intent is then judged.
+  const git = (...args) => spawnSync("git", args, { cwd: root, encoding: "utf8" }).stdout.trim();
+  const commit = git("log", "-1", "--no-merges", "--diff-filter=A", "--format=%H", "HEAD", "--", f);
+  if (!commit) return false;
+  const files = git("diff-tree", "--no-commit-id", "--name-only", "-r", "--no-renames", commit).split("\n").filter(Boolean);
+  // The active brief lives in the briefs' folder: its folder is that of the briefs.
+  const briefDirs = [posix.dirname(active), dir];
+  return files.includes(f) && files.every((g) => g !== active && briefDirs.some((d) => g.startsWith(`${d}/`)));
+}
+
+/**
  * What refuses the closing about limits, as messages; `text`: the brief, read before it is deleted. Each intent brief
  * added by the branch — the brief's own intent, the folder's README and the notes file excepted — needs the human's
  * « Record as intent » answer for its path; « Handle now » or no answer refuses.
@@ -42,8 +59,11 @@ export function limitProblems(root, text = "") {
   const dir = intentsDir(root);
   const origin = briefIntent(text);
   const skip = new Set([origin && posix.normalize(origin), `${dir}/notes.md`]);
-  const answers = new Map((readState(root).state?.limits ?? []).map((l) => [l.intent, l.choice]));
+  const { state } = readState(root);
+  const answers = new Map((state.limits ?? []).map((l) => [l.intent, l.choice]));
+  const active = posix.normalize(String(state.active_brief));
   return addedIntents(root, dir)
     .filter((f) => !skip.has(f) && !/^readme\.md$/i.test(posix.basename(f)) && answers.get(f) !== "note")
+    .filter((f) => answers.get(f) === "now" || !scopingAdd(root, f, dir, active))
     .map((f) => (answers.get(f) === "now" ? T.handleNow(f) : T.unanswered(f)));
 }

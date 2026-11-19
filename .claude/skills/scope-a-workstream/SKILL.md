@@ -14,8 +14,9 @@ back on the forge — carried by `.githooks/merge-auto.mjs`, never by the agent'
    `docs/projects/`, an intention of `docs/intentions/`) is done in the workstream's folder, on its branch,
    without a worktree: the scope gate commits it without changing the state or the active brief, nor
    widening its scope; it travels and merges with the workstream's PR (no scoping branch or PR of its
-   own, nothing to schedule here); an intention it adds still needs, at closing, the « Record as intent »
-   answer of the limits poll (`drwil-limite`) for its path. The contracts registry stays out of it. Anything else than SCOPING or
+   own, nothing to schedule here). Commit it apart: a commit of briefs and intents only, the active brief
+   untouched — an intention it adds is then no limit, the closing does not ask the limits poll for it. The
+   contracts registry stays out of it. Anything else than SCOPING or
    BUILD: say so and stop (a workstream's PR is set to automatic merge at its closing, as the state's
    instruction says). The steps below are those of a scoping made in SCOPING.
 2. The scoping is committed on its own branch, never on the main branch, pushed, and its PR opened

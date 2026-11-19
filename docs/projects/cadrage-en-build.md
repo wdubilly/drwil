@@ -85,4 +85,6 @@ Aucun.
 - **Dernier état** (2026-11-19) : lot 1 fait. Relevé : la barrière commitait déjà fiches et intentions en BUILD
   (tests QUA-016 verts d'emblée) ; gênaient le skill `scope-a-workstream` (SCOPING exigé) et, hors cadre, la
   clôture qui refuse une intention née sur la branche sans réponse « Noter en intention » (QUA-264).
-- **Prochaine étape** : sondage `drwil-limite` sur la limite QUA-264, puis VERIFY.
+- Limite QUA-264 répondue « Traiter maintenant » (2026-11-19) : une intention ajoutée par un commit de cadrage est
+  exceptée à la clôture ; traitée.
+- **Prochaine étape** : VERIFY puis clôture.

@@ -77,6 +77,10 @@ release renames this section to its version.
   the state or the active brief, never widens the workstream's scope, and
   merges with its PR (`/drwil-scope` and section 7 of the description say
   so). The contracts registry stays refused outside the active brief's scope.
+  An intention added by such a scoping commit (briefs and intents only, the
+  active brief untouched) no longer needs, at closing, the « Record as
+  intent » answer of the limits poll; one answered « Handle now » is still
+  refused.
 
 ### Changed
 
