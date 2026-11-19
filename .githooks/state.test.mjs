@@ -2421,7 +2421,7 @@ test("QUA-117 : le sondage drwil-move se prépare sans rien écrire ; seule la r
   assert.equal(refus.code, 1);
   assert.match(
     refus.message,
-    /terminal interactif requis .* ; depuis le chat : `node \.githooks\/state\.mjs poll move EXPECTATION --brief docs\/projects\/exemple\.md` prépare le sondage `drwil-move`, à poser tel quel : seule la réponse de l'humain l'applique$/,
+    /décision humaine : terminal interactif ou sondage du chat .* ; depuis le chat : `node \.githooks\/state\.mjs poll move EXPECTATION --brief docs\/projects\/exemple\.md` prépare le sondage `drwil-move`, à poser tel quel : seule la réponse de l'humain l'applique$/,
   );
   let r = await capturer(() => main(["poll", "move", "EXPECTATION", "--brief", FICHE], racine));
   assert.equal(r.code, 0, r.erreurs);

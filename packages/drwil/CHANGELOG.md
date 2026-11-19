@@ -24,7 +24,9 @@ release renames this section to its version.
   `ask_user`'s real form (`message`, `requestedSchema`, `toolCalls` before
   the call) is translated by `.claude/hooks/copilot-polls.mjs`, which also
   converts a preparation (`attest-poll --tool copilot`, or a pipe); its real
-  interactive trial is still pending.
+  interactive trial is still pending. The refusals of a
+  human transition outside a terminal and of a closing on changed criteria
+  now name the chat poll as well as the terminal.
 - `node .githooks/pr-watch.mjs` no longer says « green » while the PR's
   automatic merge is scheduled: it waits for the merge, within the same
   30 minutes, and sees it as soon as the PR's head is contained in the

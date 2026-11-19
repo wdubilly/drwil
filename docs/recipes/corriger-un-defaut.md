@@ -55,7 +55,9 @@ A detour that changes the rules of the game (an existing contract of the
 registry modified or removed, hook, threshold, scope gate, CI) needs the
 human's yes: the scope gate refuses those commits until
 `node .githooks/detour.mjs allow`, run by the human in an interactive
-terminal. In a queue, the subagent stops there and reports. Adding a new
+terminal, or the human's answer to the chat's `drwil-detour` poll
+(`node .githooks/state.mjs poll detour` prepares it, asked unchanged; only
+the hook reads the answer). In a queue, the subagent stops there and reports. Adding a new
 contract to the registry, every existing one kept word for word, needs no
 yes; in doubt, the yes is still asked. A hook test (`.githooks/*.test.mjs`)
 added or fixed is no rule change; one that removes a `test(` named after a

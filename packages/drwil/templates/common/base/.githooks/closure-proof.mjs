@@ -18,7 +18,7 @@ const TEXTS = {
     proofNotPass: (s) => `le verdict de la dernière évidence est ${s.toUpperCase()} : rien à prouver tant qu'il n'est pas PASS`,
     proofUnwritable: (f, m) => `${f} : ${m}`,
     proofChanged: (a, b) =>
-      `les critères de la fiche ne sont plus ceux que l'humain a acceptés au lancement (empreinte ${a}, aujourd'hui ${b}) : il les accepte de nouveau, dans un terminal (\`node .githooks/state.mjs accept\`)`,
+      `les critères de la fiche ne sont plus ceux que l'humain a acceptés au lancement (empreinte ${a}, aujourd'hui ${b}) : il les accepte de nouveau, dans un terminal (\`node .githooks/state.mjs accept\`) ou par le sondage \`drwil-accept\` du chat (\`node .githooks/state.mjs poll accept\`, posé tel quel)`,
     proofAccepted: (f, d) => `**Critères acceptés** : empreinte \`${f}\`, acceptés par l'humain au lancement le ${d}`,
     proofNotAccepted: "**Critères acceptés** : aucune acceptation enregistrée au lancement (lancement hors sondage ou terminal)",
     proofHead: "critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :",
@@ -38,7 +38,7 @@ const TEXTS = {
     proofNotPass: (s) => `the latest evidence's verdict is ${s.toUpperCase()}: nothing to prove until it is PASS`,
     proofUnwritable: (f, m) => `${f}: ${m}`,
     proofChanged: (a, b) =>
-      `the brief's criteria are no longer those the human accepted at the start (fingerprint ${a}, today ${b}): the human accepts them again, in a terminal (\`node .githooks/state.mjs accept\`)`,
+      `the brief's criteria are no longer those the human accepted at the start (fingerprint ${a}, today ${b}): the human accepts them again, in a terminal (\`node .githooks/state.mjs accept\`) or through the chat's \`drwil-accept\` poll (\`node .githooks/state.mjs poll accept\`, asked unchanged)`,
     proofAccepted: (f, d) => `**Criteria accepted**: fingerprint \`${f}\`, accepted by the human at the start on ${d}`,
     proofNotAccepted: "**Criteria accepted**: no acceptance recorded at the start (start outside the poll or a terminal)",
     proofHead: "criteria of this workstream, and what still proves them today (replayed by `drwil verify` after the closing):",
