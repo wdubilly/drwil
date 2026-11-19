@@ -45,6 +45,7 @@ import { accept, acceptanceCheck, acceptancePoll, acceptFromPoll, criteriaFinger
 import { mainTip, writeProof } from "./pr-watch-main.mjs";
 import { close } from "./close.mjs";
 import { intentPath, limitChoice, recordLimits } from "./state-limits.mjs";
+import { moveFromPoll, movePoll } from "./state-polls.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
 // hérités, ils font agir les dépôts de test, et le code testé, sur le dépôt qui lance les tests.
@@ -2318,7 +2319,7 @@ test("QUA-175 : le sondage drwil-accept se prépare sans rien écrire ; il ne s'
   assert.match(r.erreurs, /^✗ acceptation impossible : aucun chantier actif/);
   r = await capturer(() => main(["poll"], racine));
   assert.equal(r.code, 2);
-  assert.match(r.erreurs, /^✗ utilisation : node \.githooks\/state\.mjs poll <accept>/);
+  assert.match(r.erreurs, /^✗ utilisation : node \.githooks\/state\.mjs poll <accept\|move\|detour>/);
 
   assert.equal(start(racine, FICHE, { human: true }).code, 0);
   writeFileSync(join(racine, FICHE), CRITERES().replace("Un critère", "Un critère modifié"));
@@ -2370,7 +2371,7 @@ test("QUA-175 : le sondage drwil-accept se prépare sans rien écrire ; il ne s'
   );
   assert.match(acceptancePoll(en).poll.questions[0].question, /\n\nAccept these criteria as they are\?$/);
   r = await capturer(() => main(["poll", "autre"], en));
-  assert.match(r.erreurs, /^✗ usage : node \.githooks\/state\.mjs poll <accept>/);
+  assert.match(r.erreurs, /^✗ usage : node \.githooks\/state\.mjs poll <accept\|move\|detour>/);
 });
 
 test("QUA-175 : parmi les hooks et commandes du kit, seul state-acceptance.mjs écrit le fichier d'acceptation", () => {
@@ -2412,6 +2413,110 @@ test("QUA-175 : parmi les hooks et commandes du kit, seul state-acceptance.mjs �
     "templates/common/base/.githooks/worktree.mjs",
     "templates/common/tools/claude/.claude/hooks/prompt-hook.mjs",
   ]);
+});
+
+test("QUA-117 : le sondage drwil-move se prépare sans rien écrire ; seule la réponse lue par le hook applique la transition humaine, sur l'état du sondage", async () => {
+  const racine = depot();
+  const refus = await move(racine, { to: "EXPECTATION", brief: FICHE }, { tty: false, now: MAINTENANT });
+  assert.equal(refus.code, 1);
+  assert.match(
+    refus.message,
+    /terminal interactif requis .* ; depuis le chat : `node \.githooks\/state\.mjs poll move EXPECTATION --brief docs\/projects\/exemple\.md` prépare le sondage `drwil-move`, à poser tel quel : seule la réponse de l'humain l'applique$/,
+  );
+  let r = await capturer(() => main(["poll", "move", "EXPECTATION", "--brief", FICHE], racine));
+  assert.equal(r.code, 0, r.erreurs);
+  const q = JSON.parse(r.sortie).questions[0];
+  assert.equal(q.header, "drwil-move");
+  assert.equal(q.multiSelect, false);
+  assert.equal(
+    q.question,
+    `drwil-move EXPECTATION {"brief":"${FICHE}"}\nTransition : SCOPING → EXPECTATION\nFiche : ${FICHE}\n\nAutoriser cette transition ?`,
+  );
+  assert.deepEqual(
+    q.options.map((o) => o.label),
+    ["Autoriser", "Ne pas autoriser"],
+  );
+  assert.ok(
+    q.options.every((o) => !/recommand/i.test(o.label + o.description)),
+    "aucune option recommandée",
+  );
+  assert.equal(readState(racine).source, "missing", "la préparation n'écrit rien");
+  r = await capturer(() => main(["poll", "move"], racine));
+  assert.equal(r.code, 2);
+  assert.match(r.erreurs, /^✗ utilisation : node \.githooks\/state\.mjs poll move <ACTIVITE> \[--brief <fiche>\]/);
+  assert.match(movePoll(racine, { to: "VERIFY" }).message, /transition SCOPING → VERIFY interdite/);
+  assert.match(movePoll(racine, { to: "EXPECTATION" }).message, /ouvrir une attente exige --brief/);
+
+  // Seul l'état du sondage, inchangé, applique la transition : un autre état, ou le même sondage rejoué, rien.
+  const { data } = movePoll(racine, { to: "EXPECTATION", brief: FICHE });
+  for (const faux of [undefined, {}, { ...data, state: { ...data.state, activity: "REQUEST" } }])
+    assert.equal(await moveFromPoll(racine, faux), null);
+  assert.equal(readState(racine).source, "missing");
+  const fait = await moveFromPoll(racine, data);
+  assert.equal(fait.code, 0, fait.message);
+  assert.equal(fait.message, "SCOPING → EXPECTATION");
+  assert.equal(readState(racine).state.activity, "EXPECTATION");
+  assert.equal(await moveFromPoll(racine, data), null, "l'état a changé : le même sondage ne rejoue pas");
+  assert.match(
+    movePoll(racine, { to: "REQUEST" }).message,
+    /EXPECTATION → REQUEST n'est pas une décision humaine : `node \.githooks\/state\.mjs move REQUEST` suffit/,
+  );
+  assert.equal((await move(racine, { to: "REQUEST", request: "Lot 2" }, { now: MAINTENANT })).code, 0);
+  const lot = movePoll(racine, { to: "BUILD", request: "Lot 3" });
+  assert.match(lot.poll.questions[0].question, /^drwil-move BUILD \{"request":"Lot 3"\}\nTransition : REQUEST → BUILD\nDemande : Lot 3\n/);
+  assert.match((await move(racine, { to: "BUILD", request: "Lot 3" }, { now: MAINTENANT })).message, /poll move BUILD --request "Lot 3"`/);
+  assert.equal((await moveFromPoll(racine, lot.data)).code, 0);
+  assert.equal(readState(racine).state.activity, "BUILD");
+  assert.equal(readState(racine).state.active_request, "Lot 3");
+
+  // Le moteur refuse encore après la réponse : son message est rendu tel quel.
+  const invalide = depot();
+  const sondage = movePoll(invalide, { to: "EXPECTATION", brief: FICHE });
+  rmSync(join(invalide, FICHE));
+  assert.match((await moveFromPoll(invalide, sondage.data)).message, /introuvable/);
+
+  const agent = depot({ config: { transitions: "agent" } });
+  assert.match(movePoll(agent, { to: "EXPECTATION", brief: FICHE }).message, /n'est pas une décision humaine/);
+  const en = depot({ lang: "en" });
+  const anglais = movePoll(en, { to: "EXPECTATION", brief: FICHE }).poll.questions[0];
+  assert.deepEqual(
+    anglais.options.map((o) => o.label),
+    ["Allow", "Do not allow"],
+  );
+  assert.match(anglais.question, /\nTransition: SCOPING → EXPECTATION\nBrief: docs\/projects\/exemple\.md\n\nAllow this transition\?$/);
+  assert.match(movePoll(en, {}).message, /^usage: node \.githooks\/state\.mjs poll move <ACTIVITY>/);
+  const enAgent = depot({ lang: "en", config: { transitions: "agent" } });
+  assert.match(
+    movePoll(enAgent, { to: "EXPECTATION", brief: FICHE }).message,
+    /is not a human decision: `node \.githooks\/state\.mjs move EXPECTATION` is enough/,
+  );
+  assert.match(
+    (await move(en, { to: "EXPECTATION", brief: FICHE }, { tty: false })).message,
+    /; from the chat: `node \.githooks\/state\.mjs poll move EXPECTATION/,
+  );
+});
+
+test("QUA-117 : seuls les hooks des sondages drwil-move et drwil-detour appliquent la transition humaine et le oui au détour du chat", () => {
+  const PAQUET = join(RACINE_DEPOT, "packages/drwil");
+  const fichiers = [];
+  const parcourir = (dossier) => {
+    for (const e of readdirSync(dossier, { withFileTypes: true })) {
+      const chemin = join(dossier, e.name);
+      if (e.isDirectory()) parcourir(chemin);
+      else if (/\.(mjs|cjs|js|ts)$/.test(e.name) && !/\.test\.mjs$/.test(e.name)) fichiers.push(chemin);
+    }
+  };
+  for (const d of ["templates", "src", "bin"]) parcourir(join(PAQUET, d));
+  const qui = (motif) =>
+    fichiers
+      .filter((f) => motif.test(readFileSync(f, "utf8")))
+      .map((f) => f.slice(PAQUET.length + 1).replace(/\\/g, "/"))
+      .sort();
+  const HOOKS = "templates/common/tools/claude/.claude/hooks/";
+  assert.deepEqual(qui(/\bmoveFromPoll\b/), ["templates/common/base/.githooks/state-polls.mjs", `${HOOKS}move-poll.mjs`]);
+  assert.deepEqual(qui(/\ballowFromPoll\b/), ["templates/common/base/.githooks/detour.mjs", `${HOOKS}detour-poll.mjs`]);
+  // Le oui de l'humain passé à la transition sans terminal : seulement par moveFromPoll, sur la réponse lue par le hook.
+  assert.deepEqual(qui(/\bmove\([^)]*human:\s*true/), ["templates/common/base/.githooks/state-polls.mjs"]);
 });
 
 test("QUA-174 : accept au terminal : l'humain voit les critères et confirme ; sans confirmation, sans chantier ou sans critère, rien", async () => {

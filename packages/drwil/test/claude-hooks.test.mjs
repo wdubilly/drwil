@@ -703,6 +703,268 @@ test("QUA-235 : sondage drwil-accept (QUA-175) — refusé, cause dite, comme ce
   }
 });
 
+/**
+ * Projet aux hooks git du gabarit où se joue le hook d'un sondage préparé de l'état (drwil-move, drwil-detour, QUA-117) :
+ * `preparer(githook, dir)` rend le sondage préparé par le moteur, `hookName` le hook exporté par prompt-hook.mjs.
+ */
+async function projetSondage({ lang = "fr", etat, hookName, preparer }) {
+  const fichiers = { [FICHE_ACCEPT]: CRITERES_ACCEPT, ...(etat ? { ".drwil/state.json": JSON.stringify(etat) } : {}) };
+  const dir = projet({ lang }, fichiers);
+  cpSync(BASE_GITHOOKS, join(dir, ".githooks"), { recursive: true });
+  const hooks = await load("prompt-hook.mjs");
+  const githook = (name) => import(pathToFileURL(join(dir, ".githooks", name)).href);
+  const poll = await preparer(githook, dir);
+  const output = [];
+  const errors = [];
+  const hook = (input) => hooks[hookName](input, { root: dir, tell: (text) => output.push(text) });
+  const prepare = () => ({
+    hook_event_name: "PreToolUse",
+    tool_name: "AskUserQuestion",
+    session_id: "session-fictive",
+    tool_use_id: "appel-fictif",
+    tool_input: structuredClone(poll),
+  });
+  const post = (input, label = input.tool_input.questions[0].options[0].label) => {
+    const answers = { [input.tool_input.questions[0].question]: label };
+    return {
+      ...input,
+      hook_event_name: "PostToolUse",
+      tool_input: { ...input.tool_input, answers: { ...answers }, annotations: {} },
+      tool_response: { questions: input.tool_input.questions, answers, annotations: {} },
+    };
+  };
+  const state = () => {
+    try {
+      return JSON.parse(readFileSync(join(dir, ".drwil/state.json"), "utf8"));
+    } catch {
+      return null;
+    }
+  };
+  const last = () => {
+    const said = [...errors, ...output].at(-1) ?? "";
+    errors.length = output.length = 0;
+    return said;
+  };
+  const capture = async (fn) => {
+    const error = console.error;
+    console.error = (text) => errors.push(String(text));
+    try {
+      return await fn();
+    } finally {
+      console.error = error;
+    }
+  };
+  return { dir, hook, prepare, post, state, last, capture, output };
+}
+
+/** Les refus de forme du socle (QUA-235), communs à chaque sondage préparé : rien n'est écrit, la cause est dite. */
+async function refusDuSocle({ hook, prepare, post, state, last }, form, oui) {
+  const avant = JSON.stringify(state());
+  const base = prepare();
+  for (const [change, cause] of [
+    [(x) => (x.tool_input.metadata = { source: "agent" }), /champ inattendu \(tool_input\.metadata\)/],
+    [(x) => (x.tool_input.answers = { [x.tool_input.questions[0].question]: oui }), /champ inattendu \(tool_input\.answers\)/],
+    [(x) => (x.tool_input.questions[0].default = oui), /champ inattendu \(questions\[0\]\.default\)/],
+    [(x) => x.tool_input.questions.push({ header: "autre" }), /plusieurs questions \(2\)/],
+    [(x) => (x.tool_input.questions[0].options[0].label += " (Recommended)"), /recommandation dans l'option « .* \(Recommended\) »/],
+    [(x) => (x.tool_input.questions[0].question += "\nmodifié"), /résumé différent .*modifié/],
+    [(x) => (x.tool_input.questions[0].multiSelect = true), /résumé différent .*multiSelect/],
+    [(x) => (x.tool_name = "Bash"), /appel non corrélable/],
+    [(x) => delete x.session_id, /appel non corrélable/],
+  ]) {
+    const input = structuredClone(base);
+    change(input);
+    assert.equal(await hook(input), 2);
+    const said = last();
+    assert.match(said, cause);
+    assert.match(said, form);
+    await hook(post(input));
+    last();
+    assert.equal(JSON.stringify(state()), avant);
+  }
+  for (const [change, cause] of [
+    [(x) => (x.tool_response.answers = {}), /réponse illisible/],
+    [(x) => delete x.tool_response, /réponse illisible/],
+    [(x) => (x.tool_response.answers[x.tool_input.questions[0].question] = "Oui"), /réponse illisible \(« Oui » ∉ options\)/],
+    [(x) => (x.session_id = "autre-session"), /préparation absente/],
+  ]) {
+    assert.equal(await hook(base), 0);
+    const response = structuredClone(post(base));
+    change(response);
+    await hook(response);
+    assert.match(last(), cause);
+    assert.equal(JSON.stringify(state()), avant);
+  }
+  return base;
+}
+
+const ETAT_ROUVERT = {
+  version: 1,
+  activity: "BUILD",
+  active_brief: FICHE_ACCEPT,
+  active_request: null,
+  since: "2026-11-18T10:00:00Z",
+  reopened: { pr: 42 },
+};
+
+const sondageTransition = (lang) =>
+  projetSondage({
+    lang,
+    hookName: "moveHook",
+    preparer: async (githook, dir) => (await githook("state-polls.mjs")).movePoll(dir, { to: "EXPECTATION", brief: FICHE_ACCEPT }).poll,
+  });
+
+const sondageDetour = (lang) =>
+  projetSondage({
+    lang,
+    etat: ETAT_ROUVERT,
+    hookName: "detourHook",
+    preparer: async (githook, dir) => (await githook("detour.mjs")).detourPoll(dir).poll,
+  });
+
+test("QUA-235 : sondage drwil-move (QUA-117) — seule la réponse de l'humain au sondage préparé applique la transition humaine, une fois", async () => {
+  const s = await sondageTransition();
+  try {
+    const input = s.prepare();
+    assert.match(input.tool_input.questions[0].question, /^drwil-move EXPECTATION \{"brief":"docs\/projects\/exemple\.md"\}\n/);
+    assert.equal(await s.hook(input), 0);
+    assert.equal(s.state(), null, "la question posée n'écrit rien");
+    assert.equal(await s.hook(s.post(input)), 0);
+    assert.equal(s.output.at(-1), "✓ SCOPING → EXPECTATION");
+    assert.equal(s.state().activity, "EXPECTATION");
+    assert.equal(s.state().active_brief, FICHE_ACCEPT);
+    await s.hook(s.post(input));
+    assert.match(s.output.at(-1), /préparation absente/, "rejeu sans préparation refusé");
+    assert.equal(await s.hook({}), null, "un autre sondage n'est pas le sien");
+  } finally {
+    rmSync(s.dir, { recursive: true, force: true });
+  }
+});
+
+test("QUA-235 : sondage drwil-move (QUA-117) — refusé, cause dite, comme celui de l'attestation ; refus humain, état changé, refus du moteur", async () => {
+  const s = await sondageTransition();
+  try {
+    await s.capture(async () => {
+      const form = /sondage de transition refusé — .* ; état inchangé\. relancer `node \.githooks\/state\.mjs poll move EXPECTATION …`/;
+      const base = await refusDuSocle(s, form, "Autoriser");
+      // La première ligne porte la transition : modifiée, la préparation refaite diffère ; illisible, l'erreur est dite.
+      const autre = structuredClone(base);
+      autre.tool_input.questions[0].question = autre.tool_input.questions[0].question.replace('{"brief"', '{"request":"x","brief"');
+      assert.equal(await s.hook(autre), 2);
+      assert.match(s.last(), /résumé différent/);
+      autre.tool_input.questions[0].question = autre.tool_input.questions[0].question.replace(/\{.*\}/, "{pas du json}");
+      assert.equal(await s.hook(autre), 2);
+      assert.match(s.last(), /sondage de transition refusé — erreur \(/);
+      assert.equal(await s.hook(base), 0);
+      await s.hook(s.post(base, "Ne pas autoriser"));
+      const human = s.last();
+      assert.match(human, /refus choisi par l'humain \(« Ne pas autoriser »\) : état inchangé\./);
+      assert.doesNotMatch(human, /sondage de transition refusé/, "le refus humain n'est pas un refus de forme");
+      // État changé pendant la question : la transition n'est pas appliquée.
+      assert.equal(await s.hook(base), 0);
+      const changed = {
+        version: 1,
+        activity: "EXPECTATION",
+        active_brief: FICHE_ACCEPT,
+        active_request: null,
+        since: "2026-11-18T11:00:00Z",
+      };
+      writeFileSync(join(s.dir, ".drwil/state.json"), JSON.stringify(changed));
+      await s.hook(s.post(base));
+      assert.match(s.last(), /état de gouvernance changé pendant la question/);
+      assert.deepEqual(s.state(), changed);
+      rmSync(join(s.dir, ".drwil/state.json"));
+      // Le moteur refuse après la réponse (fiche retirée) : son message est dit tel quel.
+      assert.equal(await s.hook(base), 0);
+      rmSync(join(s.dir, FICHE_ACCEPT));
+      await s.hook(s.post(base));
+      assert.match(s.last(), /sondage de transition refusé — .*introuvable.* ; état inchangé\.$/);
+      assert.equal(s.state(), null);
+      // La préparation refaite échoue : son message est dit tel quel.
+      assert.equal(await s.hook(base), 2);
+      assert.match(s.last(), /sondage de transition refusé — .*introuvable/);
+    });
+  } finally {
+    rmSync(s.dir, { recursive: true, force: true });
+  }
+  const en = await sondageTransition("en");
+  try {
+    const input = en.prepare();
+    assert.deepEqual(
+      input.tool_input.questions[0].options.map((o) => o.label),
+      ["Allow", "Do not allow"],
+    );
+    assert.equal(await en.hook(input), 0);
+    await en.hook(en.post(input, "Do not allow"));
+    assert.match(en.output.at(-1), /refusal chosen by the human \(« Do not allow »\): state unchanged\./);
+    assert.equal(en.state(), null);
+  } finally {
+    rmSync(en.dir, { recursive: true, force: true });
+  }
+});
+
+test("QUA-235 : sondage drwil-detour (QUA-117) — seule la réponse de l'humain au sondage préparé enregistre le oui à la réouverture, une fois", async () => {
+  const s = await sondageDetour();
+  try {
+    const input = s.prepare();
+    assert.match(input.tool_input.questions[0].question, /^drwil-detour docs\/projects\/exemple\.md\nLe correctif de la réouverture/);
+    assert.equal(await s.hook(input), 0);
+    assert.deepEqual(s.state().reopened, { pr: 42 }, "la question posée n'écrit rien");
+    assert.equal(await s.hook(s.post(input)), 0);
+    assert.equal(s.output.at(-1), "✓ réouverture de docs/projects/exemple.md autorisée à changer les règles du jeu");
+    assert.deepEqual(s.state().reopened, { pr: 42, human: true });
+    await s.hook(s.post(input));
+    assert.match(s.output.at(-1), /préparation absente/, "rejeu sans préparation refusé");
+    assert.equal(await s.hook({}), null, "un autre sondage n'est pas le sien");
+  } finally {
+    rmSync(s.dir, { recursive: true, force: true });
+  }
+});
+
+test("QUA-235 : sondage drwil-detour (QUA-117) — refusé, cause dite, comme celui de l'attestation ; refus humain, réouverture changée", async () => {
+  const s = await sondageDetour();
+  try {
+    await s.capture(async () => {
+      const form = /sondage du oui au détour refusé — .* ; aucun oui enregistré\. relancer `node \.githooks\/state\.mjs poll detour`/;
+      const base = await refusDuSocle(s, form, "Autoriser");
+      assert.equal(await s.hook(base), 0);
+      await s.hook(s.post(base, "Ne pas autoriser"));
+      assert.match(
+        s.last(),
+        /refus choisi par l'humain \(« Ne pas autoriser »\) : aucun oui enregistré, la barrière de périmètre refuse toujours/,
+      );
+      assert.deepEqual(s.state().reopened, { pr: 42 });
+      // Plus rien n'attend le oui pendant la question : rien n'est enregistré.
+      assert.equal(await s.hook(base), 0);
+      const { reopened, ...sans } = s.state();
+      writeFileSync(join(s.dir, ".drwil/state.json"), JSON.stringify(sans));
+      await s.hook(s.post(base));
+      assert.match(s.last(), /détour ou réouverture changés pendant la question/);
+      assert.equal(s.state().reopened, undefined);
+      assert.equal(await s.hook(base), 2);
+      assert.match(s.last(), /sondage du oui au détour refusé — aucun détour en cours ; aucun oui enregistré\.$/);
+    });
+  } finally {
+    rmSync(s.dir, { recursive: true, force: true });
+  }
+  const en = await sondageDetour("en");
+  try {
+    const input = en.prepare();
+    assert.deepEqual(
+      input.tool_input.questions[0].options.map((o) => o.label),
+      ["Allow", "Do not allow"],
+    );
+    assert.equal(await en.hook(input), 0);
+    await en.hook(en.post(input, "Do not allow"));
+    assert.match(en.output.at(-1), /refusal chosen by the human \(« Do not allow »\): no yes recorded/);
+    assert.equal(await en.hook(input), 0);
+    await en.hook(en.post(input));
+    assert.equal(en.output.at(-1), "✓ reopening of docs/projects/exemple.md allowed to change the rules");
+  } finally {
+    rmSync(en.dir, { recursive: true, force: true });
+  }
+});
+
 const MODULE_RELEASE = fileURLToPath(new URL("../templates/common/optional/create-release/", import.meta.url));
 const CANDIDATE = "v1.1.0-rc.1";
 

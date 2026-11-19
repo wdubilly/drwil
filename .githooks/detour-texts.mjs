@@ -48,12 +48,21 @@ export const TEXTS = {
         "détour clos : retour sur {1}, {2} fusionnée dans la branche (déjà poussée : rien de réécrit, un simple push suffit), travail restauré ; BUILD sur {0}.",
       upToDate: "détour clos : retour sur {1}, qui contient déjà {2} (rien à rejouer), travail restauré ; BUILD sur {0}.",
     },
-    human: "le oui de l'humain se donne dans un terminal interactif (`node .githooks/detour.mjs allow`) ; en file, le sous-agent s'arrête",
+    human:
+      "le oui de l'humain se donne depuis le chat par le sondage `drwil-detour` (`node .githooks/state.mjs poll detour`, posé tel quel : seule la réponse de l'humain l'enregistre) ou dans un terminal interactif (`node .githooks/detour.mjs allow`) ; en file, le sous-agent s'arrête",
     confirm: "Le détour {0} change les règles du jeu. L'autoriser ? Retapez DETOUR : ",
     refused: "oui non donné : rien n'a changé",
     allowed: "détour {0} autorisé à changer les règles du jeu",
     reopenConfirm: "Le correctif de la réouverture de {0} change les règles du jeu. L'autoriser ? Retapez DETOUR : ",
     reopenAllowed: "réouverture de {0} autorisée à changer les règles du jeu",
+    // The `drwil-detour` chat poll (QUA-117): {0} detour branch or reopened brief.
+    ask: "Le détour {0} change les règles du jeu (contrat existant, hook, seuil, barrière, CI) : la barrière de périmètre refuse ses commits qui les touchent jusqu'au oui de l'humain.\n\nL'autoriser à changer les règles du jeu ?",
+    reopenAsk:
+      "Le correctif de la réouverture de {0} change les règles du jeu (contrat existant, hook, seuil, barrière, CI) : la barrière de périmètre refuse ses commits qui les touchent jusqu'au oui de l'humain.\n\nL'autoriser à changer les règles du jeu ?",
+    options: [
+      { label: "Autoriser", description: "Les commits qui changent les règles du jeu passent la barrière de périmètre." },
+      { label: "Ne pas autoriser", description: "Rien n'est enregistré ; la barrière continue de les refuser." },
+    ],
     // {0} title, {1} workstream brief, {2} branch, {3} date, {4} risk, {5} scope lines.
     brief: `# Détour : {0} (détour de {1})
 
@@ -126,12 +135,20 @@ files:
         "detour closed: back on {1}, {2} merged into the branch (already pushed: nothing rewritten, a plain push is enough), work restored; BUILD on {0}.",
       upToDate: "detour closed: back on {1}, which already contains {2} (nothing to replay), work restored; BUILD on {0}.",
     },
-    human: "the human's yes is given in an interactive terminal (`node .githooks/detour.mjs allow`); in a queue, the subagent stops",
+    human:
+      "the human's yes is given from the chat by the `drwil-detour` poll (`node .githooks/state.mjs poll detour`, asked as is: only the human's answer records it) or in an interactive terminal (`node .githooks/detour.mjs allow`); in a queue, the subagent stops",
     confirm: "Detour {0} changes the rules. Allow it? Type DETOUR: ",
     refused: "yes not given: nothing changed",
     allowed: "detour {0} allowed to change the rules",
     reopenConfirm: "The fix of the reopening of {0} changes the rules. Allow it? Type DETOUR: ",
     reopenAllowed: "reopening of {0} allowed to change the rules",
+    ask: "Detour {0} changes the rules (existing contract, hook, threshold, gate, CI): the scope gate refuses its commits touching them until the human's yes.\n\nAllow it to change the rules?",
+    reopenAsk:
+      "The fix of the reopening of {0} changes the rules (existing contract, hook, threshold, gate, CI): the scope gate refuses its commits touching them until the human's yes.\n\nAllow it to change the rules?",
+    options: [
+      { label: "Allow", description: "The commits that change the rules pass the scope gate." },
+      { label: "Do not allow", description: "Nothing is recorded; the gate keeps refusing them." },
+    ],
     brief: `# Detour: {0} (detour of {1})
 
 **Status**: opened on {3} (detour of {1}, branch {2}).
