@@ -105,12 +105,10 @@ agent's.
    - `catalog:QUA-004` (coverage) and `catalog:QUA-020` (e2e): not a choice — mandatory guarantees wired at step 3 bis.
      A new project: 100 % and e2e from the start. An existing project in debt: threshold at the measured level, diff
      coverage at 100 %, ratchet; e2e required too. What the e2e test is for each project shape is defined once, in the
-     catalog's « What "end to end" means » section. The e2e check is slow: propose `"runAt": ["ci"]` — played once, by
-     the CI of the PR (GitHub) or MR (GitLab), never at commit, at push or in `drwil verify`, which then says
-     `GOVERNANCE: PASS (CI pending)`; `--with-ci-checks` replays it locally to reproduce a failure. Declare its
-     `paths` too (what it reads: the app's sources, the e2e tests and their config, the package manifest and its lock;
-     `["**"]` when in doubt): a check without `paths` has no fingerprint of its own, so the CI's second
-     pass, the replay with the main branch's hooks, plays it again on a commit it just passed.
+     catalog's « What "end to end" means » section. The slow e2e check: propose `"runAt": ["ci"]` (played by the CI of
+     the PR or MR only, `drwil verify` then says `GOVERNANCE: PASS (CI pending)`, `--with-ci-checks` replays it locally)
+     and its `paths` (app sources, e2e tests and config, package manifest and lock; `["**"]` in doubt): without them it
+     has no fingerprint of its own and the CI's replay with the main branch's hooks plays it again on a commit it passed.
    - The catalog's other lines have no ready-made script: propose the
      detected stack's usual tool (lint, typecheck, coverage…).
 5. **Write the first business contract**: `docs/contracts.md` ships
