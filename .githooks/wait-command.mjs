@@ -6,10 +6,13 @@
 // the next call runs the command again. The verdict file holds the exit code only:
 // the output stays in a local log, never in the verdict (QUA-013: not run is not passed).
 // Usage: node .githooks/wait-command.mjs [--wait <seconds>] [--status] <command…>
+// Several words are run as is, without a shell (their quotes were already read by the caller's shell: a `-m` with
+// quotes or parentheses stays intact); a single word is a shell command line (`"a && b"`). A piped stdin is
+// passed on to the command (`git commit -F -`).
 // Exit code: 0 passed, 1 failed, 2 not run or interrupted, 3 still running.
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { closeSync, mkdirSync, openSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, mkdirSync, openSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync, writeSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -51,7 +54,7 @@ export function parseArgs(argv) {
   const i = rest.indexOf("--wait");
   const wait = i >= 0 ? Number(rest[i + 1]) : 100;
   if (i >= 0) rest.splice(i, 2);
-  return { wait: wait >= 0 ? wait : 100, status, command: rest.join(" ") };
+  return { wait: wait >= 0 ? wait : 100, status, command: rest.join(" "), argv: rest };
 }
 
 const dir = (root) => join(root, ".drwil", "evidence", "wait");
@@ -98,21 +101,33 @@ function consumed(root, command) {
 }
 
 /** Starts the command detached; only the runner writes the verdict, only the launcher writes the pid. */
-export function launch(root, command, script = fileURLToPath(import.meta.url)) {
+export function launch(root, command, script = fileURLToPath(import.meta.url), argv = []) {
   const key = keyOf(command);
   mkdirSync(dir(root), { recursive: true });
   rmSync(verdictFile(root, key), { force: true });
   rmSync(consumedFile(root, key), { force: true });
-  const runner = spawn(process.execPath, [script, "--exec", root, command], { detached: true, stdio: "ignore" });
+  // a terminal is never passed on: detached, the runner has no controlling terminal to read it from
+  const stdin = process.stdin.isTTY ? "ignore" : "inherit";
+  const runner = spawn(process.execPath, [script, "--exec", root, command, JSON.stringify(argv)], {
+    detached: true,
+    stdio: [stdin, "ignore", "ignore"],
+  });
   runner.unref();
   writeFileSync(pidFile(root, key), String(runner.pid));
 }
 
 /** The runner: plays the command with its output in the log, then writes the verdict. */
-export function exec(root, command) {
+export function exec(root, command, argv = []) {
   const key = keyOf(command);
   const fd = openSync(logFile(root, key), "w");
-  const child = spawn(command, { shell: true, cwd: root, stdio: ["ignore", fd, fd] });
+  const stdio = ["inherit", fd, fd];
+  // Windows: `npm` is `npm.cmd`, found only through the shell
+  const child =
+    argv.length > 1
+      ? spawn(argv[0], argv.slice(1), { shell: process.platform === "win32", cwd: root, stdio })
+      : spawn(command, { shell: true, cwd: root, stdio });
+  // a missing program (ENOENT) closes with a negative code: a failure, never a lost verdict; the reason in the log
+  child.on("error", (e) => writeSync(fd, `${e.message}\n`));
   child.on("close", (code) => {
     closeSync(fd);
     // renamed into place: a reader never sees a half-written verdict, which it would take for an interrupted run
@@ -122,12 +137,12 @@ export function exec(root, command) {
 }
 
 /** Launches if needed, then waits at most `wait` seconds; returns { code, message }. */
-export async function waitFor({ root = process.cwd(), command, wait, status, interval = 500, T = texts(root) }) {
+export async function waitFor({ root = process.cwd(), command, argv = [], wait, status, interval = 500, T = texts(root) }) {
   if (!command) return { code: 2, message: T.usage };
   let v = read(root, command);
   if (status && v.state === "none") return { code: 2, message: T.none };
   if (!status && (v.state === "none" || v.state === "interrupted")) {
-    launch(root, command);
+    launch(root, command, undefined, argv);
     v = { state: "running" };
   }
   const end = Date.now() + (status ? 0 : wait) * 1000;
@@ -154,7 +169,7 @@ export async function waitFor({ root = process.cwd(), command, wait, status, int
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
-  if (process.argv[2] === "--exec") exec(process.argv[3], process.argv[4]);
+  if (process.argv[2] === "--exec") exec(process.argv[3], process.argv[4], JSON.parse(process.argv[5] ?? "[]"));
   else {
     const r = await waitFor(parseArgs(process.argv.slice(2)));
     (r.code === 0 ? console.log : console.error)(r.message);

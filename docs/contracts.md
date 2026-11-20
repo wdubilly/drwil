@@ -2163,10 +2163,10 @@ régression sauf si la fiche active déclare le changement (section
 **Raison** : Sans cette section, un développeur sous fnm voit « hook errored » sans savoir que le shell de l'assistant n'a pas `node`.
 
 ## QUA-219 — Un script du kit lance une commande longue en tâche de fond et en écrit le verdict dans un fichier
-**Règle** : Livré à tout projet. `node .githooks/wait-command.mjs <commande>` lance la commande en tâche de fond, détachée (dans le dossier `wait` des évidences locales, hors versionnement), et en écrit le verdict dans un fichier : son code de sortie seul, jamais sa sortie, qui reste dans un journal local dont le chemin est dit (QUA-013 : non exécuté n'est pas passé ; une commande tuée par un signal est un échec). Un verdict livré est consommé : l'appel suivant rejoue la commande.
+**Règle** : Livré à tout projet. `node .githooks/wait-command.mjs <commande>` lance la commande en tâche de fond, détachée (dans le dossier `wait` des évidences locales, hors versionnement), et en écrit le verdict dans un fichier : son code de sortie seul, jamais sa sortie, qui reste dans un journal local dont le chemin est dit (QUA-013 : non exécuté n'est pas passé ; une commande tuée par un signal est un échec). Un verdict livré est consommé : l'appel suivant rejoue la commande. Une commande de plusieurs mots est lancée telle quelle, sans interpréteur de commandes (un `-m` à guillemets ou parenthèses reste intact ; un programme absent est un échec, sa raison au journal), un seul mot est une ligne de commande de l'interpréteur ; un stdin redirigé est transmis à la commande (`git commit -F -`).
 **Périmètre** : `.githooks/wait-command.mjs` et son gabarit (`packages/drwil/templates/common/base/.githooks/wait-command.mjs`).
 **Source de vérité** : `.githooks/wait-command.mjs`.
-**Preuve** : tests des hooks : commande de quelques secondes lancée en fond, verdict de réussite et d'échec, contenu du fichier de verdict, rejeu après consommation, signal.
+**Preuve** : tests des hooks : commande de quelques secondes lancée en fond, verdict de réussite et d'échec, contenu du fichier de verdict, rejeu après consommation, signal, argument à guillemets et parenthèses et stdin transmis, programme absent.
 **Contrôle** : `tests-qua-219`
 **Tests** : `.githooks/wait-command.test.mjs`
 **Origine** : attente-commandes-longues — « Un script du kit lance une commande longue en tâche de fond et écrit son verdict dans un fichier »

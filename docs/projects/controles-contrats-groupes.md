@@ -124,6 +124,9 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
   (lot 2) (validé par le demandeur le 2026-11-19)
 - `.githooks/run-checks-verdicts.mjs` — la seconde passe reprend les verdicts déjà acquis au lieu de rejouer (lot 2)
   (validé par le demandeur le 2026-11-19)
+- `QUA-219` — ancien critère : la commande, jointe en une ligne, passe toujours par l'interpréteur de commandes,
+  stdin fermé — raison : `git commit -F -` recevait un message vide et un `-m` à parenthèses échouait (« Syntax error »)
+  (validé par le demandeur le 2026-11-20, réponse « Traiter maintenant » au sondage des limites)
 - Le chantier dira si QUA-033 (règle du dépôt) devient la source livrée, ou s'il est seulement cité.
 
 ## 2. Hors périmètre

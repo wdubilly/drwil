@@ -204,6 +204,10 @@ release renames this section to its version.
   (never started) are named apart from those running. Every `gh` or `glab`
   call of `pr-watch` and `merge-auto` now has a time limit; a call cut at it
   is « not run », never a success.
+- `wait-command` passes a piped stdin on to the command (`git commit -F -`)
+  and runs a command of several words as is, without a shell: a `-m` with
+  quotes or parentheses no longer breaks; a missing program is a failure
+  with its reason in the log.
 
 ## 0.11.1 (2026-11-10)
 
