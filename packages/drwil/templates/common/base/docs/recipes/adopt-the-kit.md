@@ -105,9 +105,10 @@ agent's.
    - `catalog:QUA-004` (coverage) and `catalog:QUA-020` (e2e): not a choice — mandatory guarantees wired at step 3 bis.
      A new project: 100 % and e2e from the start. An existing project in debt: threshold at the measured level, diff
      coverage at 100 %, ratchet; e2e required too. What the e2e test is for each project shape is defined once, in the
-     catalog's « What "end to end" means » section. The e2e check is slow: propose `"runAt": ["ci"]` — played once, by
-     the CI of the PR (GitHub) or MR (GitLab), never at commit, at push or in `drwil verify`, which then says
-     `GOVERNANCE: PASS (CI pending)`; `--with-ci-checks` replays it locally to reproduce a failure.
+     catalog's « What "end to end" means » section. The slow e2e check: propose `"runAt": ["ci"]` (played by the CI of
+     the PR or MR only, `drwil verify` then says `GOVERNANCE: PASS (CI pending)`, `--with-ci-checks` replays it locally)
+     and its `paths` (app sources, e2e tests and config, package manifest and lock; `["**"]` in doubt): without them it
+     has no fingerprint of its own and the CI's replay with the main branch's hooks plays it again on a commit it passed.
    - The catalog's other lines have no ready-made script: propose the
      detected stack's usual tool (lint, typecheck, coverage…).
 5. **Write the first business contract**: `docs/contracts.md` ships
@@ -117,11 +118,10 @@ agent's.
    `checks` with an `id`, cite it as `**Check**`, list its test file(s) as
    `**Tests**` (QUA-029 checks they exist and carry the ID) and remove the
    `**Manual**` field: `drwil verify` then replays it at every workstream.
-   **One check per business rule**, filtering its tests by the ID
-   (`npm test -- -t "APP-001"`, `pytest -k APP_001`, `go test -run APP001`):
-   a single check shared by several contracts (one plain `npm test`) cannot
-   say which rule a failure breaks — `drwil verify` reports it as not
-   attributable. From then on, each workstream links its acceptance criteria
+   **One check per business rule**, its verdict read from the tests whose name starts with the ID: a single check shared by several contracts (one plain `npm test`) cannot say which rule a failure breaks — `drwil verify` reports it as not
+   attributable.
+   JavaScript stack (Vitest, Jest, `node --test`): `node .githooks/contract-tests.mjs APP-001` (optionally its test files, and `--runner vitest|jest|node` when the project's dependencies do not say it), never `npx vitest run -t "APP-001"`: the runner is launched once per pass for every contract check instead of once per contract, and a contract whose tests did not run fails (QUA-013).
+   Other stacks keep the filter by ID, one run per contract (`pytest -k APP_001`, `go test -run APP001`). From then on, each workstream links its acceptance criteria
    to such contracts (`docs/projects/model-brief.md`, « Acceptance
    criteria »): created by the workstream, or reused as they are; a
    contract changed on purpose is declared in the brief (« Modified
@@ -129,17 +129,16 @@ agent's.
 6. **Verify**: `node .githooks/run-checks.mjs` green, then one commit per
    subject (layer filled in, check declared, contract adopted) — never a
    catch-all commit.
-7. **Read the protection level**: `npx drwil doctor` says which of the four
-   levels the project really holds, each proved by a check (1 diagnosis
-   only, 2 local governance active: hooks wired and `scopeGate` blocking,
-   3 CI replaying the hook's checks, 4 forge protection verified, the
-   repository's auto-merge allowed on GitHub), « not
-   verified » when it could not read the forge, and the command that leads
-   to the next level (`--json` included). A new install writes `scopeGate`
-   as `blocking`; a project installed before keeps its setting, `warning`
-   when it had none — `doctor` shows the command that hardens it, and
-   `drwil verify` fails on a non-blocking `scopeGate` once the mandatory
-   guarantees are enforced.
+7. **Read the protection level**: `npx drwil doctor` says which of the four levels the project really holds, each
+   proved by a check (1 diagnosis only, 2 local governance active: hooks wired and `scopeGate` blocking, 3 CI replaying
+   the hook's checks, 4 forge protection verified, the repository's auto-merge allowed on GitHub), « not verified » when
+   it could not read the forge, and the command that leads to the next level (`--json` included). A new install writes
+   `scopeGate` as `blocking`; a project installed before keeps its setting, `warning` when it had none — `doctor` shows
+   the command that hardens it, and `drwil verify` fails on a non-blocking `scopeGate` once the mandatory guarantees
+   are enforced. Without writing anything, it also warns about **contract checks not grouped** (a `vitest`, `jest` or
+   `npm test` command filtered by an ID, shown with its grouped form of step 5), **checks left to the CI without
+   `paths`** (`runAt: ["ci"]` alone, shown with `"paths": ["**"]`, step 4) and a coverage pair that runs the tests twice;
+   `npx drwil doctor --fix` writes the safe forms into `.drwil/ia-first.json`, the others stay reported with their line.
 
 ## Human attestation in the conversation
 

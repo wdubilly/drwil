@@ -30,7 +30,9 @@ test("QUA-219 : le verdict ne contient que le code de sortie, jamais la sortie",
   const root = tmp();
   const command = "echo sortie-longue && exit 0";
   await waitFor({ root, command, wait: 15, interval: 50, status: true }); // rien à lire encore
+  process.stdin.isTTY = true; // un terminal n'est jamais transmis à la commande détachée
   launch(root, command);
+  process.stdin.isTTY = undefined;
   for (let i = 0; i < 100 && read(root, command).state !== "done"; i++) await new Promise((r) => setTimeout(r, 50));
   const dossier = join(root, ".drwil", "evidence", "wait");
   const verdict = readdirSync(dossier).find((f) => f.endsWith(".json"));
@@ -138,8 +140,8 @@ test("QUA-220 : sans commande, l'usage est dit (code 2)", async () => {
 });
 
 test("QUA-220 : la ligne de commande : attente, statut, repli de l'attente invalide", () => {
-  assert.deepEqual(parseArgs(["npm", "test"]), { wait: 100, status: false, command: "npm test" });
-  assert.deepEqual(parseArgs(["--wait", "5", "--status", "a", "b"]), { wait: 5, status: true, command: "a b" });
+  assert.deepEqual(parseArgs(["npm", "test"]), { wait: 100, status: false, command: "npm test", argv: ["npm", "test"] });
+  assert.deepEqual(parseArgs(["--wait", "5", "--status", "a", "b"]), { wait: 5, status: true, command: "a b", argv: ["a", "b"] });
   assert.equal(parseArgs(["--wait", "abc", "a"]).wait, 100);
   assert.equal(parseArgs(["--wait", "-3", "a"]).wait, 100);
 });
@@ -154,6 +156,17 @@ test("QUA-220 : la commande du kit rend le verdict par ses codes de sortie", () 
   assert.equal(ko.status, 1);
   assert.match(ko.stderr, /code 5/);
   assert.equal(lance().status, 2);
+});
+
+test("QUA-219 : plusieurs mots sont lancés sans interpréteur et le stdin passe (git commit -F -, -m à guillemets)", () => {
+  const lance = (input, ...a) => spawnSync(process.execPath, [SCRIPT, "--wait", "15", ...a], { cwd: tmp(), input, encoding: "utf8" });
+  const echo = "process.stdout.write(process.argv[1] + '|' + require('fs').readFileSync(0, 'utf8'))";
+  const r = lance("lu sur stdin", "node", "-e", echo, 'titre "cité" (parenthèse) $HOME');
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(readFileSync(r.stdout.split(" : ")[1].trim(), "utf8"), 'titre "cité" (parenthèse) $HOME|lu sur stdin');
+  const absent = lance("", "programme-absent-drwil", "a");
+  assert.equal(absent.status, 1);
+  assert.match(readFileSync(absent.stderr.split(" : ")[1].trim(), "utf8"), /ENOENT/);
 });
 
 test("QUA-220 : les messages suivent la langue du projet", () => {

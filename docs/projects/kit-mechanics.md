@@ -9,6 +9,8 @@ files:
   - .githooks/skill-headers.mjs
   - .githooks/doc-coherence.mjs
   - .githooks/check-contract-tests.mjs
+  - .githooks/contract-tests.mjs
+  - .githooks/contract-tests-reporters.mjs
   - .githooks/check-architecture.mjs
   - .githooks/consumption.mjs
   - .githooks/consumption.test.mjs
@@ -75,6 +77,7 @@ files:
   - .githooks/doc-coherence.test.mjs
   - .githooks/skill-headers.test.mjs
   - .githooks/check-contract-tests.test.mjs
+  - .githooks/contract-tests.test.mjs
   - .githooks/check-file-size.test.mjs
   - .githooks/check-kit-size.test.mjs
   - .githooks/check-diff-coverage.test.mjs

@@ -9,8 +9,9 @@ ambiguë, et son contrôle `miroirs-gabarit` refuse ce qui fuit du dépôt vers 
 un gain obtenu pour le dépôt (outil de `outils/`, fichier `propresAuDepot` de `outils/miroirs.json`) dont le livrable
 aurait besoin reste au dépôt sans que la question soit posée. Le principe « livrable léger, dépôt éprouvé » y pousse
 même : il range les outils coûteux côté dépôt. Constaté le 2026-11-19 : le lancement unique des tests par passe
-(QUA-033, `outils/tests-par-fichier.mjs`, 2026-10-16) n'a jamais été livré ; chez `marinade-poulet`, 27 démarrages de
-Vitest font passer la CI de 12 à 22 minutes (fiche `docs/projects/controles-contrats-groupes.md`, 0.11.2).
+(QUA-033, outils/tests-par-fichier.mjs, 2026-10-16) n'a jamais été livré ; chez `marinade-poulet`, 27 démarrages de
+Vitest font passer la CI de 12 à 22 minutes. Livré depuis par le chantier « controles-contrats-groupes » (journal du
+2026-11-20) : le lanceur groupé `.githooks/contract-tests.mjs` (QUA-316).
 
 Le demandeur veut que la cible principale reste le livrable : chaque chantier qui améliore le dépôt dit si le livrable
 en a besoin.

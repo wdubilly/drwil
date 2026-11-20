@@ -1,4 +1,4 @@
-// Fusion des deux contrôles de couverture d'une couche en dette en un seul run (QUA-302), séparée de
+// Fusion des deux contrôles de couverture d'une couche Node, en dette ou à 100 %, en un seul run (QUA-302), séparée de
 // guarantees-layers.ts (QUA-001). Seule une paire exactement générée par le kit est réécrite : la moindre
 // différence (option ajoutée, exclusion changée) compte comme personnalisée, par prudence (QUA-019).
 import { posix } from "node:path";
@@ -45,21 +45,35 @@ export function mergeSeriesPair(checks: DeclaredCheck[], tool: CoverageTool, slu
 }
 
 /**
- * Commande unique composée depuis une paire c8 déclarée, de série ou réglée à la main (QUA-303) : la commande de seuil
+ * Commande unique composée depuis une paire déclarée, de série ou réglée à la main (QUA-303) : la commande de seuil
  * telle quelle, rapport cobertura en plus, puis la partie `diff-cover` du contrôle de diff telle quelle ; le rapport
- * lu par `diff-cover` est effacé avant le run (QUA-013). Null hors seuil c8 ou sans `diff-cover` (Python : inchangé).
+ * lu par `diff-cover` est effacé avant le run (QUA-013). Seuil c8, ou Vitest avec `--coverage` (hors table du kit :
+ * jamais fusionnée par `guarantees`, seulement signalée). Null sinon ou sans `diff-cover` (Python : inchangé).
  */
 export function singleFromPair(pair: { threshold: DeclaredCheck; diff: DeclaredCheck }): string | null {
   const { run: t } = pair.threshold;
   const { run: d } = pair.diff;
-  if (typeof t !== "string" || typeof d !== "string" || !/\bc8 .*--check-coverage/.test(t)) return null;
-  const cover = /diff-cover (\S+).*$/.exec(d);
-  if (!cover) return null;
-  const reporter = ` --reporter=cobertura --report-dir=${posix.dirname(cover[1])}`;
-  const check = t.includes("--reporter=cobertura")
-    ? t
-    : t.includes(" --all")
-      ? t.replace(" --all", `${reporter} --all`)
-      : t.replace(/\bc8\b/, `c8${reporter}`);
-  return `rm -f ${cover[1]} && ${check} && ${cover[0]}`;
+  const cover = typeof d === "string" ? /diff-cover (\S+).*$/.exec(d) : null;
+  if (typeof t !== "string" || !cover) return null;
+  const dir = posix.dirname(cover[1]);
+  const check = /\bc8 .*--check-coverage/.test(t) ? withC8Report(t, dir) : withVitestReport(t, dir);
+  return check && `rm -f ${cover[1]} && ${check} && ${cover[0]}`;
+}
+
+function withC8Report(t: string, dir: string): string {
+  const reporter = ` --reporter=cobertura --report-dir=${dir}`;
+  if (t.includes("--reporter=cobertura")) return t;
+  return t.includes(" --all") ? t.replace(" --all", `${reporter} --all`) : t.replace(/\bc8\b/, `c8${reporter}`);
+}
+
+/** Vitest : un `--coverage.reporter` répété s'ajoute aux autres (texte du demandeur gardé) ; null sans `--coverage`. */
+function withVitestReport(t: string, dir: string): string | null {
+  const flag = /\bvitest\b.*?( --coverage(?:\.enabled(?:=true)?)?)(?=\s|$)/.exec(t);
+  if (!flag) return null;
+  const extra = [
+    t.includes("--coverage.reporter=cobertura") ? "" : " --coverage.reporter=cobertura",
+    t.includes("--coverage.reportsDirectory") ? "" : ` --coverage.reportsDirectory=${dir}`,
+  ].join("");
+  const at = flag.index + flag[0].length;
+  return `${t.slice(0, at)}${extra}${t.slice(at)}`;
 }

@@ -249,10 +249,10 @@ test("autotest : sans dossier ou sans test non applicable ; sinon les tests du d
 test("autotest : avec le lanceur par fichier du dépôt, les tests passent par lui (une exécution par fichier et par passe)", () => {
   const racine = depot();
   ecrire(racine, ".githooks/a.test.mjs", "import { test } from 'node:test'; test('t', () => {});\n");
-  ecrire(racine, "outils/tests-par-fichier.mjs", "console.log(process.argv.slice(2).join(' '));\nprocess.exitCode = 1;\n");
+  ecrire(racine, ".githooks/contract-tests.mjs", "console.log(process.argv.slice(2).join(' '));\nprocess.exitCode = 1;\n");
   const r = executer(racine, "checks-self-test");
   assert.equal(r.status, "fail");
-  assert.match(r.output, /--tous .githooks.a\.test\.mjs/);
+  assert.match(r.output, /--runner node --all .githooks.a\.test\.mjs/);
 });
 
 test("couverture CI : sans CI non exécuté, sinon check-control-coverage du projet", () => {
@@ -729,7 +729,7 @@ test("QUA-292 : tests-qua-039 et tests-qua-047 — repris malgré une fiche ou u
   ecrire(racine, "docs/projects/fiche.md", "un\n");
   ecrire(racine, "docs/intentions/idee.md", "un\n");
   const lus = {
-    "tests-qua-039": [".githooks/glossary.mjs", "packages/drwil/src/verdict.ts", "outils/tests-par-fichier.mjs", "package.json"],
+    "tests-qua-039": [".githooks/glossary.mjs", "packages/drwil/src/verdict.ts", ".githooks/contract-tests.mjs", "package.json"],
     "tests-qua-047": [
       "packages/drwil/src/render.ts",
       "outils/installer-depot.mjs",

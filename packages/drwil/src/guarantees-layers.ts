@@ -91,7 +91,7 @@ export function coverLayer(ctx: LayerContext, layer: string, technos: string[]):
   report.mode = inherited ? "existing" : "new";
   const merged = mergeSeriesPair(ctx.checks, tool, slug, layer, exclusionsOf(ctx.cfg, layer).kept);
   if (merged) {
-    // Paire de série fusionnée (QUA-302) : seule une couche en dette la porte.
+    // Paire de série fusionnée (QUA-302), en dette ou à 100 % : couche « existing », `verify` n'exige que l'unique.
     report.mode = "existing";
     report.status = "kept";
     report.lines.push(fill(T.merged, id, `coverage-diff-${slug}`, fmt(merged)));

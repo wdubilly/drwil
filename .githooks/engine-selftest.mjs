@@ -36,8 +36,10 @@ export function selfTestPlan(root, { full, docsOnly, T }) {
   if (!tests.length) return { status: "not-applicable", detail: T.noTests };
   if (docsOnly) return { status: "not-run", detail: T.docsOnly };
   const files = tests.map((f) => join(".githooks", f));
-  const shared = join("outils", "tests-par-fichier.mjs"); // dépôt drwil : un lancement par fichier et par passe, partagé avec les contrôles de contrats (QUA-033)
+  // Un lancement par fichier et par passe, partagé avec les contrôles de contrats (QUA-316) ; `--runner node` : ces tests
+  // sont des `node --test`, quel que soit le lanceur que les dépendances du projet désigneraient.
+  const shared = join(".githooks", "contract-tests.mjs");
   return {
-    args: existsSync(join(root, shared)) ? [shared, "--tous", ...files] : ["--test", ...files],
+    args: existsSync(join(root, shared)) ? [shared, "--runner", "node", "--all", ...files] : ["--test", ...files],
   };
 }

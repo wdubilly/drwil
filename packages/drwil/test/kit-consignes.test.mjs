@@ -367,7 +367,7 @@ test("QUA-030 : le registre livré et la recette d'adoption enseignent un contr�
   const dir = tmp();
   await quiet(() => init({ lang: "en", targetDir: dir, git: false, ci: "none" }));
   const registre = readFileSync(join(dir, "docs/contracts.md"), "utf8");
-  assert.match(registre, /\*\*Proof\*\* : .*its own check .*`npm test -- -t "APP-001"`/);
+  assert.match(registre, /\*\*Proof\*\* : .*its own check .*grouped.*`node \.githooks\/contract-tests\.mjs APP-001`/);
   assert.match(registre, /list its file as \*\*Tests\*\*/);
   assert.match(registre, /^## QUA-029 — .*\n(.*\n)*\*\*Check\*\* : `contract-tests`/m);
   const recette = readFileSync(join(dir, "docs/recipes/adopt-the-kit.md"), "utf8");

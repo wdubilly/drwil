@@ -50,14 +50,17 @@ compté comme passé ; un critère de la fiche active sans preuve fait tomber
 le verdict. Le verdict d'un contrôle est repris quand ce qu'il juge n'a pas
 changé (`run-checks`, `drwil verify`, le pre-push, et en CI la passe d'une
 PR qui le demande, sur les verdicts de la dernière CI de la branche
-principale, dans la CI du dépôt comme dans celles livrées, GitHub et GitLab ; le push sur la branche principale rejoue tout, `--no-reuse` et
-`--replay-all` aussi), et la sortie dit repris ou rejoué ;
+principale, dans la CI du dépôt comme dans celles livrées, GitHub et GitLab ; le push sur la branche principale saute ses contrôles quand la PR ou
+MR fusionnée a prouvé le même arbre, et en garde les verdicts, sinon il
+rejoue tout ; `--no-reuse` et `--replay-all` rejouent tout), et la sortie dit repris ou rejoué ;
 `verify` peut jouer ses contrôles en parallèle, et chaque contrôle dit sa
 durée. `drwil doctor` diagnostique l'installation, `drwil contracts`
 valide le registre sans rien exécuter. `drwil verify --failed` ne rejoue
 que les contrats en échec (verdict partiel, jamais une preuve de clôture) ;
 `drwil doctor` dit le niveau de protection réellement tenu et signale après coup
-ce qu'une montée a supprimé ou laissé (fichier du kit disparu, `.bak`, stack vide, CI sans zone du projet).
+ce qu'une montée a supprimé ou laissé (fichier du kit disparu, `.bak`, stack vide, CI sans zone du projet) ;
+`drwil doctor --fix` réécrit dans `.drwil/ia-first.json` les seules déclarations à forme sûre (contrôle de contrat
+groupé, `paths` manquant, paire de couverture fusionnée), le reste restant signalé.
 `drwil contracts add` écrit un contrat propre au projet, `drwil contracts
 adopt <ID>` reprend un contrat du catalogue. `drwil report` imprime un
 rapport de défaut du kit sans donnée du projet. Un contrôle lent se découpe

@@ -29,6 +29,24 @@ plan:
     - node .githooks/run-checks.mjs --pr-previous
     # A declaration the engine refuses fails this job: that is no plan, never "no slice".
     - node .githooks/run-checks.mjs --shard-plan > .drwil/evidence/shard-plan.json
+    # QUA-296: a main-branch tree that the merged branch's last green pipeline proved (laid last by its `checks`) plans no slice, and the plan
+    # carries the proof and its verdicts to `checks`. The job token cannot read merge requests: the branch points at this commit or its second parent, or the default merge message names it.
+    - |
+      if [ -z "$CI_COMMIT_TAG" ] && [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
+        tree=$(git rev-parse 'HEAD^{tree}'); heads=" $CI_COMMIT_SHA $(git rev-parse -q --verify 'HEAD^2' || true) "; p=$(mktemp -d)
+        branches=$( { git ls-remote --heads origin | while read -r sha ref; do case "$heads" in *" $sha "*) echo "${ref#refs/heads/}";; esac; done; git log -1 --format=%s | sed -n "s/^Merge branch '\(.*\)' into .*/\1/p"; } | grep -vx "$CI_DEFAULT_BRANCH" | sort -u || true)
+        for branch in $branches; do
+          url="$CI_API_V4_URL/projects/$CI_PROJECT_ID/jobs/artifacts/$(printf %s "$branch" | sed 's|/|%2F|g')/raw/.drwil/evidence/pr-verdicts"
+          curl -sSfL --header "JOB-TOKEN: $CI_JOB_TOKEN" -o "$p/tree" "$url/proven-tree.txt?job=checks" 2>/dev/null && [ "$(cat "$p/tree")" = "$tree" ] || continue
+          echo "Checks not replayed: tree $tree is the one the green pipeline of $branch proved."
+          curl -sSfL --header "JOB-TOKEN: $CI_JOB_TOKEN" -o "$p/verdicts" "$url/run-checks-verdicts.json?job=checks" 2>/dev/null || true
+          node -e 'const fs = require("fs"); const [, file, tree, branch] = process.argv; let v = null; try { v = JSON.parse(fs.readFileSync(file, "utf8")); } catch {}
+            if (!v?.checks || typeof v.checks !== "object" || Array.isArray(v.checks)) { v = null; console.log(`WARNING: no readable verdict in the proof of ${branch}: the verdicts are not saved.`); }
+            fs.writeFileSync(".drwil/evidence/shard-plan.json", JSON.stringify({ include: [], proven: { tree, branch, verdicts: v } }));' "$p/verdicts" "$tree" "$branch"
+          break
+        done
+        grep -q '"proven"' .drwil/evidence/shard-plan.json || echo "Tree not proven by a green pipeline of the merged branch: everything is replayed."
+      fi
     - cat .drwil/evidence/shard-plan.json
   artifacts:
     paths:
@@ -97,21 +115,27 @@ checks:
     # verdicts of the slices of this pipeline (`--aggregate-shards`, downloaded from the slices stage). Not the
     # GitLab cache: protected and unprotected branches do not share it by default, and a shared one
     # could be written by a merge request. No verdict downloaded: everything is replayed.
+    # QUA-296: on the main branch, the plan's proof of this very tree skips the checks, its verdicts kept; QUA-297: restored verdicts dated.
     - |
       verdicts=.drwil/evidence/run-checks-verdicts.json
-      if [ -z "$CI_COMMIT_TAG" ] && [ "$CI_COMMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ]; then
+      if [ -z "$CI_COMMIT_TAG" ] && [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ] && node -e 'const fs = require("fs"); const p = JSON.parse(fs.readFileSync(".drwil/evidence/shard-plan.json", "utf8")).proven;
+        if (!p || p.tree !== process.argv[1]) process.exit(1); if (p.verdicts) fs.writeFileSync(process.argv[2], JSON.stringify(p.verdicts));' "$(git rev-parse 'HEAD^{tree}')" "$verdicts" 2>/dev/null; then
+        echo "Checks not replayed: this tree is proven (see the plan job)."
+      elif [ -z "$CI_COMMIT_TAG" ] && [ "$CI_COMMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ]; then
         mkdir -p .drwil/evidence
         curl -sSfL --header "JOB-TOKEN: $CI_JOB_TOKEN" -o "$verdicts" \
           "$CI_API_V4_URL/projects/$CI_PROJECT_ID/jobs/artifacts/$CI_DEFAULT_BRANCH/raw/$verdicts?job=checks" \
           || { rm -f "$verdicts"; echo "No verdict of the main branch's CI: every check is replayed."; }
+        [ ! -s "$verdicts" ] || echo "Verdicts cache: the main branch's last successful pipeline, run at $(node -p 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).ranAt' "$verdicts" 2>/dev/null || echo "an unknown date")."
         DRWIL_CI_REUSE=1 node .githooks/run-checks.mjs --aggregate-shards .drwil/evidence/shards
       else
         node .githooks/run-checks.mjs --aggregate-shards .drwil/evidence/shards
       fi
-    # QUA-113: off the main branch, the checks are replayed with the main branch's hooks (its
-    # .githooks/, read through Git) and the branch's list of checks: a merge request that weakens
-    # a hook or removes a check does not validate itself. The main branch's copy of base-checks.mjs
-    # runs; the branch's only while the main branch has none yet (kit adoption).
+    # QUA-296: off the main branch, this pass's verdicts are kept for the merge before the replay below rewrites them.
+    - '[ -n "$CI_COMMIT_TAG" ] || [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ] || { mkdir -p .drwil/evidence/pr-verdicts && cp .drwil/evidence/run-checks-verdicts.json .drwil/evidence/pr-verdicts/ 2>/dev/null || true; }'
+    # QUA-113: off the main branch, the checks are replayed with the main branch's hooks (its .githooks/, read through Git) and the
+    # branch's list of checks: a merge request that weakens a hook or removes a check does not validate itself. The main branch's copy
+    # of base-checks.mjs runs; the branch's only while the main branch has none yet (kit adoption).
     - |
       target="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-$CI_DEFAULT_BRANCH}"
       if [ -z "$CI_COMMIT_TAG" ] && [ "$CI_COMMIT_BRANCH" != "$target" ]; then
@@ -124,6 +148,8 @@ checks:
           node .githooks/base-checks.mjs --base "$base" --aggregate-shards .drwil/evidence/shards
         fi
       fi
+    # QUA-296: last line of the kit, so laid only when every line above succeeded: the tree this pipeline proved.
+    - '[ -n "$CI_COMMIT_TAG" ] || [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ] || git rev-parse "HEAD^{tree}" > .drwil/evidence/pr-verdicts/proven-tree.txt'
     # drwil-project-begin steps
     # Script lines of the project: kept as they are by `drwil init`, which rewrites everything outside the two zones.
     # drwil-project-end steps
@@ -147,13 +173,10 @@ checks:
 # Jobs of the project: kept as they are by `drwil init`, which rewrites everything outside the two zones.
 # drwil-project-end jobs
 
-# No branch protection is possible on an equivalent GitLab plan (merging stays
-# an unconditional click): only an after-the-fact alert is possible.
-# `when: on_failure` + a dedicated stage: triggers only if a job of the `test`
-# stage failed, and only on the main branch. Best-effort: depending on the
-# GitLab project's configuration, the job token may not be allowed to write
-# issues — this job then fails without blocking `checks`. Opens no duplicate if
-# an equivalent issue is already open.
+# No branch protection is possible on an equivalent GitLab plan (merging stays an unconditional click): only an after-the-fact alert.
+# `when: on_failure` + a dedicated stage: triggers only if a job of the `test` stage failed, and only on the main branch. Best-effort:
+# depending on the GitLab project's configuration, the job token may not be allowed to write issues — this job then fails without
+# blocking `checks`. Opens no duplicate if an equivalent issue is already open.
 alert-if-ci-broken:
   stage: alert
   image: alpine:3

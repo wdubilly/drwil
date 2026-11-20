@@ -9,6 +9,8 @@ files:
   - .githooks/skill-headers.mjs
   - .githooks/doc-coherence.mjs
   - .githooks/check-contract-tests.mjs
+  - .githooks/contract-tests.mjs
+  - .githooks/contract-tests-reporters.mjs
   - .githooks/check-architecture.mjs
   - .githooks/consumption.mjs
   - .githooks/check-control-coverage.mjs

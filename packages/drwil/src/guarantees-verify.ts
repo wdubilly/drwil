@@ -13,7 +13,13 @@ import { scopeGateFailure } from "./protection.js";
  */
 export function coverageFailures(root: string, cfg: GuaranteeConfig, contracts: { checks?: string[] | null }[]) {
   const T = TEXTS[projectLang(root)];
-  const declared = new Set((Array.isArray(cfg.checks) ? cfg.checks : []).map((c) => at(c, "id")));
+  const list: unknown[] = Array.isArray(cfg.checks) ? cfg.checks : [];
+  const declared = new Set(list.map((c) => at(c, "id")));
+  const runOf = (id: string) =>
+    at(
+      list.find((c) => at(c, "id") === id),
+      "run",
+    );
   const cited = new Set(contracts.flatMap((k) => k.checks ?? []));
   const state = (id: string) => (!declared.has(id) ? T.undeclared : !cited.has(id) ? T.uncited : null);
   const out: { layer: string | null; reason: string }[] = [];
@@ -25,8 +31,11 @@ export function coverageFailures(root: string, cfg: GuaranteeConfig, contracts: 
     const slug = slugOf(layer);
     const existing = cfg.guarantees?.layers?.[slug] === "existing";
     // Existing layer whose tool runs the tests once (QUA-301): `coverage-diff-<layer>` judges threshold and diff.
-    const single = existing && toolFor(technos)?.single;
-    const ids = [...(single ? [] : [`coverage-${slug}`]), ...(existing ? [`coverage-diff-${slug}`] : [])];
+    const tool = toolFor(technos);
+    const single = existing && tool?.single;
+    // Existing layer measured at 100 % (QUA-093): the kit's 100 % command alone, the diff being covered by it.
+    const full = existing && !!tool && runOf(`coverage-${slug}`) === tool.run({}, exclusionsOf(cfg, layer).kept);
+    const ids = full ? [`coverage-${slug}`] : [...(single ? [] : [`coverage-${slug}`]), ...(existing ? [`coverage-diff-${slug}`] : [])];
     for (const id of ids) {
       const s = state(id);
       if (s) out.push({ layer, reason: fill(T.verifyLayer, layer, id, s) });

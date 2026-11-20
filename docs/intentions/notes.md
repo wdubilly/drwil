@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — notes rangées le 2026-11-18 (rangement du backlog).
+**Statut** : ouverte en permanence — notes rangées le 2026-11-20 (rangement du backlog).
 
 ## Besoin
 
@@ -42,3 +42,4 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 - 2026-11-17 — Fausse alerte transitoire de close.mjs --check (2026-11-17, chantier avertissement-de-lancement-juste) : juste après node .githooks/close.mjs, tant que la suppression de la fiche n'est pas commitée, --check signale à tort .githooks/state-hooks.mjs et .githooks/state.test.mjs comme hooks non déclarés (QUA-137) ; l'alerte disparaît une fois la suppression commitée. Piste : lire les puces « Contrats modifiés » de la fiche dans HEAD quand elle est supprimée de la copie de travail.
 - 2026-11-18 — Le sondage d'attestation a échoué deux fois sur deux le 2026-11-18 : préparation expirée pendant que la question restait affichée, puis réponse libre refusée ; le demandeur est passé par le terminal. Piste retenue par le demandeur, à traiter avec la note « Gestes humains depuis le chat » du 2026-11-07 : un geste humain du chat se confirme en tapant l'identifiant (l'ID du contrat pour une attestation), comme drwil attest au terminal, et non par un bouton Attester ou Refuser ; l'expiration se juge sur des preuves inchangées, pas sur l'heure de préparation.
 - 2026-11-18 — Renommer un fichier de test sans changer aucun test (chantier tests-du-kit-decoupes-par-theme, 2026-11-18) a fait tomber cinq attestations (QUA-184, effet du contrôle changé) et exigé de déclarer 69 contrats modifiés (champs Tests, Source de vérité, Périmètre), alors que QUA-315 prouvait les tests identiques : le kit ne distingue pas un renommage de chemin d'un changement de règle ; à porter à l'audit de cohérence des garanties existantes (docs/intentions/audit-coherence-des-garanties-existantes.md).
+- 2026-11-20 — Sondage drwil-detour refusé deux fois sous Claude Code : AskUserQuestion retire multiSelect:false (valeur par défaut) avant le hook, qui compare à la préparation de `state.mjs poll detour` et refuse (« questions[0].multiSelect ≠ false ») ; repli terminal `detour.mjs allow` utilisé le 2026-11-20. Le hook devrait traiter multiSelect absent comme false.

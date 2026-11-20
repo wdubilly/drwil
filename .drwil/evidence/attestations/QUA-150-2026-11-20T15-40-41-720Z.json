@@ -1,0 +1,31 @@
+{
+  "version": 4,
+  "contract": "QUA-150",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-20T15:40:41.720Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "QUA-150 : diff de engine.test.mjs relu, 3 lignes : seul le faux lanceur est renommé ; aucun test de durée ajouté ni modifié. QUA-236 : recette d'adoption modifiée aux étapes 3 bis, 5 et 7 (paths e2e, contrôle groupé, doctor --fix), 249 lignes ; partie attestation inchangée ; ce sondage est l'exemple à juger.",
+  "fingerprint": "be1f48eb5f9e36f5762e77149d720dcabe6cb008d6335dbd084f5bcbc86f1b65",
+  "proof": {},
+  "covers": [
+    ".githooks/engine.test.mjs",
+    "outils/banc.test.mjs",
+    "outils/banc-agents.test.mjs"
+  ],
+  "coverage": {
+    ".githooks/engine.test.mjs": "7dd383fd963aebf65f13cc88c881749841971b2b8dca168e9521c8fd8fa3f42c",
+    "outils/banc-agents.test.mjs": "83d2b3466e6ae064d196ee55a864ec7523d01eddc1114c2a7844b1991c8accaf",
+    "outils/banc.test.mjs": "aaa279f3774427225ecf086adfd867bf3d3d310716c1173a24ba99ae9f6099d6"
+  },
+  "commit": "8872a421937a03a5c9191a470459e977733a71af",
+  "automated": [],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "e50e1755-8471-4c89-b667-157687a77e7f",
+    "toolUseId": "toolu_01QdjnDAJvA6ybHnTAnyWMLG",
+    "askedAt": "2026-11-20T15:40:15.949Z"
+  }
+}

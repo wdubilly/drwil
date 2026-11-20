@@ -154,9 +154,6 @@ d'un outil) la dit dans son statut.
 
 ### Vitesse
 
-- [ ] [IA] [P0] (0.11.2) Les contrôles de contrats d'un projet lancent chaque fichier de tests une fois par passe, pas
-  une fois par contrat (Vitest, Jest, `node --test`) ; l'e2e n'est plus rejoué dans la seconde passe ; une seule
-  couverture sur une couche à 100 % ; CI GitHub et GitLab livrées iso (cadré le 2026-11-19) — `docs/projects/controles-contrats-groupes.md`.
 - [ ] [IA] [P0] (0.11.2) Un contrôle lent est découpé en tranches dès sa déclaration chez tout adoptant : table des
   outils e2e, déclaré par `guarantees` et signalé par `drwil doctor` ; prêt, décisions D1 à D6 tranchées (cadré le
   2026-11-09) — `docs/projects/controles-lents-decoupes-des-le-depart.md`.

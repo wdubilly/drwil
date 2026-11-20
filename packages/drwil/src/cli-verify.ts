@@ -113,7 +113,8 @@ export function registerVerify(program: Command): void {
       "Diagnose the drwil installation without running any check: healthy (exit 0), problems (exit 1), not a drwil project (exit 2)",
     )
     .option("--json", "Machine-readable output (stable format, version 1), same exit codes")
-    .action((opts) => machine(doctor, opts.json, formatDiagnosis, diagnosisJson));
+    .option("--fix", "Rewrite in .drwil/ia-first.json the declarations that have one safe form; the others stay reported")
+    .action((opts) => machine((o) => doctor({ ...o, fix: opts.fix }), opts.json, formatDiagnosis, diagnosisJson));
 
   registerContracts(program);
 }
