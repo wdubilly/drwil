@@ -65,6 +65,8 @@ files:
   - packages/drwil/test/doctor-fix.test.mjs
   - packages/drwil/src/cli-verify.ts
   - packages/drwil/README.md
+  - docs/intentions/qua-018-gain-non-reporte.md
+  - docs/intentions/suivi-ci-et-contexte.md
 -->
 
 ## 1. Besoin
