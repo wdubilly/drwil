@@ -96,7 +96,7 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
   échoue, jamais un succès (QUA-013) ; hors passe (lancement à la main), le lanceur est rejoué — `QUA-317`
 - La recette d'adoption déclare désormais un contrôle de contrat par ce mécanisme ; un projet déjà adopté est guidé :
   `drwil doctor` signale, sans rien écrire, les contrôles `vitest|jest … -t "<ID>"` qui relancent chacun le lanceur, et
-  donne la forme groupée — contrat à créer
+  donne la forme groupée — `QUA-318`
 - Mesure : sur une copie de `marinade-poulet` (ou un projet de test de même forme, 27 contrats Vitest), le temps de
   `run-checks` avant et après est relevé dans le journal de clôture — [humain] `QUA-013`
 - Lot 2 : sur un commit dont les contrôles viennent de passer, la seconde passe ne rejoue pas l'e2e ; la cause du
@@ -111,7 +111,7 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
 - Lot 5 : un pipeline GitLab de la branche principale dont l'arbre est celui qu'une MR verte a prouvé saute ses
   contrôles et sauvegarde quand même ses verdicts, comme le push GitHub — `QUA-296`
 - Lot 5 : la CI GitHub et la CI GitLab livrées sont iso : chaque optimisation de l'une a son équivalent dans l'autre,
-  ou un écart déclaré avec sa raison ; un test compare les deux fichiers livrés étape par étape — contrat à créer
+  ou un écart déclaré avec sa raison ; un test compare les deux fichiers livrés étape par étape — `QUA-319`
 
 ## Contrats modifiés
 
@@ -141,6 +141,10 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
 - `QUA-219` — ancien critère : la commande, jointe en une ligne, passe toujours par l'interpréteur de commandes,
   stdin fermé — raison : `git commit -F -` recevait un message vide et un `-m` à parenthèses échouait (« Syntax error »)
   (validé par le demandeur le 2026-11-20, réponse « Traiter maintenant » au sondage des limites)
+- `.githooks/wait-command.mjs` — une commande de plusieurs mots est lancée sans interpréteur et reçoit le stdin
+  redirigé (QUA-219) (validé par le demandeur le 2026-11-20, réponse « Traiter maintenant » au sondage des limites)
+- `.githooks/wait-command.test.mjs` — tests des guillemets, parenthèses, stdin et programme absent (QUA-219) (validé
+  par le demandeur le 2026-11-20, réponse « Traiter maintenant » au sondage des limites)
 - `QUA-033` — ancien critère : les contrôles `tests-<id>` du dépôt passent par son lanceur propre,
   outils/tests-par-fichier.mjs (`--tous` pour l'autotest et `miroirs-gabarit`) — raison : une seule source, le module
   livré `.githooks/contract-tests.mjs` (QUA-316, mode `--all`) (validé par le demandeur le 2026-11-20, réponse
