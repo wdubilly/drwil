@@ -234,7 +234,7 @@ test("frontière d'attestation : --yes, stdin redirigé, script, leurres refusé
 });
 
 // Projet temporaire avec un contrat à partie humaine qui cite un contrôle, attesté en version 4.
-async function projetAttesteSurEffet() {
+async function projetAttesteSurEffet(controle) {
   const dir = tmp();
   await quiet(() => init({ lang: "fr", targetDir: dir, git: false }));
   const base = read(dir, "docs/contracts.md");
@@ -244,7 +244,12 @@ async function projetAttesteSurEffet() {
   );
   const regler = (c1) => writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...config(dir), checks: [c1] }, null, 2));
   const contrat = async () => (await verify({ targetDir: dir, only: ["APP-009"] })).contracts[0];
-  const c1 = { id: "c1", run: "node -e 0 --test-name-pattern=APP-009", paths: ["src/**", "t.test.mjs"] };
+  // Lanceurs factices qui passent : le statut ne dépend plus que de l'empreinte.
+  for (const lanceur of ["outils/tests-par-fichier.mjs", ".githooks/contract-tests.mjs"]) {
+    mkdirSync(join(dir, lanceur, ".."), { recursive: true });
+    writeFileSync(join(dir, lanceur), "");
+  }
+  const c1 = controle ?? { id: "c1", run: "node -e 0 --test-name-pattern=APP-009", paths: ["src/**", "t.test.mjs"] };
   regler(c1);
   const r = await attest({ targetDir: dir, id: "APP-009", confirm: async () => true });
   assert.equal(r.code, 0);
@@ -273,7 +278,23 @@ test("QUA-183 : l'attestation porte sur l'effet du contrôle ; un champ d'exécu
     k.reasons.some((l) => /attestation de version 3/.test(l) && /version 4/.test(l)),
     "dit laquelle est lue par l'ancienne empreinte",
   );
+
+  // Seul le lanceur change pour un équivalent (fichiers du lanceur dans les paths compris) : l'effet est le même.
+  for (const [avant, apres] of [
+    ["node outils/tests-par-fichier.mjs APP-009 t.test.mjs", "node .githooks/contract-tests.mjs APP-009 t.test.mjs"],
+    ["node outils/tests-par-fichier.mjs APP-009 t.test.mjs", "node .githooks/contract-tests.mjs --runner node APP-009 t.test.mjs"],
+    ["node outils/tests-par-fichier.mjs --tous t.test.mjs", "node .githooks/contract-tests.mjs --all t.test.mjs"],
+    ["node outils/tests-par-fichier.mjs --tous t.test.mjs", "node .githooks/contract-tests.mjs --runner node --all t.test.mjs"],
+  ]) {
+    const h = await historique(avant);
+    h.regler({ ...h.c1, run: apres, paths: LANCEUR });
+    assert.equal((await h.contrat()).status, "ATTESTED", `${apres} : lanceur équivalent, même effet`);
+  }
 });
+
+// Contrôle attesté sous le lanceur historique ; `lanceur` : ses paths sous le lanceur livré équivalent.
+const historique = (run) => projetAttesteSurEffet({ id: "c1", run, paths: ["outils/tests-par-fichier.mjs", "src/**"] });
+const LANCEUR = [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", "src/**"];
 
 test("QUA-184 : l'attestation tombe quand la commande, le test visé ou les paths d'un contrôle changent, et le dit", async () => {
   const { c1, regler, contrat } = await projetAttesteSurEffet();
@@ -292,6 +313,23 @@ test("QUA-184 : l'attestation tombe quand la commande, le test visé ou les path
   }
   regler(c1);
   assert.equal((await contrat()).status, "ATTESTED", "effet rétabli : attestation de nouveau valable");
+
+  // Sous le lanceur équivalent (QUA-183), tout autre écart fait toujours tomber l'attestation.
+  const h = await historique("node outils/tests-par-fichier.mjs APP-009 t.test.mjs");
+  const livre = "node .githooks/contract-tests.mjs APP-009 t.test.mjs";
+  for (const [cas, variante] of [
+    ["ID", { run: livre.replace("APP-009", "APP-010") }],
+    ["fichier de tests", { run: livre.replace("t.test", "u.test") }],
+    ["autre lanceur", { run: livre.replace("mjs APP", "mjs --runner vitest APP") }],
+    ["--all au lieu de l'ID", { run: "node .githooks/contract-tests.mjs --all t.test.mjs" }],
+    ["dossier", { cwd: "sous" }],
+    ["paths retirés", { paths: undefined }],
+    ["autres paths", { paths: [...LANCEUR, "lib/**"] }],
+    ["fichiers du lanceur sans le lanceur", { run: "node -e 0 APP-009 t.test.mjs" }],
+  ]) {
+    h.regler({ ...h.c1, run: livre, paths: LANCEUR, ...variante });
+    assert.notEqual((await h.contrat()).status, "ATTESTED", cas);
+  }
 });
 
 test("QUA-185 : `Couvre : aucun` justifié compte comme déclaré, sans fichier couvert ; chaque contrat attesté de ce dépôt déclare ce qu'il couvre", async () => {
