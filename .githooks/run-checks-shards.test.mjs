@@ -170,11 +170,11 @@ function projetAuto(shardsCount) {
   return racine;
 }
 
-test("QUA-288 : D6 : N = nombre de tests / 5 arrondi au-dessus, borné à 16 ; sous 2, une seule tranche", () => {
+test("QUA-321 : D6 : N = nombre de tests / 5 arrondi au-dessus, borné à 16 ; sous 2, une seule tranche", () => {
   assert.deepEqual([0, 1, 5, 6, 10, 11, 80, 81, 500].map(shardsFor), [1, 1, 1, 2, 2, 3, 16, 16, 16]);
 });
 
-test("QUA-288 : countTests : le premier entier de la dernière ligne non vide, dans le dossier du contrôle ; sinon un problème", () => {
+test("QUA-321 : countTests : le premier entier de la dernière ligne non vide, dans le dossier du contrôle ; sinon un problème", () => {
   const T = texts("fr");
   const racine = tmp();
   ecrire(racine, "e2e/n.txt", "Total: 23 tests in 4 files\n\n");
@@ -187,7 +187,7 @@ test("QUA-288 : countTests : le premier entier de la dernière ligne non vide, d
   assert.match(countTests({ shardsCount: "echo 12; exit 4" }, "e2e", T, racine).problem, /\(code 4\)/);
 });
 
-test("QUA-288 : --shard-plan avec « auto » : N compté à chaque plan, suit la suite ; tranches et agrégation lisent ce N", () => {
+test("QUA-321 : --shard-plan avec « auto » : N compté à chaque plan, suit la suite ; tranches et agrégation lisent ce N", () => {
   const racine = projetAuto("echo 'Listing tests:'; echo 'Total: 12 tests in 3 files'");
   const plan = passe(racine, "--shard-plan");
   assert.equal(plan.status, 0, plan.stderr);
@@ -200,7 +200,7 @@ test("QUA-288 : --shard-plan avec « auto » : N compté à chaque plan, suit la
   assert.equal(lire(racine, ".drwil/evidence/run-checks-verdicts.json").checks["project:e2e"].status, "ok");
 });
 
-test("QUA-288 : « auto » sous 2 : une seule tranche 1/1 ; sans aucune tranche, l'agrégation échoue", () => {
+test("QUA-321 : « auto » sous 2 : une seule tranche 1/1 ; sans aucune tranche, l'agrégation échoue", () => {
   const racine = projetAuto("echo 4");
   assert.deepEqual(JSON.parse(passe(racine, "--shard-plan").stdout), { include: [{ index: 1, total: 1 }] });
   const sans = passe(racine, "--aggregate-shards", DOSSIER);
@@ -211,7 +211,7 @@ test("QUA-288 : « auto » sous 2 : une seule tranche 1/1 ; sans aucune tranche,
   assert.deepEqual(trace(racine).toSorted(), ["e2e 1/1", "lint", "lint"]);
 });
 
-test("QUA-288 : --shard-plan « auto » : un comptage impossible fait échouer le plan (code 1, rien sur la sortie)", () => {
+test("QUA-321 : --shard-plan « auto » : un comptage impossible fait échouer le plan (code 1, rien sur la sortie)", () => {
   const racine = projetAuto("echo 'Error: no config' >&2; exit 1");
   const r = passe(racine, "--shard-plan");
   assert.equal(r.status, 1);

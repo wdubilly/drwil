@@ -949,7 +949,7 @@ const { countTests } = await import(join(MOTEUR, "run-checks-shards.mjs"));
 const { texts: moteurTextes } = await import(join(MOTEUR, "engine-texts.mjs"));
 const E2E_EXEC = () => faux([[/c8 --version/, OK], ...FORGE_OK]);
 
-test("QUA-089 outil e2e de la table : guarantees déclare `e2e` en tranches « auto », que le moteur accepte (QUA-013)", async () => {
+test("QUA-320 outil e2e de la table : guarantees déclare `e2e` en tranches « auto », que le moteur accepte (QUA-013)", async () => {
   const cas = [
     ["playwright.config.ts", "Playwright", "."],
     ["vitest.e2e.config.mts", "Vitest", "."],
@@ -980,7 +980,7 @@ test("QUA-089 outil e2e de la table : guarantees déclare `e2e` en tranches « a
   }
 });
 
-test("QUA-089 outil e2e d'une couche : la déclaration porte son cwd ; la racine passe avant les couches", async () => {
+test("QUA-320 outil e2e d'une couche : la déclaration porte son cwd ; la racine passe avant les couches", async () => {
   const dir = await projet();
   ecrire(dir, "front/package.json", JSON.stringify({ name: "f" }));
   ecrire(dir, "front/src/a.js", "export const a = 1;\n");
@@ -1009,7 +1009,7 @@ test("QUA-089 outil e2e d'une couche : la déclaration porte son cwd ; la racine
   assert.equal(config(racine).checks.find((c) => c.id === "e2e").cwd, undefined);
 });
 
-test("QUA-089 contrôle `e2e` déjà déclaré : jamais réécrit, même pour un outil de la table", async () => {
+test("QUA-322 contrôle `e2e` déjà déclaré : jamais réécrit, même pour un outil de la table", async () => {
   const dir = await projet();
   ecrire(dir, "playwright.config.ts", "export default {};\n");
   const cfg = config(dir);
@@ -1024,7 +1024,7 @@ test("QUA-089 contrôle `e2e` déjà déclaré : jamais réécrit, même pour un
   assert.deepEqual(r.e2eLines, ["contrôle `e2e` déjà déclaré : gardé tel quel, jamais réécrit"]);
 });
 
-test("QUA-089 outil e2e hors de la table : rien n'est découpé de force, la fiche le dit (français et anglais)", async () => {
+test("QUA-322 outil e2e hors de la table : rien n'est découpé de force, la fiche le dit (français et anglais)", async () => {
   for (const lang of ["fr", "en"]) {
     const dir = await projet({ lang });
     ecrire(dir, "cypress.config.js", "export default {};\n");
@@ -1045,7 +1045,7 @@ test("QUA-089 outil e2e hors de la table : rien n'est découpé de force, la fic
   assert.ok(!(config(vide).checks ?? []).some((c) => c.id === "e2e"));
 });
 
-test("QUA-089 comptage des tests de la table (QUA-013) : un nombre en dernière ligne, une liste illisible fait échouer le plan", () => {
+test("QUA-320 comptage des tests de la table (QUA-013) : un nombre en dernière ligne, une liste illisible fait échouer le plan", () => {
   const T = moteurTextes("fr");
   const compteur = (outil) =>
     E2E_TOOLS.find((t) => t.tool === outil)

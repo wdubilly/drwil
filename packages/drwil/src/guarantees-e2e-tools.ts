@@ -1,5 +1,5 @@
-// Table of the e2e tools (QUA-089, catalog:QUA-020): the kit declares the `e2e` check itself, sliced with `shards: "auto"`, for a
-// tool of the table; the CI plan counts the tests and sets N at each run (engine-shards.mjs). One table, one source: `guarantees`
+// Table of the e2e tools (QUA-320, QUA-322, QUA-324, catalog:QUA-020): the kit declares the `e2e` check itself, sliced with
+// `shards: "auto"`, for a tool of the table; the CI plan counts the tests and sets N at each run (engine-shards.mjs). One table, one source: `guarantees`
 // declares from it, `doctor` compares against it. A tool outside the table is never sliced by force.
 import { existsSync } from "node:fs";
 import { join } from "node:path";

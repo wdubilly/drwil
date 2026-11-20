@@ -63,18 +63,18 @@ corrigés, pas seulement avertis (demandeur, 2026-11-20).
 
 - Pour un outil e2e de la table du kit (Playwright, Vitest, Jest), `drwil guarantees` déclare lui-même le contrôle `e2e`
   dans `.drwil/ia-first.json`, avec `shards: "auto"` et la commande de tranche de l'outil lisant `DRWIL_SHARD_INDEX` et
-  `DRWIL_SHARD_TOTAL`, et le setup de l'outil dans la commande — contrat à créer
+  `DRWIL_SHARD_TOTAL`, et le setup de l'outil dans la commande — `QUA-320`
 - Avec `shards: "auto"`, le plan des tranches (`run-checks --shard-plan`, déjà joué à chaque CI GitHub et GitLab) compte
   les tests e2e par l'outil et fixe N (règle D6) à chaque CI ; la tranche et l'agrégation lisent ce N du plan ; sous 2,
   une seule passe ; un comptage impossible fait échouer le plan, jamais un succès (QUA-013) ; les YAML de CI livrés ne
-  changent pas — contrat à créer
+  changent pas — `QUA-321`
 - Un contrôle `e2e` déjà déclaré par le projet à la main n'est jamais réécrit ; un outil e2e hors de la table n'est
-  jamais découpé de force : le contrôle reste en une seule passe et la fiche de garantie le dit — contrat à créer
+  jamais découpé de force : le contrôle reste en une seule passe et la fiche de garantie le dit — `QUA-322`
 - `drwil doctor` signale un contrôle e2e d'un outil de la table déclaré sans `shards` ou avec un N figé, et donne la
   déclaration `"auto"` ; `drwil doctor --fix` la pose sur le contrôle `e2e` non découpé d'un outil de la table, écrit à la main
   ou par le kit, en gardant ses autres champs ; la mise à jour du kit (`npx drwil init`) n'y écrit rien et son compte
-  rendu invite à lancer `npx drwil doctor --fix` (D1 revue le 2026-11-20) — contrat à créer
-- Un projet neuf et un projet adopté reçoivent la même déclaration (une seule table, une seule source) — contrat à créer
+  rendu invite à lancer `npx drwil doctor --fix` (D1 revue le 2026-11-20) — `QUA-323`
+- Un projet neuf et un projet adopté reçoivent la même déclaration (une seule table, une seule source) — `QUA-324`
 
 ## Contrats modifiés
 
@@ -168,9 +168,10 @@ Tranchées par le demandeur le 2026-11-09 (l'agent n'en a tranché aucune) :
   shards-proposal vert, cas « écrit à la main » corrigé par `--fix`.
 - **Lot 5 — la mise à jour du kit invite à `doctor --fix`** [IA] : `finishUpdate` (`packages/drwil/src/kit-update.ts`)
   n'écrit rien sur le contrôle `e2e` ; si `doctor` le signalerait non découpé, son compte rendu dit « lancer
-  `npx drwil doctor --fix` » avec la ligne exacte (textes de `doctor`). Critère de sortie : test `kit-mise-a-jour` vert,
-  cas d'un contrôle `e2e` écrit à la main (invitation dite, `.drwil/ia-first.json` inchangé, commit de mise à jour
-  accepté par la barrière), cas sans contrôle `e2e` sans invitation.
+  `npx drwil doctor --fix` » avec la ligne exacte (textes de `doctor`). Critère de sortie : test de la mise à jour du kit
+  vert dans `packages/drwil/test/shards-proposal.test.mjs` (`packages/drwil/test/kit-mise-a-jour.test.mjs` inchangé : l'inventaire
+  figé de QUA-315 y refuse tout test ajouté), cas d'un contrôle `e2e` écrit à la main (invitation dite,
+  `.drwil/ia-first.json` inchangé, commit de mise à jour accepté par la barrière), cas sans contrôle `e2e` sans invitation.
 - **Lot 6 — documentation** [IA] : CHANGELOG « Unreleased » (anglais), `docs/architecture.md`, catalogue du gabarit
   (`catalog:QUA-020`), contrats et leurs contrôles dans `.drwil/ia-first.json`.
 
@@ -227,14 +228,12 @@ Tranchées par le demandeur le 2026-11-09 (l'agent n'en a tranché aucune) :
   `.drwil/ia-first.json` et son commit inchangés, commit accepté par la barrière ; sans `e2e`, aucune invitation). Il
   ne vit pas dans `packages/drwil/test/kit-mise-a-jour.test.mjs` : l'inventaire figé de QUA-315 (`packages/drwil/test/decoupe-kit.inventaire.json`, hors
   scope) y refuse tout test ajouté.
-- **Pour le lot 6** : contrats à créer (critères d'acceptation) et tests à leur rattacher (aujourd'hui sous QUA-089) :
-  déclaration du kit — `packages/drwil/test/guarantees.test.mjs` « outil e2e de la table », « outil e2e d'une
-  couche », « comptage des tests de la table » ; jamais réécrit / hors table — `packages/drwil/test/guarantees.test.mjs` « contrôle `e2e`
-  déjà déclaré », « outil e2e hors de la table », et `packages/drwil/test/shards-proposal.test.mjs` « déjà `"auto"`,
-  outil hors table, contrôle absent », « `--fix` sur un contrôle déjà `"auto"`, hors table ou absent » ; avertissement et
-  correction de `doctor` — `packages/drwil/test/shards-proposal.test.mjs` « N figé », « sans `shards` », « écrit à la
-  main sans `shards` », « écrit à la main à N figé », « la mise à jour du kit n'écrit rien… » ; `"auto"` dans le moteur — `.githooks/engine-shards.test.mjs`,
-  `.githooks/run-checks-shards.test.mjs`, cas « auto » de `packages/drwil/test/ci-shards.test.mjs` (titres à relire
-  pour leur ID actuel). `packages/drwil/src/doctor-shards.ts` est déjà cité dans `docs/architecture.md`.
+- **Lot 6 fait** : contrats créés et rattachés, contrôles `tests-qua-320` à `tests-qua-324` dans `.drwil/ia-first.json` :
+  QUA-320 (déclaration du kit, `packages/drwil/test/guarantees.test.mjs`), QUA-321 (`"auto"` dans le moteur, tests « auto » de
+  `.githooks/engine-shards.test.mjs`, `.githooks/run-checks-shards.test.mjs` et cas « auto » de
+  `packages/drwil/test/ci-shards.test.mjs`), QUA-322 (jamais réécrit, hors table), QUA-323 (avertissement, `--fix`, invitation
+  de la mise à jour du kit), QUA-324 (une seule table : la proposition de `doctor` égale la déclaration du kit) ;
+  `tests-qua-089` revenu à `packages/drwil/test/guarantees.test.mjs` seul. CHANGELOG « Unreleased », `docs/architecture.md`
+  et `catalog:QUA-020` du gabarit à jour ; critères reliés à leur contrat.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 6 (documentation, contrats).
+- **Prochaine étape** : [IA] VERIFY puis clôture.

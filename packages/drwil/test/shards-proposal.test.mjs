@@ -1,6 +1,5 @@
 // Point « Contrôle lent non découpé » de `drwil doctor` : un contrôle `e2e` d'un outil de la table du kit sans `"auto"` est signalé
-// avec la déclaration à poser ; `--fix` la pose, qu'il soit écrit à la main ou par le kit. Rattaché à QUA-089 en attendant les
-// contrats du chantier « contrôles lents découpés dès le départ ».
+// avec la déclaration à poser ; `--fix` la pose, qu'il soit écrit à la main ou par le kit. Contrats : QUA-322, QUA-323, QUA-324.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -32,7 +31,7 @@ function dossier(fichiers = {}) {
 // La proposition posée sur le contrôle doit être acceptée par le moteur (QUA-013) : jamais une déclaration refusée.
 const accepte = (c, p) => assert.equal(shardProblem({ ...c, ...p.fields }, "e2e", texts("fr")), null);
 
-test('QUA-089 N figé : signalé avec `"auto"` et son comptage, la commande gardée, la déclaration à faire sur une PR', () => {
+test('QUA-323 N figé : signalé avec `"auto"` et son comptage, la commande gardée, la déclaration à faire sur une PR', () => {
   const dir = dossier({ "playwright.config.ts": "export default {};\n" });
   const c = { id: "e2e", run: `npx playwright test ${SLICE}`, shards: 4 };
   const p = shardsProposal(dir, c);
@@ -48,7 +47,7 @@ test('QUA-089 N figé : signalé avec `"auto"` et son comptage, la commande gard
   assert.match(en.detail, /fixes 4 slices: set "shards": "auto".*quote `e2e` in backticks under « Contrats modifiés »/);
 });
 
-test("QUA-089 sans `shards` : la commande de tranche du kit est proposée avec son setup ; un outil d'une couche par son cwd", () => {
+test("QUA-324 sans `shards` : la commande de tranche du kit est proposée avec son setup ; un outil d'une couche par son cwd", () => {
   const dir = dossier({ "front/vitest.e2e.config.ts": "export default {};\n" });
   const c = { id: "e2e", run: "npx vitest run --config vitest.e2e.config.ts", cwd: "front" };
   const p = shardsProposal(dir, c);
@@ -65,7 +64,7 @@ test("QUA-089 sans `shards` : la commande de tranche du kit est proposée avec s
   assert.match(shardsPoints(dir, [c], "en")[0].detail, /runs the whole suite in a single pass: set "shards": "auto"/);
 });
 
-test('QUA-089 déjà `"auto"`, outil hors table, contrôle absent : rien n\'est signalé', () => {
+test('QUA-322 déjà `"auto"`, outil hors table, contrôle absent : rien n\'est signalé', () => {
   const dir = dossier({ "jest.e2e.config.js": "module.exports = {};\n", "front/cypress.config.js": "export default {};\n" });
   const kit = e2eDeclaration(E2E_TOOLS[2], "jest.e2e.config.js", ".");
   assert.equal(shardsProposal(dir, kit), null);
@@ -99,7 +98,7 @@ async function projet(e2e) {
 const diagnostic = (dir, fix) => doctor({ targetDir: dir, fix, exec: () => ({ status: 1, stdout: "" }) });
 const relu = (fichier) => JSON.parse(readFileSync(fichier, "utf8"));
 
-test('QUA-089 écrit à la main sans `shards` : `doctor` le signale sans rien écrire, `doctor --fix` le passe en `"auto"`', async () => {
+test('QUA-323 écrit à la main sans `shards` : `doctor` le signale sans rien écrire, `doctor --fix` le passe en `"auto"`', async () => {
   const e2e = { id: "e2e", name: "e2e maison", run: "npx playwright test", paths: ["**"], runAt: ["ci"], degradable: false };
   const { dir, fichier, cfg } = await projet(e2e);
   const avant = readFileSync(fichier, "utf8");
@@ -129,7 +128,7 @@ test('QUA-089 écrit à la main sans `shards` : `doctor` le signale sans rien é
   assert.equal(readFileSync(fichier, "utf8"), fige);
 });
 
-test('QUA-089 écrit à la main à N figé : `--fix` pose `"auto"`, garde la commande de tranche et rappelle la puce « Contrats modifiés »', async () => {
+test('QUA-323 écrit à la main à N figé : `--fix` pose `"auto"`, garde la commande de tranche et rappelle la puce « Contrats modifiés »', async () => {
   const e2e = { id: "e2e", run: `npx playwright test ${SLICE}`, shards: 4, cwd: ".", timeout: 900 };
   const { dir, fichier } = await projet(e2e);
   const d = await diagnostic(dir, true);
@@ -150,7 +149,7 @@ test('QUA-089 écrit à la main à N figé : `--fix` pose `"auto"`, garde la com
   );
 });
 
-test('QUA-089 `--fix` sur un contrôle déjà `"auto"`, hors table ou absent : fichier inchangé', async () => {
+test('QUA-322 `--fix` sur un contrôle déjà `"auto"`, hors table ou absent : fichier inchangé', async () => {
   for (const e2e of [
     { id: "e2e", run: `npx playwright test ${SLICE}`, shards: "auto", shardsCount: "echo 3" },
     { id: "e2e", run: "npx cypress run", cwd: "front" },
@@ -187,7 +186,7 @@ async function equipe(lang, e2e) {
   return { dir, sortie };
 }
 
-test("QUA-089 la mise à jour du kit n'écrit rien sur un contrôle e2e non découpé : son compte rendu invite à `doctor --fix` ; sans e2e, rien", async () => {
+test("QUA-323 la mise à jour du kit n'écrit rien sur un contrôle e2e non découpé : son compte rendu invite à `doctor --fix` ; sans e2e, rien", async () => {
   const e2e = { id: "e2e", name: "e2e du projet", run: "npx playwright test", paths: ["e2e-absent/**"] };
   const { dir, sortie } = await equipe("fr", e2e);
   assert.match(

@@ -310,7 +310,7 @@ const AUTO = {
   paths: ["e2e/**"],
 };
 
-test('QUA-288 : « shards: "auto" » demande la commande qui compte les tests, et garde les autres règles', () => {
+test('QUA-321 : « shards: "auto" » demande la commande qui compte les tests, et garde les autres règles', () => {
   assert.equal(shardProblem(AUTO, "e2e", T), null);
   for (const shardsCount of [undefined, 3, "  "]) assert.match(shardProblem({ ...AUTO, shardsCount }, "e2e", T), /demande « shardsCount »/);
   assert.match(shardProblem({ ...AUTO, reuse: "tree" }, "e2e", T), /reuse: "tree"/);
@@ -318,7 +318,7 @@ test('QUA-288 : « shards: "auto" » demande la commande qui compte les tests, e
   assert.match(shardProblem({ ...AUTO, shards: "Auto" }, "e2e", T), /entier de 2 à 16, ou "auto"/);
 });
 
-test("QUA-288 : shardMatrix : N d'un contrôle « auto » vient du comptage, demandé seulement pour un plan à jouer", () => {
+test("QUA-321 : shardMatrix : N d'un contrôle « auto » vient du comptage, demandé seulement pour un plan à jouer", () => {
   const demandes = [];
   const compte = (total) => (_c, name) => {
     demandes.push(name);
@@ -352,7 +352,7 @@ test("QUA-288 : shardMatrix : N d'un contrôle « auto » vient du comptage, dem
   assert.deepEqual(demandes, [AUTO.run]);
 });
 
-test("QUA-289 : un contrôle « auto » joue la tranche que le plan lui donne, et 1/1 en local", () => {
+test("QUA-321 : un contrôle « auto » joue la tranche que le plan lui donne, et 1/1 en local", () => {
   const racine = tmp();
   const cfg = { checks: [AUTO] };
   const env = { ...process.env, CI: "" };
@@ -365,7 +365,7 @@ test("QUA-289 : un contrôle « auto » joue la tranche que le plan lui donne, e
   assert.match(sortie({ index: 1, total: 1 }).output, /tranche 1\/1/);
 });
 
-test("QUA-288 : agrégation « auto » : N est le total unique de ses tranches ; aucune tranche, ou plusieurs totaux, échoue", () => {
+test("QUA-321 : agrégation « auto » : N est le total unique de ses tranches ; aucune tranche, ou plusieurs totaux, échoue", () => {
   const racine = tmp();
   const deposer = (verdicts) => {
     rmSync(join(racine, "t"), { recursive: true, force: true });

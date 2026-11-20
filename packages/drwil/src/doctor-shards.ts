@@ -1,6 +1,6 @@
-// Point « Contrôle lent non découpé » of `drwil doctor` (QUA-089, catalog:QUA-020): an `e2e` check of a tool of the kit's table
-// (guarantees-e2e-tools.ts, the single source) declared without `shards` or with a fixed N gets the `"auto"` declaration. `--fix`
-// sets it, whoever wrote the check: the kit never wrote a fixed N, so an unsliced check is always hand-written.
+// Point « Contrôle lent non découpé » of `drwil doctor` (QUA-322, QUA-323, QUA-324, catalog:QUA-020): an `e2e` check of a tool
+// of the kit's table (guarantees-e2e-tools.ts, the single source) declared without `shards` or with a fixed N gets the `"auto"`
+// declaration. `--fix` sets it, whoever wrote the check: the kit never wrote a fixed N, so an unsliced check is always hand-written.
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { e2eDeclaration, e2eToolOf } from "./guarantees-e2e-tools.js";
