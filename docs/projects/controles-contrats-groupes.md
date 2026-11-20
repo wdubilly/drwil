@@ -65,9 +65,9 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
 - Un contrôle de contrat déclaré par le mécanisme livré (`node .githooks/contract-tests.mjs <ID> [fichiers…]`) lance
   son lanceur de tests (Vitest, Jest ou `node --test`, détecté ou déclaré) **une seule fois par passe** pour tous les
   contrats qui le partagent ; son verdict ne vient que des tests dont le nom commence par son ID : un test cassé fait
-  échouer ce seul contrat — contrat à créer
+  échouer ce seul contrat — `QUA-316`
 - Un contrat dont aucun test ne porte l'ID, ou un lancement qui n'a rien joué (erreur de chargement, processus mort),
-  échoue, jamais un succès (QUA-013) ; hors passe (lancement à la main), le lanceur est rejoué — contrat à créer
+  échoue, jamais un succès (QUA-013) ; hors passe (lancement à la main), le lanceur est rejoué — `QUA-317`
 - La recette d'adoption déclare désormais un contrôle de contrat par ce mécanisme ; un projet déjà adopté est guidé :
   `drwil doctor` signale, sans rien écrire, les contrôles `vitest|jest … -t "<ID>"` qui relancent chacun le lanceur, et
   donne la forme groupée — contrat à créer
@@ -138,8 +138,10 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
 
 ## 5. Points à trancher
 
-- [IA] Forme exacte du lanceur unique par outil (Vitest : `--reporter=json` ou reporter maison ; Jest : `--json`) :
-  tranchée au lot 1 sur mesure.
+- [IA] Forme exacte du lanceur unique par outil — tranché au lot 1 : Vitest `run --reporter=default --reporter=json
+  --outputFile.json=<f>`, Jest `--json --outputFile=<f>` (même rapport, `ancestorTitles` + `title` : le nom complet de
+  chaque test), `node --test` avec le reporter du module ; lancés par `node` depuis le `bin` du paquet trouvé dans
+  `node_modules`, sans `npx` ni interpréteur de commandes.
 
 ## 6. Increments
 
@@ -158,5 +160,15 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-19) : cadré, non lancé.
-- **Prochaine étape** : [humain] `/drwil-start`, après le cadrage en BUILD.
+- **Dernier état** (2026-11-20) : lot 1 fait. Mesure sur une copie de même forme (27 contrats Vitest 3.2, jsdom) :
+  27 lancements `vitest run -t "<ID>"` en 38,8 s, les 27 contrôles `node .githooks/contract-tests.mjs <ID>` en 3,8 s
+  dans une passe (un seul lancement). Livrés : `.githooks/contract-tests.mjs` et `.githooks/contract-tests-reporters.mjs`
+  (gabarit et copies), tests `.githooks/contract-tests.test.mjs` (couverture 100 %), recette d'adoption étape 5,
+  contrats `QUA-316` et `QUA-317` avec leurs contrôles. Le moteur n'a pas eu à changer pour le lot 1 : il pose déjà
+  `DRWIL_PASS_ID` et `run-checks` efface déjà le dossier des résultats partagés de la passe.
+  `outils/tests-par-fichier.mjs` (QUA-033) reste l'outil du dépôt, hors du bloc scope : sa bascule sur le module livré
+  est une limite hors cadre. Bloc scope élargi au lot 1 à `packages/drwil/templates/common/base/docs/projects/kit-mechanics.md` (et sa copie) : tout hook
+  livré y est cité, sinon le rappel de cadrage d'un projet installé le dit orphelin.
+- **Prochaine étape** : lot 2 — e2e non rejoué dans la seconde passe : reproduire sur un commit dont les contrôles
+  viennent de passer, dire la cause (contrôle sans `paths`, ou passe qui ne reprend pas ses verdicts,
+  `.githooks/run-checks-verdicts.mjs`), puis corriger.

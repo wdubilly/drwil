@@ -117,11 +117,10 @@ agent's.
    `checks` with an `id`, cite it as `**Check**`, list its test file(s) as
    `**Tests**` (QUA-029 checks they exist and carry the ID) and remove the
    `**Manual**` field: `drwil verify` then replays it at every workstream.
-   **One check per business rule**, filtering its tests by the ID
-   (`npm test -- -t "APP-001"`, `pytest -k APP_001`, `go test -run APP001`):
-   a single check shared by several contracts (one plain `npm test`) cannot
-   say which rule a failure breaks — `drwil verify` reports it as not
-   attributable. From then on, each workstream links its acceptance criteria
+   **One check per business rule**, its verdict read from the tests whose name starts with the ID: a single check shared by several contracts (one plain `npm test`) cannot say which rule a failure breaks — `drwil verify` reports it as not
+   attributable.
+   JavaScript stack (Vitest, Jest, `node --test`): `node .githooks/contract-tests.mjs APP-001` (optionally its test files, and `--runner vitest|jest|node` when the project's dependencies do not say it), never `npx vitest run -t "APP-001"`: the runner is launched once per pass for every contract check instead of once per contract, and a contract whose tests did not run fails (QUA-013).
+   Other stacks keep the filter by ID, one run per contract (`pytest -k APP_001`, `go test -run APP001`). From then on, each workstream links its acceptance criteria
    to such contracts (`docs/projects/model-brief.md`, « Acceptance
    criteria »): created by the workstream, or reused as they are; a
    contract changed on purpose is declared in the brief (« Modified

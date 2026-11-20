@@ -4273,6 +4273,30 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-316",
+      "name": "tests de QUA-316, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node outils/tests-par-fichier.mjs QUA-316 .githooks/contract-tests.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/tests-par-fichier.mjs",
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-317",
+      "name": "tests de QUA-317, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node outils/tests-par-fichier.mjs QUA-317 .githooks/contract-tests.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/tests-par-fichier.mjs",
+        ".githooks/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
       "id": "couverture-diff",
       "runAt": [
         "ci"
