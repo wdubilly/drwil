@@ -301,3 +301,89 @@ test("QUA-288 : D6 iv : l'agrégation compare N à celui de la branche principal
   git("commit", "-qm", "fiche");
   assert.deepEqual(agrege(2, { GITHUB_BASE_REF: "main" }), { status: "ok" }, "changement cité dans la fiche de la branche : accepté");
 });
+
+const AUTO = {
+  name: "e2e",
+  run: 'echo "tranche $DRWIL_SHARD_INDEX/$DRWIL_SHARD_TOTAL"',
+  shards: "auto",
+  shardsCount: "echo 12",
+  paths: ["e2e/**"],
+};
+
+test('QUA-288 : « shards: "auto" » demande la commande qui compte les tests, et garde les autres règles', () => {
+  assert.equal(shardProblem(AUTO, "e2e", T), null);
+  for (const shardsCount of [undefined, 3, "  "]) assert.match(shardProblem({ ...AUTO, shardsCount }, "e2e", T), /demande « shardsCount »/);
+  assert.match(shardProblem({ ...AUTO, reuse: "tree" }, "e2e", T), /reuse: "tree"/);
+  assert.match(shardProblem({ ...AUTO, run: "npx playwright test" }, "e2e", T), /DRWIL_SHARD_INDEX/);
+  assert.match(shardProblem({ ...AUTO, shards: "Auto" }, "e2e", T), /entier de 2 à 16, ou "auto"/);
+});
+
+test("QUA-288 : shardMatrix : N d'un contrôle « auto » vient du comptage, demandé seulement pour un plan à jouer", () => {
+  const demandes = [];
+  const compte = (total) => (_c, name) => {
+    demandes.push(name);
+    return total === undefined ? { problem: `${name} : comptage impossible` } : { total };
+  };
+  assert.deepEqual(shardMatrix({ checks: [AUTO] }, T, new Set(), compte(2)), {
+    include: [
+      { index: 1, total: 2 },
+      { index: 2, total: 2 },
+    ],
+    problems: [],
+  });
+  // Sous 2 : une seule tranche, donc une seule passe.
+  assert.deepEqual(shardMatrix({ checks: [AUTO] }, T, new Set(), compte(1)).include, [{ index: 1, total: 1 }]);
+  // Un comptage impossible fait échouer le plan, jamais « aucune tranche » (QUA-013).
+  assert.deepEqual(shardMatrix({ checks: [AUTO] }, T, new Set(), compte(undefined)), {
+    include: [],
+    problems: ["e2e : comptage impossible"],
+  });
+  // Avec un N figé d'un autre contrôle : un seul total par projet.
+  const mixte = shardMatrix({ checks: [AUTO, { ...E2E, name: "autre" }] }, T, new Set(), compte(4));
+  assert.match(mixte.problems.join(), /plusieurs nombres de tranches \(3, 4\)/);
+  assert.equal(shardMatrix({ checks: [AUTO, { ...E2E, name: "autre" }] }, T, new Set(), compte(3)).include.length, 3);
+  demandes.length = 0;
+  // Ni déclaration refusée ni passe précédente qui a tout réglé ne comptent les tests.
+  assert.equal(shardMatrix({ checks: [AUTO, { ...AUTO, name: "x", shardsCount: "" }] }, T, new Set(), compte(2)).problems.length, 1);
+  assert.deepEqual(shardMatrix({ checks: [AUTO] }, T, new Set(["project:e2e"]), compte(2)), { include: [], problems: [] });
+  assert.deepEqual(demandes, []);
+  // Sans nom, le contrôle est nommé par sa commande.
+  shardMatrix({ checks: [{ ...AUTO, name: undefined }] }, T, new Set(), compte(2));
+  assert.deepEqual(demandes, [AUTO.run]);
+});
+
+test("QUA-289 : un contrôle « auto » joue la tranche que le plan lui donne, et 1/1 en local", () => {
+  const racine = tmp();
+  const cfg = { checks: [AUTO] };
+  const env = { ...process.env, CI: "" };
+  const sortie = (shard) =>
+    checks(racine, { cfg, env, shard })
+      .find((c) => c.id === "project:e2e")
+      .run({ stdio: "pipe" });
+  assert.match(sortie(undefined).output, /tranche 1\/1/);
+  assert.match(sortie({ index: 4, total: 7 }).output, /tranche 4\/7/);
+  assert.match(sortie({ index: 1, total: 1 }).output, /tranche 1\/1/);
+});
+
+test("QUA-288 : agrégation « auto » : N est le total unique de ses tranches ; aucune tranche, ou plusieurs totaux, échoue", () => {
+  const racine = tmp();
+  const deposer = (verdicts) => {
+    rmSync(join(racine, "t"), { recursive: true, force: true });
+    for (const [i, x] of verdicts.entries())
+      ecrire(racine, `t/${i}.json`, JSON.stringify({ check: "project:e2e", control: "e", commit: COMMIT, status: "ok", ...x }));
+    return aggregateShards({ root: racine, dir: "t", c: AUTO, id: "project:e2e", name: "e2e", fingerprint: () => "e", T, commit: COMMIT });
+  };
+  const n = (total) => Array.from({ length: total }, (_, i) => ({ index: i + 1, total }));
+  assert.deepEqual(deposer(n(2)), { status: "ok" });
+  assert.deepEqual(deposer(n(1)), { status: "ok" });
+  const absente = deposer(n(3).slice(1));
+  assert.equal(absente.status, "fail");
+  assert.match(absente.output, /tranche 1\/3 absente/);
+  assert.match(deposer([]).message, /e2e : aucune tranche du plan de la CI/);
+  assert.match(deposer([...n(2), { index: 3, total: 3 }]).message, /un seul nombre de tranches de 1 à 16 \(2, 3\)/);
+  assert.match(deposer([{ index: 1, total: "x" }]).message, /de 1 à 16 \(x\)/);
+  assert.match(deposer([{ index: 1, total: 17 }]).message, /de 1 à 16 \(17\)/);
+  const zero = deposer([{ index: 1, total: 0 }]);
+  assert.equal(zero.status, "fail");
+  assert.match(zero.output, /tranche 1\/0 incohérente/);
+});

@@ -153,9 +153,22 @@ Tranchées par le demandeur le 2026-11-09 (l'agent n'en a tranché aucune) :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-20) : lot 0 fait — points installation, manifeste, version, AGENTS.md et intégrations
-  déplacés de `packages/drwil/src/doctor.ts` vers `packages/drwil/src/doctor-install.ts` (`installPoints`), sans
-  changement de comportement (mêmes points, même ordre, mêmes textes) ; `packages/drwil/src/doctor.ts` passe de 189 à 150 lignes ; module
-  cité dans `docs/architecture.md`.
+- **Dernier état** (2026-11-20) : lot 0 fait (points d'installation de `doctor` dans
+  `packages/drwil/src/doctor-install.ts`). Lot 1 fait — le moteur accepte `shards: "auto"`, qui demande
+  `shardsCount` : la commande (setup compris) qui compte les tests ; leur nombre est le premier entier de la dernière
+  ligne non vide de sa sortie (la ligne `Total: 12 tests in 3 files` de `playwright test --list` convient telle quelle).
+  `--shard-plan` lance `shardsCount` à chaque plan (`countTests`, `shardsFor` dans `.githooks/run-checks-shards.mjs`) :
+  N = tests / 5 arrondi au-dessus, plafonné à 16 ; sous 2, le plan donne une seule tranche `1/1` (une seule passe, YAML
+  inchangés) ; code non nul ou aucun nombre : le plan échoue (code 1). Une tranche « auto » joue le `i/N` donné par le
+  plan ; l'agrégation prend pour N le total unique que portent ses tranches (aucune tranche, plusieurs totaux ou un
+  total hors de 1 à 16 : échec). Le comptage n'est pas lancé si une déclaration est refusée ni si la passe précédente
+  de la PR a tout réglé (QUA-250). Tests : `.githooks/engine-shards.test.mjs`, `.githooks/run-checks-shards.test.mjs`,
+  cas « auto » GitLab dans `packages/drwil/test/ci-shards.test.mjs`.
+- **Pour le lot 2** : la déclaration écrite par `guarantees` porte `shards: "auto"`, `shardsCount` (comptage de
+  l'outil, setup compris : le job de plan n'a que Node) et `run` citant `DRWIL_SHARD_INDEX`. Vitest et Jest n'ont pas
+  de ligne de total : la table doit fournir une commande qui imprime le nombre en dernière ligne.
+- **Pour le lot 3** : la comparaison D6 iv de l'agrégation (`againstBase`) refuse sur une PR un `shards` changé
+  (N figé vers `"auto"`) tant qu'une fiche de la branche ne le déclare pas dans « Contrats modifiés » ; à prendre en
+  compte pour `doctor --fix` et la mise à jour du kit.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 1 (`"auto"` dans le moteur).
+- **Prochaine étape** : [IA] lot 2 (la table des outils e2e et la déclaration).

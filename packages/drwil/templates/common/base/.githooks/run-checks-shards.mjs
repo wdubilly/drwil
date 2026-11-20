@@ -1,9 +1,10 @@
 // Slices in run-checks.mjs (engine-shards.mjs): reading of the options, and the verdict file each slice leaves for the aggregation.
+import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { checks } from "./engine.mjs";
 import { texts } from "./engine-texts.mjs";
-import { gitCommit, parseShardArgs, shardMatrix, SHARDS_DIR } from "./engine-shards.mjs";
+import { gitCommit, parseShardArgs, SHARD_MAX, shardMatrix, SHARDS_DIR } from "./engine-shards.mjs";
 import { fetchPrevious, hooksChanged, prContext } from "./run-checks-pr.mjs";
 import { prCovered } from "./run-checks-verdicts.mjs";
 
@@ -11,7 +12,8 @@ import { prCovered } from "./run-checks-verdicts.mjs";
  * `--shard i/N`, `--without-shards`, `--aggregate-shards <dir>`: the options for `checks()`, or exit 2 on a malformed one.
  * `--pr-previous [run]` downloads the verdicts of the previous pass of this pull request (run-checks-pr.mjs) and prints `previous=<run>`.
  * `--shard-plan` plays nothing: it prints the matrix of the slices the CI plays (`{"include":[{"index":1,"total":4}…]}`, empty without
- * sharded check, nor when the previous pass of this pull request settled them all, QUA-250), or exits 1 naming the declarations it refuses (a plan that cannot be read is no plan, QUA-013).
+ * sharded check, nor when the previous pass of this pull request settled them all, QUA-250), or exits 1 naming the declarations it refuses or
+ * the `"auto"` check it cannot count (a plan that cannot be read is no plan, QUA-013).
  */
 export function shardOptions(argv, T, cfg = {}) {
   if (argv.includes("--pr-previous")) {
@@ -22,7 +24,8 @@ export function shardOptions(argv, T, cfg = {}) {
   if (argv.includes("--shard-plan")) {
     const ctx = prContext();
     const covered = ctx && !hooksChanged(ctx) ? prCovered(checks(process.cwd(), { cfg })) : undefined;
-    const { include, problems } = shardMatrix(cfg, texts(cfg.lang === "en" ? "en" : "fr"), covered);
+    const P = texts(cfg.lang === "en" ? "en" : "fr");
+    const { include, problems } = shardMatrix(cfg, P, covered, (c, name) => countTests(c, name, P));
     if (problems.length) console.error(problems.join("\n"));
     else console.log(JSON.stringify({ include }));
     process.exit(problems.length ? 1 : 0);
@@ -31,6 +34,24 @@ export function shardOptions(argv, T, cfg = {}) {
   if (!shard?.error) return shard;
   console.error(T.shardUsage);
   process.exit(2);
+}
+
+/** D6: N = number of tests divided by 5, rounded up, capped at SHARD_MAX; under 2, a single slice (one pass). */
+export const shardsFor = (tests) => Math.min(SHARD_MAX, Math.max(1, Math.ceil(tests / 5)));
+
+/**
+ * `shards: "auto"`: its N, counted at each plan. The number of tests is the first integer of the last non-empty line `shardsCount` prints
+ * (its own setup included); a failed command or no number is `{ problem }`, which fails the plan (QUA-013). Its stderr stays in the log.
+ */
+export function countTests(c, name, T, root = process.cwd()) {
+  const r = spawnSync(c.shardsCount, {
+    shell: true,
+    cwd: c.cwd ? join(root, c.cwd) : root,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "inherit"],
+  });
+  const tests = r.status === 0 ? /\d+/.exec(String(r.stdout).trim().split("\n").at(-1))?.[0] : undefined;
+  return tests === undefined ? { problem: T.shardsCountFailed(name, r.status) } : { total: shardsFor(Number(tests)) };
 }
 
 /**
