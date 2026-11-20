@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { doctor, init } from "../dist/index.js";
 import { shardsPoints, shardsProposal } from "../dist/doctor-shards.js";
 import { E2E_TOOLS, e2eDeclaration } from "../dist/guarantees-e2e-tools.js";
+import { capture, config, git, tmp } from "./kit-commun.mjs";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
@@ -160,4 +161,47 @@ test('QUA-089 `--fix` sur un contrôle déjà `"auto"`, hors table ou absent : f
     assert.ok(!(await diagnostic(dir, true)).points.some((p) => p.id === "e2e-shards"), e2e.id);
     assert.equal(readFileSync(fichier, "utf8"), avant);
   }
+});
+
+// Projet équipé d'une version antérieure, contrôle `e2e` à la main en plus. Sous kit-mise-a-jour.test.mjs, l'inventaire
+// figé de QUA-315 refuserait tout test ajouté : il vit ici. `paths` qu'aucun commit ne touche : non joué au pre-commit.
+async function equipe(lang, e2e) {
+  const dir = tmp();
+  for (const args of [
+    ["init", "-q", "-b", "master"],
+    ["config", "core.autocrlf", "false"],
+    ["config", "user.name", "t"],
+    ["config", "user.email", "t@t"],
+  ])
+    git(dir, ...args);
+  await capture(() => init({ lang, targetDir: dir, name: "demo", git: false }));
+  writeFileSync(join(dir, ".drwil/install.json"), JSON.stringify({ format: 1, version: "0.0.1", firstVersion: "0.0.1" }));
+  writeFileSync(join(dir, "playwright.config.ts"), "export default {};\n");
+  const cfg = config(dir);
+  if (e2e) writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...cfg, checks: [...cfg.checks, e2e] }, null, 2) + "\n");
+  git(dir, "add", "-A");
+  assert.equal(git(dir, "commit", "-q", "-m", "kit ancien").status, 0);
+  const sortie = (await capture(() => init({ lang, targetDir: dir, name: "demo" }))).join("\n");
+  assert.match(sortie, /(Fait : mise à jour du kit|Done: kit update) /, sortie);
+  assert.equal(git(dir, "status", "--porcelain").stdout.trim(), "", "commit de mise à jour accepté par la barrière");
+  return { dir, sortie };
+}
+
+test("QUA-089 la mise à jour du kit n'écrit rien sur un contrôle e2e non découpé : son compte rendu invite à `doctor --fix` ; sans e2e, rien", async () => {
+  const e2e = { id: "e2e", name: "e2e du projet", run: "npx playwright test", paths: ["e2e-absent/**"] };
+  const { dir, sortie } = await equipe("fr", e2e);
+  assert.match(
+    sortie,
+    /Reste à décider : Contrôle lent non découpé — `e2e` \(Playwright, `playwright\.config\.ts`\) joue toute la suite en une seule passe : poser "shards": "auto".*La mise à jour n'y écrit rien : lancer `npx drwil doctor --fix`\./,
+  );
+  assert.deepEqual(config(dir).checks.at(-1), e2e, "contrôle e2e inchangé");
+  assert.deepEqual(JSON.parse(git(dir, "show", "HEAD:.drwil/ia-first.json").stdout).checks.at(-1), e2e, "commit sans réécriture");
+  assert.ok(sortie.lastIndexOf("Commande suivante") > sortie.indexOf("Contrôle lent"), "la commande suivante reste en dernier");
+  const fige = { ...e2e, run: `npx playwright test ${SLICE}`, shards: 4 };
+  const en = (await equipe("en", fige)).sortie;
+  assert.match(
+    en,
+    /Left to decide: Slow check not sliced — `e2e` .* fixes 4 slices.*The update writes nothing to it: run `npx drwil doctor --fix`\./,
+  );
+  assert.doesNotMatch((await equipe("fr", null)).sortie, /Contrôle lent|doctor --fix/);
 });

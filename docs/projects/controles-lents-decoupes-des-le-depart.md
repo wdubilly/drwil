@@ -218,14 +218,23 @@ Tranchées par le demandeur le 2026-11-09 (l'agent n'en a tranché aucune) :
   `--fix`, l'avertissement dit que `npx drwil doctor --fix` le corrige. Déjà `"auto"`, hors table, absent : rien
   d'écrit. `guarantees` ne réécrit toujours aucun contrôle `e2e` existant. La mise à jour du kit (`drwil init`) ne pose
   rien : seul `doctor --fix` corrige.
-- **Pour le lot 5** : contrats à créer (critères d'acceptation) et tests à leur rattacher (aujourd'hui sous QUA-089) :
+  Lot 5 fait (D1 revue, QUA-238 inchangé) — `finishUpdate` (`packages/drwil/src/kit-update.ts`) n'écrit rien sur le
+  contrôle `e2e` ; après le commit, il lit la configuration et, pour chaque point que `shardsPoints` (sans `--fix`)
+  donnerait, affiche « Reste à décider : <libellé> — <détail de doctor>. La mise à jour n'y écrit rien : lancer
+  `npx drwil doctor --fix`. » (anglais : « Left to decide: … run `npx drwil doctor --fix`. »), avant la commande
+  suivante. Test : `packages/drwil/test/shards-proposal.test.mjs` « la mise à jour du kit n'écrit rien sur un contrôle
+  e2e non découpé… » (projet équipé d'une version antérieure : invitation en français et en anglais, N figé compris,
+  `.drwil/ia-first.json` et son commit inchangés, commit accepté par la barrière ; sans `e2e`, aucune invitation). Il
+  ne vit pas dans `packages/drwil/test/kit-mise-a-jour.test.mjs` : l'inventaire figé de QUA-315 (`packages/drwil/test/decoupe-kit.inventaire.json`, hors
+  scope) y refuse tout test ajouté.
+- **Pour le lot 6** : contrats à créer (critères d'acceptation) et tests à leur rattacher (aujourd'hui sous QUA-089) :
   déclaration du kit — `packages/drwil/test/guarantees.test.mjs` « outil e2e de la table », « outil e2e d'une
   couche », « comptage des tests de la table » ; jamais réécrit / hors table — `packages/drwil/test/guarantees.test.mjs` « contrôle `e2e`
   déjà déclaré », « outil e2e hors de la table », et `packages/drwil/test/shards-proposal.test.mjs` « déjà `"auto"`,
   outil hors table, contrôle absent », « `--fix` sur un contrôle déjà `"auto"`, hors table ou absent » ; avertissement et
   correction de `doctor` — `packages/drwil/test/shards-proposal.test.mjs` « N figé », « sans `shards` », « écrit à la
-  main sans `shards` », « écrit à la main à N figé » ; `"auto"` dans le moteur — `.githooks/engine-shards.test.mjs`,
+  main sans `shards` », « écrit à la main à N figé », « la mise à jour du kit n'écrit rien… » ; `"auto"` dans le moteur — `.githooks/engine-shards.test.mjs`,
   `.githooks/run-checks-shards.test.mjs`, cas « auto » de `packages/drwil/test/ci-shards.test.mjs` (titres à relire
   pour leur ID actuel). `packages/drwil/src/doctor-shards.ts` est déjà cité dans `docs/architecture.md`.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 5 (documentation, contrats).
+- **Prochaine étape** : [IA] lot 6 (documentation, contrats).
