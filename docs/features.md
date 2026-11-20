@@ -50,8 +50,9 @@ compté comme passé ; un critère de la fiche active sans preuve fait tomber
 le verdict. Le verdict d'un contrôle est repris quand ce qu'il juge n'a pas
 changé (`run-checks`, `drwil verify`, le pre-push, et en CI la passe d'une
 PR qui le demande, sur les verdicts de la dernière CI de la branche
-principale, dans la CI du dépôt comme dans celles livrées, GitHub et GitLab ; le push sur la branche principale rejoue tout, `--no-reuse` et
-`--replay-all` aussi), et la sortie dit repris ou rejoué ;
+principale, dans la CI du dépôt comme dans celles livrées, GitHub et GitLab ; le push sur la branche principale saute ses contrôles quand la PR ou
+MR fusionnée a prouvé le même arbre, et en garde les verdicts, sinon il
+rejoue tout ; `--no-reuse` et `--replay-all` rejouent tout), et la sortie dit repris ou rejoué ;
 `verify` peut jouer ses contrôles en parallèle, et chaque contrôle dit sa
 durée. `drwil doctor` diagnostique l'installation, `drwil contracts`
 valide le registre sans rien exécuter. `drwil verify --failed` ne rejoue

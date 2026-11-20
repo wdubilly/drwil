@@ -236,6 +236,15 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
   élargi à ce fichier (commit de la fiche seule). Ligne « Unreleased » du CHANGELOG ajoutée. Limite hors cadre :
   `docs/features.md` dit encore « le push sur la branche principale rejoue tout » (faux depuis QUA-296 sur GitHub,
   désormais aussi sur GitLab).
+- **Limites traitées sur le champ** (2026-11-20, réponse « Traiter maintenant » au sondage des limites ; bloc scope
+  élargi par un commit de la fiche seule) : registre livré, l'exemple `APP-001` enseigne la forme groupée
+  `node .githooks/contract-tests.mjs APP-001` (QUA-030 inchangé : « filtre ses tests par l'ID » reste vrai) ; recette
+  d'adoption, étape 7 : `doctor` signale contrôles de contrats non groupés, contrôles CI sans `paths` et paire de
+  couverture en double (248 lignes) ; `twiceDetail` dit qu'une paire réglée à la main, Vitest comprise, n'est jamais
+  fusionnée, seulement signalée ; `docs/features.md` dit le saut du push prouvé ; `wait-command` (QUA-219 modifié) :
+  cause reproduite (ligne jointe rejouée par `sh`, stdin fermé), plusieurs mots lancés sans interpréteur, stdin
+  redirigé transmis, programme absent en échec. Restent pour une autre session : tests-par-fichier, couche existante
+  à 100 %, `doctor --fix`.
 - **Prochaine étape** : lot 5 [humain] — essai sur un vrai pipeline GitLab (`marinade-poulet` après `npx drwil init`, ou
   bac à sable) : une MR verte à jour avec la branche principale, fusionnée ; le job `plan` du pipeline de la branche
   principale dit « Checks not replayed: tree … proved », `checks` dit « this tree is proven » et garde le fichier de

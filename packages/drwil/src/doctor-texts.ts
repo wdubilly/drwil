@@ -22,7 +22,7 @@ export const TEXTS = {
     coverage: "Couverture des attestations",
     twice: "Couverture jouée en double",
     twiceDetail:
-      "`{0}` et `{1}` jouent les tests deux fois : remplacer les deux par le seul `{1}`, de commande `{2}` (`npx drwil guarantees` le fait pour une paire de série)",
+      "`{0}` et `{1}` jouent les tests deux fois : remplacer les deux par le seul `{1}`, de commande `{2}` (`npx drwil guarantees` le fait pour une paire de série ; une paire réglée à la main, Vitest comprise, n'est jamais fusionnée automatiquement, seulement signalée ici avec cette commande unique)",
     bypass: "Contournement du ruleset",
     noCovers: " (sans Couvre, leur attestation ne tombe pas si le code jugé change ; `aucun` avec sa raison compte comme déclaré : {0})",
     hooks: "Hooks git",
@@ -69,7 +69,7 @@ export const TEXTS = {
     coverage: "Attestation coverage",
     twice: "Coverage run twice",
     twiceDetail:
-      "`{0}` and `{1}` run the tests twice: replace both with the single `{1}`, command `{2}` (`npx drwil guarantees` does it for a pair as generated)",
+      "`{0}` and `{1}` run the tests twice: replace both with the single `{1}`, command `{2}` (`npx drwil guarantees` does it for a pair as generated; a hand-tuned pair, Vitest included, is never merged automatically, only reported here with this single command)",
     bypass: "Ruleset bypass",
     noCovers:
       " (without Covers, their attestation does not fall if the code they judged changes; `none` with its reason counts as declared: {0})",

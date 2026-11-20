@@ -132,7 +132,7 @@ contracts » section).
 **Rule** : (example) An order with no line is refused. Replace it with the most critical business rule of your project.
 **Scope** : the code that applies this rule
 **Source of truth** : the module that implements it
-**Proof** : a test of this rule, named after its ID, declared as its own check (`.drwil/ia-first.json` → `checks`, with an `id`, filtering the tests by the ID: `npm test -- -t "APP-001"`), replayed by `drwil verify` at every workstream
+**Proof** : a test of this rule, named after its ID, declared as its own check (`.drwil/ia-first.json` → `checks`, with an `id`, filtering the tests by the ID, grouped with the other contract checks into one run of the test runner per pass: `node .githooks/contract-tests.mjs APP-001`, never `npm test -- -t "APP-001"`), replayed by `drwil verify` at every workstream
 **Reason** : an acceptance criterion proven by a contract becomes the business non-regression: the next workstreams cannot break it without seeing it, and its own check names the broken rule
 **Manual** : check to complete — write the test, declare it in `checks` with an `id`, cite it here as **Check**, list its file as **Tests**, then remove this field (`docs/recipes/adopt-the-kit.md`, step 5).
 

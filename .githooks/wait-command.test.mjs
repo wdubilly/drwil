@@ -30,7 +30,9 @@ test("QUA-219 : le verdict ne contient que le code de sortie, jamais la sortie",
   const root = tmp();
   const command = "echo sortie-longue && exit 0";
   await waitFor({ root, command, wait: 15, interval: 50, status: true }); // rien à lire encore
+  process.stdin.isTTY = true; // un terminal n'est jamais transmis à la commande détachée
   launch(root, command);
+  process.stdin.isTTY = undefined;
   for (let i = 0; i < 100 && read(root, command).state !== "done"; i++) await new Promise((r) => setTimeout(r, 50));
   const dossier = join(root, ".drwil", "evidence", "wait");
   const verdict = readdirSync(dossier).find((f) => f.endsWith(".json"));
@@ -157,8 +159,7 @@ test("QUA-220 : la commande du kit rend le verdict par ses codes de sortie", () 
 });
 
 test("QUA-219 : plusieurs mots sont lancés sans interpréteur et le stdin passe (git commit -F -, -m à guillemets)", () => {
-  const root = tmp();
-  const lance = (input, ...args) => spawnSync(process.execPath, [SCRIPT, "--wait", "15", ...args], { cwd: root, input, encoding: "utf8" });
+  const lance = (input, ...a) => spawnSync(process.execPath, [SCRIPT, "--wait", "15", ...a], { cwd: tmp(), input, encoding: "utf8" });
   const echo = "process.stdout.write(process.argv[1] + '|' + require('fs').readFileSync(0, 'utf8'))";
   const r = lance("lu sur stdin", "node", "-e", echo, 'titre "cité" (parenthèse) $HOME');
   assert.equal(r.status, 0, r.stderr);

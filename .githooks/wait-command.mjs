@@ -169,7 +169,7 @@ export async function waitFor({ root = process.cwd(), command, argv = [], wait, 
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
-  if (process.argv[2] === "--exec") exec(process.argv[3], process.argv[4], JSON.parse(process.argv[5] ?? "[]"));
+  if (process.argv[2] === "--exec") exec(process.argv[3], process.argv[4], JSON.parse(process.argv[5]));
   else {
     const r = await waitFor(parseArgs(process.argv.slice(2)));
     (r.code === 0 ? console.log : console.error)(r.message);

@@ -129,17 +129,15 @@ agent's.
 6. **Verify**: `node .githooks/run-checks.mjs` green, then one commit per
    subject (layer filled in, check declared, contract adopted) — never a
    catch-all commit.
-7. **Read the protection level**: `npx drwil doctor` says which of the four
-   levels the project really holds, each proved by a check (1 diagnosis
-   only, 2 local governance active: hooks wired and `scopeGate` blocking,
-   3 CI replaying the hook's checks, 4 forge protection verified, the
-   repository's auto-merge allowed on GitHub), « not
-   verified » when it could not read the forge, and the command that leads
-   to the next level (`--json` included). A new install writes `scopeGate`
-   as `blocking`; a project installed before keeps its setting, `warning`
-   when it had none — `doctor` shows the command that hardens it, and
-   `drwil verify` fails on a non-blocking `scopeGate` once the mandatory
-   guarantees are enforced.
+7. **Read the protection level**: `npx drwil doctor` says which of the four levels the project really holds, each
+   proved by a check (1 diagnosis only, 2 local governance active: hooks wired and `scopeGate` blocking, 3 CI replaying
+   the hook's checks, 4 forge protection verified, the repository's auto-merge allowed on GitHub), « not verified » when
+   it could not read the forge, and the command that leads to the next level (`--json` included). A new install writes
+   `scopeGate` as `blocking`; a project installed before keeps its setting, `warning` when it had none — `doctor` shows
+   the command that hardens it, and `drwil verify` fails on a non-blocking `scopeGate` once the mandatory guarantees
+   are enforced. Without writing anything, it also warns about **contract checks not grouped** (a `vitest`, `jest` or
+   `npm test` command filtered by an ID, shown with its grouped form of step 5), **checks left to the CI without
+   `paths`** (`runAt: ["ci"]` alone, shown with `"paths": ["**"]`, step 4) and a coverage pair that runs the tests twice.
 
 ## Human attestation in the conversation
 
