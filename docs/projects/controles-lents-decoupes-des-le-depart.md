@@ -16,6 +16,8 @@ files:
   - packages/drwil/src/doctor-shards.ts
   - packages/drwil/src/doctor-texts.ts
   - packages/drwil/src/doctor-install.ts
+  - packages/drwil/src/kit-update.ts
+  - packages/drwil/test/kit-mise-a-jour.test.mjs
   - packages/drwil/test/guarantees.test.mjs
   - packages/drwil/test/shards-proposal.test.mjs
   - packages/drwil/templates/common/base/docs/contracts-catalog.md
@@ -69,8 +71,9 @@ corrigés, pas seulement avertis (demandeur, 2026-11-20).
 - Un contrôle `e2e` déjà déclaré par le projet à la main n'est jamais réécrit ; un outil e2e hors de la table n'est
   jamais découpé de force : le contrôle reste en une seule passe et la fiche de garantie le dit — contrat à créer
 - `drwil doctor` signale un contrôle e2e d'un outil de la table déclaré sans `shards` ou avec un N figé, et donne la
-  déclaration `"auto"` ; `drwil doctor --fix` et la mise à jour du kit la posent sur un contrôle que le kit a déclaré
-  (forme exacte de sa déclaration), jamais sur un contrôle écrit ou modifié à la main — contrat à créer
+  déclaration `"auto"` ; `drwil doctor --fix` et la mise à jour du kit (`npx drwil init`) la posent sur le contrôle `e2e` non
+  découpé d'un outil de la table, écrit à la main ou par le kit, en gardant ses autres champs (D1 revue le
+  2026-11-20) — contrat à créer
 - Un projet neuf et un projet adopté reçoivent la même déclaration (une seule table, une seule source) — contrat à créer
 
 ## Contrats modifiés
@@ -94,7 +97,8 @@ corrigés, pas seulement avertis (demandeur, 2026-11-20).
 - Découper un outil hors de la table : le kit ne devine pas la commande de tranche d'un outil qu'il ne connaît pas.
 - Les autres pistes d'accélération, notées à part : mesure des durées par contrôle, équilibrage des tranches par durées
   historiques, annulation rapide du contrôle lent, `paths` calculés automatiquement, tests impactés.
-- Réécrire un contrôle `e2e` écrit ou modifié à la main : `guarantees` le garde, `doctor` le signale avec la ligne à poser.
+- Réécrire un contrôle `e2e` existant depuis `guarantees` : il le garde ; seuls `doctor --fix` et la mise à jour du kit
+  le passent en `"auto"` (D1 revue le 2026-11-20).
 
 ## 3. Contraintes
 
@@ -119,7 +123,8 @@ Tranchées par le demandeur le 2026-11-09 (l'agent n'en a tranché aucune) :
   adoptant est donc écrit à la main, et « avertir seulement » ne corrigeait aucun projet adopté) : `doctor --fix`
   passe aussi en `"auto"` un contrôle `e2e` écrit ou modifié à la main, pour un outil de la table ; il pose `shards`,
   `shardsCount` et, si la commande ne lit pas `DRWIL_SHARD_INDEX`, le `run` du kit, et garde les autres champs ; il dit
-  ce qu'il a remplacé. L'exception « jamais réécrit à la main » ne vaut plus pour ce contrôle ; `guarantees` continue de
+  ce qu'il a remplacé ; la mise à jour du kit (`npx drwil init`) applique la même correction, dans son commit de mise à
+  jour (demandeur, 2026-11-20). L'exception « jamais réécrit à la main » ne vaut plus pour ce contrôle ; `guarantees` continue de
   ne jamais réécrire un contrôle `e2e` existant.
 - **D2 — nombre de tranches** : croissant avec le nombre de tests e2e (pas de N fixe).
 - **D3 — table des outils e2e** : Playwright, Vitest et Jest ; Cypress hors table (pas de tranche native).
@@ -159,7 +164,11 @@ Tranchées par le demandeur le 2026-11-09 (l'agent n'en a tranché aucune) :
   point « Contrôle lent non découpé » le dit corrigible) ; la déclaration écrite est acceptée par le moteur (QUA-013) ;
   pour un N figé, le message rappelle la puce « Contrats modifiés » à poser. Critère de sortie : le test
   shards-proposal vert, cas « écrit à la main » corrigé par `--fix`.
-- **Lot 5 — documentation** [IA] : CHANGELOG « Unreleased » (anglais), `docs/architecture.md`, catalogue du gabarit
+- **Lot 5 — la mise à jour du kit corrige aussi** [IA] : `finishUpdate` (`packages/drwil/src/kit-update.ts`) applique
+  la correction du lot 4 (`fixShards`) avant son commit, qui la porte, et dit ce qu'elle a posé (et, pour un N figé, la
+  puce « Contrats modifiés » à poser). Critère de sortie : test `kit-mise-a-jour` vert, cas d'un contrôle `e2e` écrit
+  à la main passé en `"auto"` dans le commit de mise à jour, cas sans contrôle `e2e` inchangé.
+- **Lot 6 — documentation** [IA] : CHANGELOG « Unreleased » (anglais), `docs/architecture.md`, catalogue du gabarit
   (`catalog:QUA-020`), contrats et leurs contrôles dans `.drwil/ia-first.json`.
 
 ## 7. Reprise
