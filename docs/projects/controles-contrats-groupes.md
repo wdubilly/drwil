@@ -41,6 +41,8 @@ files:
   - docs/projects/journal.md
   - packages/drwil/CHANGELOG.md
   - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
+  - packages/drwil/src/doctor-checks.ts
+  - packages/drwil/test/doctor-checks.test.mjs
 -->
 
 ## 1. Besoin
