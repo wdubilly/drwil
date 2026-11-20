@@ -4701,3 +4701,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 ## cadrage-en-build
 
 - **Preuve de clôture** : `docs/preuves/cadrage-en-build.md`.
+
+## 2026-11-20 — Détour de docs/projects/controles-contrats-groupes.md : une attestation ne tombe plus quand seul le lanceur équivalent de son contrôle change
+
+- **Défaut** : en basculant les contrôles du dépôt de `node outils/tests-par-fichier.mjs <ID> <fichiers>` au lanceur livré (même ID, mêmes fichiers, même effet : verdict par ID lu dans une exécution par fichier), dix attestations humaines tombaient (empreinte d'effet, version 4).
+- **Cause** : `proofFingerprints` (`packages/drwil/src/fingerprint.ts`) hachait la commande telle qu'écrite et les `paths` tels quels, où le fichier du lanceur change aussi.
+- **Correction** : une table courte de lanceurs équivalents ramène, avant le hachage, la commande du lanceur livré (éventuellement avec `--runner node`, `--all` valant `--tous`) à la forme historique, et ses fichiers dans les `paths` au fichier historique. Les attestations enregistrées restent valides (aucune empreinte changée avec la déclaration actuelle ; aucune attestation valide ne tombe avec celle du chantier). Toute autre différence (ID, fichiers de tests, dossier, autres paths, autre lanceur) les fait toujours tomber. Test de non-régression (QUA-183), vu échouer avant la correction.
+- **Contrats modifiés** : QUA-183 et QUA-184 (champ « Modifié »), validé par le demandeur le 2026-11-20, oui au détour (`detour.mjs allow`) ; ligne « Unreleased » au changelog.
+- **Clôturé par** : la branche `detour/attestation-lanceur-equivalent`.

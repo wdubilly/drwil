@@ -58,18 +58,47 @@ export function legacyProofFingerprints(k: { checks?: string[] | null }, cfg: Pr
 }
 
 /**
+ * Equivalent launchers (QUA-183): same arguments, same effect (verdict per ID read from a run per
+ * file). A command using one is hashed in the historical form, so the attestations recorded with
+ * the historical launcher stay valid; its launcher files in `paths` are folded the same way.
+ */
+const HISTORICAL_FILE = "outils/tests-par-fichier.mjs";
+const EQUIVALENT_LAUNCHER = {
+  // Equivalent command prefix → historical one; the longer first. `--runner node` is the runner the
+  // historical launcher always used; `--all` is its `--tous` (every test of each file must pass).
+  commands: [
+    ["node .githooks/contract-tests.mjs --runner node --all ", "node outils/tests-par-fichier.mjs --tous "],
+    ["node .githooks/contract-tests.mjs --all ", "node outils/tests-par-fichier.mjs --tous "],
+    ["node .githooks/contract-tests.mjs --runner node ", "node outils/tests-par-fichier.mjs "],
+    ["node .githooks/contract-tests.mjs ", "node outils/tests-par-fichier.mjs "],
+  ],
+  files: [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs"],
+};
+
+function effect(c: CheckDefinition): { run: unknown; paths: string[] | null } {
+  const paths = Array.isArray(c.paths) ? (c.paths as string[]) : null;
+  const run = String(c.run);
+  const found = EQUIVALENT_LAUNCHER.commands.find(([p]) => run.startsWith(p));
+  if (found === undefined) return { run: c.run, paths };
+  const fold = (p: string) => (EQUIVALENT_LAUNCHER.files.includes(p) ? HISTORICAL_FILE : p);
+  return { run: found[1] + run.slice(found[0].length), paths: paths && [...new Set(paths.map(fold))] };
+}
+
+/**
  * Version 4 (QUA-183): what a cited check does, not how it is run. The command (which carries the
  * targeted tests), its folder and its `paths`; the execution fields (`build`, `needsBuild`,
- * `parallel`, `reuse`…) are left out, so adding or removing one keeps the attestation valid.
- * A command, a targeted test or a path that changes still makes it obsolete (QUA-184, QUA-013).
+ * `parallel`, `reuse`…) are left out, so adding or removing one keeps the attestation valid, and an
+ * equivalent launcher counts as the historical one. A command, a targeted test or a path that
+ * changes still makes it obsolete (QUA-184, QUA-013).
  */
 export function proofFingerprints(k: { checks?: string[] | null }, cfg: ProjectConfig): Record<string, string> {
   const checks = definedChecks(cfg);
   return Object.fromEntries(
     (k.checks ?? []).map((id) => {
       const c = checks.find((x) => x.id === id);
-      const paths = Array.isArray(c?.paths) ? [...(c.paths as string[])].sort() : null;
-      return [id, sha(c ? { id, run: c.run, cwd: c.cwd ?? null, paths } : { id })];
+      if (!c) return [id, sha({ id })];
+      const { run, paths } = effect(c);
+      return [id, sha({ id, run, cwd: c.cwd ?? null, paths: paths ? [...paths].sort() : null })];
     }),
   );
 }

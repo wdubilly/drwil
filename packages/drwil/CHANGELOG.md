@@ -183,6 +183,14 @@ release renames this section to its version.
 
 ### Fixed
 
+- A human attestation no longer falls when only the launcher of a cited check
+  changes for an equivalent one: `node outils/tests-par-fichier.mjs` and the
+  shipped contract-tests launcher under .githooks/ (optionally with
+  `--runner node`, its `--all` matching `--tous`) give the same fingerprint,
+  their launcher files in `paths` included. Any other change (ID, test files,
+  folder, other paths, another launcher) still makes it obsolete (QUA-183,
+  QUA-184).
+
 - The start's warning about undeclared hooks (QUA-137) now names each file of
   `.githooks/` as the scope block cites it: a test file is named as a test,
   no longer renamed to its module, and the bullet it proposes names that
