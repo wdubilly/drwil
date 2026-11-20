@@ -1,0 +1,33 @@
+{
+  "version": 4,
+  "contract": "QUA-236",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-20T15:40:42.045Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "QUA-150 : diff de engine.test.mjs relu, 3 lignes : seul le faux lanceur est renommé ; aucun test de durée ajouté ni modifié. QUA-236 : recette d'adoption modifiée aux étapes 3 bis, 5 et 7 (paths e2e, contrôle groupé, doctor --fix), 249 lignes ; partie attestation inchangée ; ce sondage est l'exemple à juger.",
+  "fingerprint": "e0160b8544e838418392aa97474d4b9ae054d4b81c702669067064701526aaf8",
+  "proof": {},
+  "covers": [
+    "packages/drwil/src/attest.ts",
+    "packages/drwil/src/attest-portable.ts",
+    "packages/drwil/src/cli-cursor.ts",
+    "packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md"
+  ],
+  "coverage": {
+    "packages/drwil/src/attest-portable.ts": "7b4a578b7be985fd1a4fac5ff32a5750d482896956492ab850085bfd00ed6302",
+    "packages/drwil/src/attest.ts": "3547ff56139ff43fa41da5842202bec2c5548c035ec34b3eef84b6f425777772",
+    "packages/drwil/src/cli-cursor.ts": "9e4159eafbcbfc6d6e512fbdb6d9756489f1b38eb79b50ddc20db7c8736e2ddd",
+    "packages/drwil/templates/common/base/docs/recipes/adopt-the-kit.md": "eacdddcb901b35a5d8e9a684c26b368eb2a231787a8a52e7431b9739dd7d47e6"
+  },
+  "commit": "8872a421937a03a5c9191a470459e977733a71af",
+  "automated": [],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "e50e1755-8471-4c89-b667-157687a77e7f",
+    "toolUseId": "toolu_01QdjnDAJvA6ybHnTAnyWMLG",
+    "askedAt": "2026-11-20T15:40:15.949Z"
+  }
+}
