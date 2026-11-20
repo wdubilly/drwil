@@ -40,6 +40,7 @@ files:
   - docs/projects/pending.md
   - docs/projects/journal.md
   - packages/drwil/CHANGELOG.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
 -->
 
 ## 1. Besoin
@@ -96,6 +97,16 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
   2026-11-19)
 - `QUA-296` — ancien critère : le saut du push déjà prouvé et la sauvegarde de ses verdicts, CI GitHub seule —
   raison : GitHub et GitLab doivent être iso (validé par le demandeur le 2026-11-19)
+- `.githooks/engine.mjs` — le lanceur de tests des contrats est lancé une seule fois par passe et partagé entre les
+  contrats (lot 1), l'e2e n'est plus rejoué en seconde passe (lot 2) (validé par le demandeur le 2026-11-19)
+- `.githooks/engine-pass.mjs` — même changement : lancement partagé par passe (lot 1), e2e non rejoué en seconde passe
+  (lot 2) (validé par le demandeur le 2026-11-19)
+- `.githooks/engine-launch.mjs` — même changement : lancement partagé par passe (lot 1), e2e non rejoué en seconde
+  passe (lot 2) (validé par le demandeur le 2026-11-19)
+- `.githooks/run-checks.mjs` — même changement : lancement partagé par passe (lot 1), e2e non rejoué en seconde passe
+  (lot 2) (validé par le demandeur le 2026-11-19)
+- `.githooks/run-checks-verdicts.mjs` — la seconde passe reprend les verdicts déjà acquis au lieu de rejouer (lot 2)
+  (validé par le demandeur le 2026-11-19)
 - Le chantier dira si QUA-033 (règle du dépôt) devient la source livrée, ou s'il est seulement cité.
 
 ## 2. Hors périmètre
