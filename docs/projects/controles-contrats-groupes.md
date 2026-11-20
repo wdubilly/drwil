@@ -98,10 +98,10 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
   `drwil doctor` signale, sans rien écrire, les contrôles `vitest|jest … -t "<ID>"` qui relancent chacun le lanceur, et
   donne la forme groupée — `QUA-318`
 - Mesure : sur une copie de `marinade-poulet` (ou un projet de test de même forme, 27 contrats Vitest), le temps de
-  `run-checks` avant et après est relevé dans le journal de clôture — [humain] `QUA-013`
+  `run-checks` avant et après est relevé dans le journal de clôture — `QUA-013`
 - Lot 2 : sur un commit dont les contrôles viennent de passer, la seconde passe ne rejoue pas l'e2e ; la cause du
-  rejeu est d'abord reproduite et dite (contrôle sans `paths`, ou passe qui ne reprend pas ses verdicts) — contrat à
-  créer ou existant cité selon la cause
+  rejeu est d'abord reproduite et dite (contrôle sans `paths`, ou passe qui ne reprend pas ses verdicts) ; cause : contrôle sans
+  `paths`, corrigée par la recette et signalée par `doctor` — `QUA-141`
 - Lot 4 : sur une couche Node **à 100 %** (seuil déjà au maximum), la paire `coverage-<couche>` et
   `coverage-diff-<couche>` exactement telle que le kit la génère est aussi fusionnée en un seul run ; une paire
   modifiée à la main n'est jamais réécrite et `drwil doctor` la signale — `QUA-302`
