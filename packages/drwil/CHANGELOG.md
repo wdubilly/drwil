@@ -81,6 +81,21 @@ release renames this section to its version.
   active brief untouched) no longer needs, at closing, the « Record as
   intent » answer of the limits poll; one answered « Handle now » is still
   refused.
+- Faster checks of an adopted project: the contracts' checks declared as
+  `node .githooks/contract-tests.mjs <ID> [files…]` (adoption recipe) start
+  their test runner (Vitest, Jest or `node --test`) once per pass for all the
+  contracts sharing it, each verdict read from the tests named with its ID
+  (none found, or a run that played nothing: a failure); an e2e check
+  declared with its `paths` is no longer replayed by the second CI pass;
+  `drwil doctor` warns, without writing anything, about contract checks
+  filtered by ID (with their grouped form), checks left to CI without
+  `paths`, and a coverage pair that runs the tests twice, a hand-tuned
+  Vitest pair included (with its single command); `drwil guarantees` also
+  merges the generated pair of a layer at 100 %. The delivered GitLab CI now
+  matches the GitHub one: a main-branch pipeline whose tree the merged
+  branch's green pipeline proved skips its checks and still keeps the
+  verdicts the next merge request reuses, the date of the restored verdicts
+  is logged, and a test keeps both CIs on par.
 
 ### Changed
 

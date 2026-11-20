@@ -259,10 +259,10 @@ test("QUA-270 : un projet d'essai installé depuis le paquet reçoit les mécani
     assert.match(ci, /git show "\$base:\.githooks\/base-checks\.mjs"/, nom);
     assert.match(ci, /DRWIL_CI_REUSE/, nom);
   }
-  // Un push sur la branche principale lit la preuve d'arbre de la PR verte (GitHub seulement, GitLab rejoue tout).
+  // Un push sur la branche principale lit la preuve d'arbre de la PR ou MR verte (QUA-296, GitHub et GitLab, détail dans ci-parite.test.mjs).
   assert.match(gh, /gh run download[^\n]*--name proven-tree/);
   assert.match(gh, /git rev-parse 'HEAD\^\{tree\}' > "\$RUNNER_TEMP\/proven-tree\.txt"/);
-  assert.doesNotMatch(gl, /proven-tree/);
+  assert.match(gl, /git rev-parse "HEAD\^\{tree\}" > \.drwil\/evidence\/pr-verdicts\/proven-tree\.txt/);
   // Le moteur livré est celui du dépôt : reprise des verdicts, rejeu QUA-113 et classement des durées.
   for (const f of ["base-checks", "run-checks", "run-checks-verdicts", "engine"])
     assert.equal(read(dirGh, `.githooks/${f}.mjs`), readFileSync(join(DEPOT, `.githooks/${f}.mjs`), "utf8"), `${f}.mjs`);

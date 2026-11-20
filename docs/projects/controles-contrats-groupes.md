@@ -206,5 +206,28 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
   `packages/drwil/src/doctor-coverage.ts` et à ce test (commit de la fiche seule). Le texte `twiceDetail`
   (`packages/drwil/src/doctor-texts.ts`, hors du bloc scope) dit « `npx drwil guarantees` le fait pour une paire de série » : vrai, mais
   sans dire qu'une paire Vitest ne l'est jamais — limite hors cadre.
-- **Prochaine étape** : lot 5 — parité GitHub et GitLab de la CI livrée (reproduire : une MR GitLab rejoue-t-elle
-  tout ? dire la cause, corriger ; test de parité des deux CI livrées ; essai réel sur GitLab, [humain]).
+- **Lot 5 fait, partie [IA]** (2026-11-20) : cause lue dans les deux CI livrées (un banc local de pipeline GitLab simulé
+  a été refusé par le garde-fou de l'agent ; la preuve est le test bash). Une MR GitLab ne rejoue pas tout par
+  construction : elle télécharge l'artefact de verdicts du dernier pipeline **réussi** de la branche principale et
+  reprend chaque contrôle d'empreinte inchangée (QUA-250), plus les verdicts lents de sa passe précédente (QUA-291) ;
+  elle rejoue tout sans pipeline réussi de la branche principale, sur téléchargement refusé, ou pour un contrôle sans
+  `paths` (lot 2). Le cache est sauvegardé à chaque fusion, mais **au prix d'un rejeu complet** du pipeline de la
+  branche principale : le saut du push déjà prouvé (QUA-296) n'existait que sur GitHub, et rien ne disait au journal
+  de quand dataient les verdicts repris (QUA-297, GitHub seul). Correctif dans `packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml` :
+  le `checks` d'une branche garde les verdicts de sa passe avant le rejeu et pose l'arbre prouvé en dernière ligne du
+  kit (artefact `pr-verdicts`) ; le `plan` de la branche principale retrouve la branche fusionnée (pointant sur le
+  commit ou son second parent, ou nommée par le message de fusion par défaut : le jeton du job ne lit pas l'API des
+  MR), compare les arbres, ne planifie aucune tranche et passe arbre et verdicts à `checks` dans son plan de tranches
+  (seul artefact du plan, figé par `packages/drwil/test/ci-shards.test.mjs`), qui revérifie l'arbre, saute la passe et garde ces
+  verdicts ; date des verdicts restaurés dite. GitHub inchangé ; fichier GitLab ramené à 199 lignes (plafond QUA-157).
+  Contrat créé `QUA-319` (parité, contrôle `tests-qua-319`, tableau `OPTIMISATIONS` et écarts déclarés `ECARTS` : seul
+  QUA-251) ; QUA-250 et QUA-296 modifiés. Les tests vivent dans `packages/drwil/test/ci-parite.test.mjs`, pas dans
+  `packages/drwil/test/kit-ci.test.mjs` : les fichiers `kit-*.test.mjs` sont figés par l'inventaire de leur découpe (QUA-315) ; bloc scope
+  élargi à ce fichier (commit de la fiche seule). Ligne « Unreleased » du CHANGELOG ajoutée. Limite hors cadre :
+  `docs/features.md` dit encore « le push sur la branche principale rejoue tout » (faux depuis QUA-296 sur GitHub,
+  désormais aussi sur GitLab).
+- **Prochaine étape** : lot 5 [humain] — essai sur un vrai pipeline GitLab (`marinade-poulet` après `npx drwil init`, ou
+  bac à sable) : une MR verte à jour avec la branche principale, fusionnée ; le job `plan` du pipeline de la branche
+  principale dit « Checks not replayed: tree … proved », `checks` dit « this tree is proven » et garde le fichier de
+  verdicts en artefact ; la MR suivante dit « Verdicts cache: … run at … » et reprend ses contrôles inchangés. Puis
+  lot 6 [humain] — mesure du temps de CI avant/après, au journal de clôture.
