@@ -169,6 +169,14 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
   `outils/tests-par-fichier.mjs` (QUA-033) reste l'outil du dépôt, hors du bloc scope : sa bascule sur le module livré
   est une limite hors cadre. Bloc scope élargi au lot 1 à `packages/drwil/templates/common/base/docs/projects/kit-mechanics.md` (et sa copie) : tout hook
   livré y est cité, sinon le rappel de cadrage d'un projet installé le dit orphelin.
-- **Prochaine étape** : lot 2 — e2e non rejoué dans la seconde passe : reproduire sur un commit dont les contrôles
-  viennent de passer, dire la cause (contrôle sans `paths`, ou passe qui ne reprend pas ses verdicts,
-  `.githooks/run-checks-verdicts.mjs`), puis corriger.
+- **Lot 2 fait** (2026-11-20) : cause reproduite — **contrôle sans `paths`**, pas une passe qui ne reprend pas ses
+  verdicts. Deux passes CI successives (`CI=1 DRWIL_CI_REUSE=1`, comme le rejeu de `.githooks/base-checks.mjs`, QUA-113) sur un
+  même commit : un contrôle sans `paths` est lancé deux fois, le même avec `paths: ["**"]` une seule (repris). Le
+  `e2e` de `marinade-poulet` est déclaré sans `paths` : il n'a pas d'empreinte propre (QUA-141) et la seconde passe le
+  rejoue. Correctif : la recette d'adoption (étape 3 bis, gabarit et copie) fait déclarer les `paths` du contrôle e2e ;
+  contrats existants cités (QUA-141, QUA-113), aucun créé, le moteur inchangé. La recette livrée ne cite pas leurs ID
+  (absents du registre d'un projet : `check-docs` refuse la mise à jour du kit, tests QUA-237, QUA-239, QUA-244).
+  `marinade-poulet` ajoute ses `paths` dans sa propre session (hors périmètre).
+- **Prochaine étape** : lot 3 — `doctor` : avertir des contrôles `vitest|jest … -t "<ID>"` non groupés, sans rien
+  écrire, avec la forme groupée (`node .githooks/contract-tests.mjs <ID>`) ; contrat à créer. Le même avertissement
+  pourrait nommer un contrôle `runAt: ["ci"]` sans `paths` (lot 2) : à décider dans le lot, sinon limite hors cadre.

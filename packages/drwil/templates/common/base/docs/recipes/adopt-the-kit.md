@@ -107,7 +107,10 @@ agent's.
      coverage at 100 %, ratchet; e2e required too. What the e2e test is for each project shape is defined once, in the
      catalog's « What "end to end" means » section. The e2e check is slow: propose `"runAt": ["ci"]` — played once, by
      the CI of the PR (GitHub) or MR (GitLab), never at commit, at push or in `drwil verify`, which then says
-     `GOVERNANCE: PASS (CI pending)`; `--with-ci-checks` replays it locally to reproduce a failure.
+     `GOVERNANCE: PASS (CI pending)`; `--with-ci-checks` replays it locally to reproduce a failure. Declare its
+     `paths` too (what it reads: the app's sources, the e2e tests and their config, the package manifest and its lock;
+     `["**"]` when in doubt): a check without `paths` has no fingerprint of its own, so the CI's second
+     pass, the replay with the main branch's hooks, plays it again on a commit it just passed.
    - The catalog's other lines have no ready-made script: propose the
      detected stack's usual tool (lint, typecheck, coverage…).
 5. **Write the first business contract**: `docs/contracts.md` ships
