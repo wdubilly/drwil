@@ -46,9 +46,14 @@ export const TEXTS = {
     upgradeCi: "{0} sans zone du projet (marqueurs « drwil-project-begin/end ») : une montée supprimerait les étapes ajoutées à la main",
     unsliced: "Contrôle lent non découpé",
     unslicedDetail:
-      "`e2e` ({0}, `{1}`) joue toute la suite en une seule passe : poser {2} (le plan de chaque CI fixe N d'après le nombre de tests) ; écrit ou modifié à la main, `--fix` ne le réécrit pas",
+      "`e2e` ({0}, `{1}`) joue toute la suite en une seule passe : poser {2} (le plan de chaque CI fixe N d'après le nombre de tests) ; `npx drwil doctor --fix` le corrige",
     fixedDetail:
-      "`e2e` ({0}, `{1}`) fige {2} tranches : poser {3} (le plan de chaque CI fixe N d'après le nombre de tests) ; écrit ou modifié à la main, `--fix` ne le réécrit pas ; sur une PR, citer `e2e` entre backticks dans « Contrats modifiés » d'une fiche de la branche, sans quoi l'agrégation des tranches refuse le changement",
+      "`e2e` ({0}, `{1}`) fige {2} tranches : poser {3} (le plan de chaque CI fixe N d'après le nombre de tests) ; `npx drwil doctor --fix` le corrige",
+    shardsPr:
+      " ; sur une PR, citer `e2e` entre backticks dans « Contrats modifiés » d'une fiche de la branche, sans quoi l'agrégation des tranches refuse le changement",
+    sliced: "Contrôle lent découpé par --fix",
+    slicedDetail: "`e2e` ({0}, `{1}`) : {2} posé(s), autres champs gardés ; remplacé : {3}",
+    slicedNone: "rien (champs ajoutés)",
     healthy: "Installation saine.",
     problems: "Problème(s) à corriger ci-dessus.",
   },
@@ -98,9 +103,14 @@ export const TEXTS = {
     upgradeCi: '{0} has no project zone ("drwil-project-begin/end" markers): an upgrade would remove the steps added by hand',
     unsliced: "Slow check not sliced",
     unslicedDetail:
-      "`e2e` ({0}, `{1}`) runs the whole suite in a single pass: set {2} (each CI's plan sets N from the number of tests); written or modified by hand, `--fix` never rewrites it",
+      "`e2e` ({0}, `{1}`) runs the whole suite in a single pass: set {2} (each CI's plan sets N from the number of tests); `npx drwil doctor --fix` fixes it",
     fixedDetail:
-      "`e2e` ({0}, `{1}`) fixes {2} slices: set {3} (each CI's plan sets N from the number of tests); written or modified by hand, `--fix` never rewrites it; on a pull request, quote `e2e` in backticks under « Contrats modifiés » of a brief of the branch, or the slices' aggregation refuses the change",
+      "`e2e` ({0}, `{1}`) fixes {2} slices: set {3} (each CI's plan sets N from the number of tests); `npx drwil doctor --fix` fixes it",
+    shardsPr:
+      "; on a pull request, quote `e2e` in backticks under « Contrats modifiés » of a brief of the branch, or the slices' aggregation refuses the change",
+    sliced: "Slow check sliced by --fix",
+    slicedDetail: "`e2e` ({0}, `{1}`): {2} set, other fields kept; replaced: {3}",
+    slicedNone: "nothing (fields added)",
     healthy: "Healthy installation.",
     problems: "Problem(s) to fix above.",
   },

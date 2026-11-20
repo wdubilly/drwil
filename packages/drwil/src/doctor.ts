@@ -14,7 +14,7 @@ import { upgradeTraces } from "./doctor-upgrade.js";
 import { installPoints } from "./doctor-install.js";
 import { coveragePoints } from "./doctor-coverage.js";
 import { checksPoints } from "./doctor-checks.js";
-import { shardsPoints } from "./doctor-shards.js";
+import { fixShards, shardsPoints } from "./doctor-shards.js";
 import { fixConfig, fixedPoints } from "./doctor-fix.js";
 import { defaultExec, type Exec } from "./guarantees-table.js";
 
@@ -44,6 +44,7 @@ export async function doctor(opts: { targetDir: string; exec?: Exec; fix?: boole
   const root = opts.targetDir;
   // `--fix` (QUA-318, QUA-303) rewrites the safe forms first: the diagnosis then reads what is left.
   const fixed = opts.fix ? await fixConfig(root) : [];
+  const sliced = opts.fix ? await fixShards(root) : null;
   const project = await loadProject(root);
   if (typeof project === "string") return { lang: projectLang(root), code: 2, points: [], error: project };
   const { lang, cfg, registry, contracts: reader } = project;
@@ -63,7 +64,7 @@ export async function doctor(opts: { targetDir: string; exec?: Exec; fix?: boole
   );
   const live = contracts.filter((k) => !k.retired); // a retired contract, without proof (QUA-298), is not counted
   points.push(...coveragePoints(live, lang, cfg.checks), ...checksPoints(cfg.checks, lang), ...fixedPoints(fixed, lang));
-  points.push(...shardsPoints(root, cfg.checks, lang));
+  points.push(...shardsPoints(root, cfg.checks, lang, sliced));
 
   // A hook manager of the project (husky…) is fine as long as it calls the drwil hooks.
   const path = hooksPath(root);

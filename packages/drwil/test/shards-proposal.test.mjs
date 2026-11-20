@@ -1,6 +1,6 @@
 // Point « Contrôle lent non découpé » de `drwil doctor` : un contrôle `e2e` d'un outil de la table du kit sans `"auto"` est signalé
-// avec la déclaration à poser, jamais réécrit (le kit n'a jamais écrit que `"auto"`). Rattaché à QUA-089 en attendant les contrats
-// du chantier « contrôles lents découpés dès le départ ».
+// avec la déclaration à poser ; `--fix` la pose, qu'il soit écrit à la main ou par le kit. Rattaché à QUA-089 en attendant les
+// contrats du chantier « contrôles lents découpés dès le départ ».
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -41,7 +41,7 @@ test('QUA-089 N figé : signalé avec `"auto"` et son comptage, la commande gard
   const [point] = shardsPoints(dir, [c], "fr");
   assert.deepEqual([point.id, point.state, point.label], ["e2e-shards", "warning", "Contrôle lent non découpé"]);
   assert.match(point.detail, /^`e2e` \(Playwright, `playwright\.config\.ts`\) fige 4 tranches : poser "shards": "auto", "shardsCount": /);
-  assert.match(point.detail, /`--fix` ne le réécrit pas/);
+  assert.match(point.detail, /`npx drwil doctor --fix` le corrige/);
   assert.match(point.detail, /citer `e2e` entre backticks dans « Contrats modifiés »/);
   const [en] = shardsPoints(dir, [c], "en");
   assert.match(en.detail, /fixes 4 slices: set "shards": "auto".*quote `e2e` in backticks under « Contrats modifiés »/);
@@ -77,7 +77,8 @@ test('QUA-089 déjà `"auto"`, outil hors table, contrôle absent : rien n\'est 
   for (const rien of [undefined, [], [{ id: "unit", run: "npx jest" }]]) assert.deepEqual(shardsPoints(dir, rien, "fr"), []);
 });
 
-test("QUA-089 écrit à la main : `doctor --fix` le signale et ne réécrit jamais la configuration", async () => {
+// Un projet installé, son contrôle `e2e` écrit à la main entre deux autres champs et contrôles qui ne doivent pas bouger.
+async function projet(e2e) {
   const dir = dossier({ "playwright.config.ts": "export default {};\n" });
   const { log, warn } = console;
   console.log = console.warn = () => {};
@@ -89,14 +90,74 @@ test("QUA-089 écrit à la main : `doctor --fix` le signale et ne réécrit jama
   }
   const fichier = join(dir, ".drwil/ia-first.json");
   const cfg = JSON.parse(readFileSync(fichier, "utf8"));
-  cfg.checks = [...(cfg.checks ?? []), { id: "e2e", name: "e2e", run: "npx playwright test", paths: ["**"] }];
+  cfg.checks = [...(cfg.checks ?? []), e2e, { id: "autre", run: "echo autre", paths: ["src/**"] }];
   writeFileSync(fichier, `${JSON.stringify(cfg, null, 2)}\n`);
+  return { dir, fichier, cfg };
+}
+
+const diagnostic = (dir, fix) => doctor({ targetDir: dir, fix, exec: () => ({ status: 1, stdout: "" }) });
+const relu = (fichier) => JSON.parse(readFileSync(fichier, "utf8"));
+
+test('QUA-089 écrit à la main sans `shards` : `doctor` le signale sans rien écrire, `doctor --fix` le passe en `"auto"`', async () => {
+  const e2e = { id: "e2e", name: "e2e maison", run: "npx playwright test", paths: ["**"], runAt: ["ci"], degradable: false };
+  const { dir, fichier, cfg } = await projet(e2e);
   const avant = readFileSync(fichier, "utf8");
-  for (const fix of [false, true]) {
-    const d = await doctor({ targetDir: dir, fix, exec: () => ({ status: 1, stdout: "" }) });
-    const point = d.points.find((p) => p.id === "e2e-shards");
-    assert.equal(point?.state, "warning", `fix: ${fix}`);
-    assert.ok(!d.points.some((p) => p.id === "fixed" && /e2e/.test(p.detail)));
+  const sans = await diagnostic(dir, false);
+  assert.equal(sans.points.find((p) => p.id === "e2e-shards")?.state, "warning");
+  assert.equal(readFileSync(fichier, "utf8"), avant, "sans --fix, rien n'est écrit");
+
+  const d = await diagnostic(dir, true);
+  const kit = e2eDeclaration(E2E_TOOLS[0], "playwright.config.ts", ".");
+  const apres = relu(fichier);
+  const corrige = apres.checks.find((c) => c.id === "e2e");
+  assert.deepEqual(corrige, { ...e2e, run: kit.run, shards: "auto", shardsCount: kit.shardsCount }, "les autres champs sont gardés");
+  assert.equal(shardProblem(corrige, "e2e", texts("fr")), null, "la déclaration écrite est acceptée par le moteur (QUA-013)");
+  assert.deepEqual(
+    { ...apres, checks: apres.checks.filter((c) => c.id !== "e2e") },
+    { ...cfg, checks: cfg.checks.filter((c) => c.id !== "e2e") },
+  );
+  const point = d.points.find((p) => p.id === "e2e-shards");
+  assert.deepEqual([point.state, point.label], ["ok", "Contrôle lent découpé par --fix"]);
+  assert.match(
+    point.detail,
+    /^`e2e` \(Playwright, `playwright\.config\.ts`\) : "shards", "shardsCount", "run" posé\(s\), autres champs gardés ; remplacé : "run": "npx playwright test"$/,
+  );
+  // Relancé : déjà `"auto"`, plus rien à écrire ni à signaler.
+  const fige = readFileSync(fichier, "utf8");
+  assert.ok(!(await diagnostic(dir, true)).points.some((p) => p.id === "e2e-shards"));
+  assert.equal(readFileSync(fichier, "utf8"), fige);
+});
+
+test('QUA-089 écrit à la main à N figé : `--fix` pose `"auto"`, garde la commande de tranche et rappelle la puce « Contrats modifiés »', async () => {
+  const e2e = { id: "e2e", run: `npx playwright test ${SLICE}`, shards: 4, cwd: ".", timeout: 900 };
+  const { dir, fichier } = await projet(e2e);
+  const d = await diagnostic(dir, true);
+  const corrige = relu(fichier).checks.find((c) => c.id === "e2e");
+  assert.deepEqual(corrige, { ...e2e, shards: "auto", shardsCount: e2eDeclaration(E2E_TOOLS[0], "playwright.config.ts", ".").shardsCount });
+  assert.equal(shardProblem(corrige, "e2e", texts("fr")), null);
+  assert.deepEqual(relu(fichier).checks.at(-1), { id: "autre", run: "echo autre", paths: ["src/**"] });
+  const point = d.points.find((p) => p.id === "e2e-shards");
+  assert.equal(point.state, "warning", "une action reste à faire : la puce de la fiche");
+  assert.match(
+    point.detail,
+    /"shards", "shardsCount" posé\(s\), autres champs gardés ; remplacé : "shards": 4 ; sur une PR, citer `e2e` entre backticks dans « Contrats modifiés »/,
+  );
+  const en = shardsPoints(dir, [], "en", { tool: "Playwright", config: "playwright.config.ts", fields: { shards: "auto" }, replaced: {} });
+  assert.deepEqual(
+    [en[0].state, en[0].detail],
+    ["ok", '`e2e` (Playwright, `playwright.config.ts`): "shards" set, other fields kept; replaced: nothing (fields added)'],
+  );
+});
+
+test('QUA-089 `--fix` sur un contrôle déjà `"auto"`, hors table ou absent : fichier inchangé', async () => {
+  for (const e2e of [
+    { id: "e2e", run: `npx playwright test ${SLICE}`, shards: "auto", shardsCount: "echo 3" },
+    { id: "e2e", run: "npx cypress run", cwd: "front" },
+    { id: "pas-e2e", run: "npx playwright test" },
+  ]) {
+    const { dir, fichier } = await projet(e2e);
+    const avant = readFileSync(fichier, "utf8");
+    assert.ok(!(await diagnostic(dir, true)).points.some((p) => p.id === "e2e-shards"), e2e.id);
     assert.equal(readFileSync(fichier, "utf8"), avant);
   }
 });
