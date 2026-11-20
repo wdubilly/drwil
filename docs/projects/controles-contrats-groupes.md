@@ -53,6 +53,18 @@ files:
   - packages/drwil/templates/common/base/.githooks/wait-command.mjs
   - .githooks/wait-command.mjs
   - .githooks/wait-command.test.mjs
+  - outils/tests-par-fichier.mjs
+  - outils/tests-par-fichier.test.mjs
+  - outils/miroirs.json
+  - packages/drwil/templates/common/base/.githooks/engine-selftest.mjs
+  - .githooks/engine-selftest.mjs
+  - .githooks/engine.test.mjs
+  - packages/drwil/src/guarantees-verify.ts
+  - packages/drwil/test/guarantees.test.mjs
+  - packages/drwil/src/doctor-fix.ts
+  - packages/drwil/test/doctor-fix.test.mjs
+  - packages/drwil/src/cli-verify.ts
+  - packages/drwil/README.md
 -->
 
 ## 1. Besoin
