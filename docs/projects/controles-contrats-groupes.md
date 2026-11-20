@@ -45,6 +45,7 @@ files:
   - packages/drwil/test/doctor-checks.test.mjs
   - packages/drwil/src/doctor-coverage.ts
   - packages/drwil/test/coverage-vitest.test.mjs
+  - packages/drwil/test/ci-parite.test.mjs
 -->
 
 ## 1. Besoin
