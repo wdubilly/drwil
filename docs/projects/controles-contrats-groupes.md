@@ -46,6 +46,13 @@ files:
   - packages/drwil/src/doctor-coverage.ts
   - packages/drwil/test/coverage-vitest.test.mjs
   - packages/drwil/test/ci-parite.test.mjs
+  - packages/drwil/templates/common/base/docs/contracts.md
+  - packages/drwil/test/kit-consignes.test.mjs
+  - packages/drwil/src/doctor-texts.ts
+  - docs/features.md
+  - packages/drwil/templates/common/base/.githooks/wait-command.mjs
+  - .githooks/wait-command.mjs
+  - .githooks/wait-command.test.mjs
 -->
 
 ## 1. Besoin
