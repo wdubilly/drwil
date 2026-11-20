@@ -15,6 +15,7 @@ files:
   - packages/drwil/src/doctor.ts
   - packages/drwil/src/doctor-shards.ts
   - packages/drwil/src/doctor-texts.ts
+  - packages/drwil/src/doctor-install.ts
   - packages/drwil/test/guarantees.test.mjs
   - packages/drwil/test/shards-proposal.test.mjs
   - packages/drwil/templates/common/base/docs/contracts-catalog.md
@@ -77,9 +78,14 @@ corrigés, pas seulement avertis (demandeur, 2026-11-20).
 - `catalog:QUA-020` — ancien critère : le contrôle e2e est déclaré par le demandeur ou l'agent, sans découpage imposé —
   raison : le kit le déclare lui-même avec `shards: "auto"`, N suit la suite à chaque CI (validé par le demandeur le
   2026-11-20)
-- `.githooks/engine-shards.mjs` et `.githooks/run-checks-shards.mjs` — `shards` accepte `"auto"` : N vient du plan de
-  la CI, la tranche et l'agrégation le lisent du plan au lieu de la configuration (validé par le demandeur le
+- `.githooks/engine-shards.mjs` — `shards` accepte `"auto"` : N vient du plan de la CI (validé par le demandeur le
   2026-11-20)
+- `.githooks/run-checks-shards.mjs` — avec `shards: "auto"`, la tranche et l'agrégation lisent N du plan de la CI au
+  lieu de la configuration (validé par le demandeur le 2026-11-20)
+- `.githooks/engine-texts.mjs` — nouveaux messages du moteur pour `"auto"` : plan absent, N calculé hors de 2 à 16
+  (validé par le demandeur le 2026-11-20)
+- `.githooks/run-checks-shards.test.mjs` — tests du mode `"auto"` : N lu du plan, agrégation des tranches (validé par
+  le demandeur le 2026-11-20)
 
 ## 2. Hors périmètre
 
