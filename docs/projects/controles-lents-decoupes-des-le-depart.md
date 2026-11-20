@@ -153,6 +153,9 @@ Tranchées par le demandeur le 2026-11-09 (l'agent n'en a tranché aucune) :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-20) : D1 et D6 revues (N à chaque CI, correction des projets adoptés) ; rien d'implémenté.
-- **Travail non commité** : cette fiche et sa ligne d'index.
-- **Prochaine étape** : [IA] lot 1, au lancement de la fiche par le demandeur.
+- **Dernier état** (2026-11-20) : lot 0 fait — points installation, manifeste, version, AGENTS.md et intégrations
+  déplacés de `packages/drwil/src/doctor.ts` vers `packages/drwil/src/doctor-install.ts` (`installPoints`), sans
+  changement de comportement (mêmes points, même ordre, mêmes textes) ; `packages/drwil/src/doctor.ts` passe de 189 à 150 lignes ; module
+  cité dans `docs/architecture.md`.
+- **Travail non commité** : aucun.
+- **Prochaine étape** : [IA] lot 1 (`"auto"` dans le moteur).

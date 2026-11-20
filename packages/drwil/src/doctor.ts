@@ -8,10 +8,10 @@ import { TEXTS } from "./doctor-texts.js";
 import { loadProject } from "./verify.js";
 import { resolveFromConfig } from "./config.js";
 import { AUTO_KINDS, describeGap, findGaps, hooksPath, scriptsDir, unchainedHooks } from "./essentials.js";
-import { compareVersions, engineVersion, readInstall } from "./manifest.js";
 import { bypassDiagnosis } from "./guarantees-forge.js";
 import { computeProtection, formatProtection, protectionJson, type Protection } from "./protection.js";
 import { upgradeTraces } from "./doctor-upgrade.js";
+import { installPoints } from "./doctor-install.js";
 import { coveragePoints } from "./doctor-coverage.js";
 import { checksPoints } from "./doctor-checks.js";
 import { fixConfig, fixedPoints } from "./doctor-fix.js";
@@ -35,15 +35,6 @@ export interface Diagnosis {
   error?: string;
 }
 
-// Entry file of each AI tool (AGENTS.md is for all of them).
-const TOOL_FILES: Record<string, string> = {
-  claude: "CLAUDE.md",
-  codex: "AGENTS.md",
-  cursor: ".cursor/rules/ia-first.mdc",
-  gemini: "GEMINI.md",
-  copilot: ".github/copilot-instructions.md",
-};
-
 function toolPresent(cmd: string, args: string[]): boolean {
   return !spawnSync(cmd, args, { stdio: "ignore" }).error;
 }
@@ -56,38 +47,8 @@ export async function doctor(opts: { targetDir: string; exec?: Exec; fix?: boole
   if (typeof project === "string") return { lang: projectLang(root), code: 2, points: [], error: project };
   const { lang, cfg, registry, contracts: reader } = project;
   const T = TEXTS[lang];
-  const points: DiagnosisPoint[] = [];
+  const points: DiagnosisPoint[] = installPoints(root, cfg, lang);
   const point = (id: string, label: string, state: PointState, detail: string) => points.push({ id, label, state, detail });
-
-  point("installation", T.installation, "ok", ".drwil/ia-first.json");
-  const manifest = existsSync(join(root, ".drwil", "installed-files.json"));
-  point("manifest", T.manifest, manifest ? "ok" : "warning", manifest ? ".drwil/installed-files.json" : T.noManifest);
-  const install = readInstall(root);
-  const cli = engineVersion();
-  const gap = install ? compareVersions(install.version, cli) : null;
-  point(
-    "version",
-    T.version,
-    gap === 0 ? "ok" : "warning",
-    !install
-      ? T.noInstall
-      : gap === 0
-        ? install.firstVersion === null
-          ? fill(T.unknownOrigin, install.version)
-          : fill(T.sameVersion, install.version, install.firstVersion)
-        : fill((gap ?? 0) < 0 ? T.olderInstall : T.newerInstall, install.version, cli),
-  );
-  const agents = existsSync(join(root, "AGENTS.md"));
-  point("agents", "AGENTS.md", agents ? "ok" : "problem", agents ? T.present : T.noAgents);
-
-  const tools: string[] = Array.isArray(cfg.tools) ? cfg.tools : [];
-  const missing = tools.filter((t) => TOOL_FILES[t] && !existsSync(join(root, TOOL_FILES[t])));
-  point(
-    "integrations",
-    T.integrations,
-    missing.length ? "problem" : "ok",
-    `${tools.length - missing.length}/${tools.length}${missing.length ? fill(T.missing, missing.map((t) => TOOL_FILES[t]).join(", ")) : ""}`,
-  );
 
   const contracts: any[] = reader.readContracts(readFileSync(join(root, registry), "utf8"));
   const errors: { message: string }[] = reader.validateContracts(contracts, reader.knownChecks(cfg), lang);
