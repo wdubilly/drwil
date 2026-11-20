@@ -842,7 +842,7 @@ régression sauf si la fiche active déclare le changement (section
 **Source de vérité** : `packages/drwil/src/guarantees.ts`.
 **Preuve** : tests du paquet : fiche écrite, échec tant que `e2e` manque, levé une fois déclaré et cité.
 **Contrôle** : `tests-qua-089`
-**Tests** : `packages/drwil/test/guarantees.test.mjs`
+**Tests** : `packages/drwil/test/guarantees.test.mjs`, `packages/drwil/test/shards-proposal.test.mjs`
 **Origine** : garanties obligatoires à l'adoption — « Le même mécanisme exige un e2e des chemins critiques (`catalog:QUA-020`) : une fiche bloquante `[P0]` demande au demandeur de nommer ces chemins, et ne se clôt que lorsqu'un test e2e rejoué par un contrôle les couvre »
 **Raison** : L'e2e n'était qu'un objectif du catalogue, jamais exigé.
 

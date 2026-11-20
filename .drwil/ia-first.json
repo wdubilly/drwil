@@ -1520,7 +1520,7 @@
     {
       "id": "tests-qua-089",
       "name": "tests de QUA-089, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node .githooks/contract-tests.mjs QUA-089 packages/drwil/test/guarantees.test.mjs",
+      "run": "node .githooks/contract-tests.mjs QUA-089 packages/drwil/test/guarantees.test.mjs packages/drwil/test/shards-proposal.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/contract-tests.mjs",

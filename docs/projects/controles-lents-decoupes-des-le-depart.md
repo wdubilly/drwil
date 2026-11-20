@@ -178,12 +178,25 @@ Tranchées par le demandeur le 2026-11-09 (l'agent n'en a tranché aucune) :
   `packages/drwil/src/guarantees-texts.ts`). Tests (`packages/drwil/test/guarantees.test.mjs`, rattachés à QUA-089 en attendant les contrats du lot 4) :
   les quatre configurations acceptées par `shardProblem`, cwd d'une couche, racine avant couche, contrôle gardé,
   hors table en français et anglais, comptage via `countTests` du gabarit.
-- **Pour le lot 3** : la comparaison D6 iv de l'agrégation (`againstBase`) refuse sur une PR un `shards` changé
-  (N figé vers `"auto"`) tant qu'une fiche de la branche ne le déclare pas dans « Contrats modifiés » ; à prendre en
-  compte pour `doctor --fix` et la mise à jour du kit.
-- **Pour le lot 3** (suite) : `doctor` reconnaît un contrôle déclaré par le kit en le comparant à
-  `e2eDeclaration(...)` (même outil, même fichier, même couche via `e2eToolOf`) ; une déclaration du kit avec un N
-  figé n'existe pas encore (le lot 2 écrit d'emblée `"auto"`) : la « forme exacte » d'un ancien N figé est à fixer par
-  le lot 3 sans deviner.
+  Lot 3 fait — `packages/drwil/src/doctor-shards.ts` (`shardsProposal`, `shardsPoints`), branché dans
+  `packages/drwil/src/doctor.ts`, textes FR/EN dans `packages/drwil/src/doctor-texts.ts`. Point `e2e-shards`
+  « Contrôle lent non découpé » (avertissement) : le contrôle d'`id` `e2e` dont la couche (`cwd`, sinon la racine)
+  porte un outil de la table (`e2eToolOf`, même table que le lot 2), déclaré sans `shards` ou avec un N figé ; il
+  donne les champs à poser (`"shards": "auto"`, `"shardsCount"` du kit, et `"run"` du kit quand la commande ne lit
+  pas `DRWIL_SHARD_INDEX`), toujours acceptés par `shardProblem` ; pour un N figé, il dit de citer `e2e` entre
+  backticks dans « Contrats modifiés » d'une fiche de la branche (sinon `againstBase`, D6 iv, refuse sur la PR).
+  Rien n'est signalé pour un `"auto"` (kit ou main), un outil hors table ou un contrôle absent.
+  **Choix prudent, à confirmer par le demandeur** : la forme exacte d'une ancienne déclaration du kit à N figé
+  n'existe pas (le kit n'a jamais écrit que `"auto"`, lot 2) ; tout contrôle `e2e` sans `"auto"` est donc écrit ou
+  modifié à la main, et ni `doctor --fix` ni la mise à jour du kit ne le réécrivent (le message le dit). `--fix`
+  n'a aujourd'hui rien à poser ; le besoin « corrigés, pas seulement avertis » n'est tenu que par l'avertissement.
+- **Pour le lot 4** : contrats à créer (critères d'acceptation) et tests à leur rattacher (aujourd'hui sous QUA-089) :
+  déclaration du kit — `packages/drwil/test/guarantees.test.mjs` « outil e2e de la table », « outil e2e d'une
+  couche », « comptage des tests de la table » ; jamais réécrit / hors table — `packages/drwil/test/guarantees.test.mjs` « contrôle `e2e`
+  déjà déclaré », « outil e2e hors de la table », et `packages/drwil/test/shards-proposal.test.mjs` « écrit à la
+  main », « déjà `"auto"`, outil hors table, contrôle absent » ; avertissement de `doctor` — `packages/drwil/test/shards-proposal.test.mjs`
+  « N figé », « sans `shards` » ; `"auto"` dans le moteur — `.githooks/engine-shards.test.mjs`,
+  `.githooks/run-checks-shards.test.mjs`, cas « auto » de `packages/drwil/test/ci-shards.test.mjs` (titres à relire
+  pour leur ID actuel). `packages/drwil/src/doctor-shards.ts` est déjà cité dans `docs/architecture.md`.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 3 (l'avertissement de `doctor`).
+- **Prochaine étape** : [IA] lot 4 (documentation, contrats).
