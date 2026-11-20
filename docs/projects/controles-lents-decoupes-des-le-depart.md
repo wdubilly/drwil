@@ -82,8 +82,8 @@ corrigés, pas seulement avertis (demandeur, 2026-11-20).
   2026-11-20)
 - `.githooks/run-checks-shards.mjs` — avec `shards: "auto"`, la tranche et l'agrégation lisent N du plan de la CI au
   lieu de la configuration (validé par le demandeur le 2026-11-20)
-- `.githooks/engine-texts.mjs` — nouveaux messages du moteur pour `"auto"` : plan absent, N calculé hors de 2 à 16
-  (validé par le demandeur le 2026-11-20)
+- `.githooks/engine-texts.mjs` — nouveaux messages du moteur pour `"auto"` : comptage des tests impossible, plan
+  absent, total de tranches hors de 1 à 16 à l'agrégation (validé par le demandeur le 2026-11-20)
 - `.githooks/run-checks-shards.test.mjs` — tests du mode `"auto"` : N lu du plan, agrégation des tranches (validé par
   le demandeur le 2026-11-20)
 
@@ -114,7 +114,13 @@ Tranchées par le demandeur le 2026-11-09 (l'agent n'en a tranché aucune) :
   *Alternatives écartées* : le kit propose seulement (a) ; `doctor` pose après un oui en terminal (c). Conséquence : le
   kit écrit dans `.drwil/ia-first.json` ; il ne réécrit jamais un contrôle `e2e` écrit ou modifié à la main (même
   règle que les contrôles de couverture, « conservé »). **Revue le 2026-11-20** (demandeur) : `"auto"` au lieu d'un N, et
-  le kit passe en `"auto"` un contrôle qu'il a lui-même déclaré (`doctor --fix`, mise à jour du kit).
+  le kit passe en `"auto"` un contrôle qu'il a lui-même déclaré (`doctor --fix`, mise à jour du kit). **Revue à nouveau
+  le 2026-11-20** (demandeur, après le lot 3 : le kit n'a jamais écrit de N figé, tout contrôle e2e non découpé chez un
+  adoptant est donc écrit à la main, et « avertir seulement » ne corrigeait aucun projet adopté) : `doctor --fix`
+  passe aussi en `"auto"` un contrôle `e2e` écrit ou modifié à la main, pour un outil de la table ; il pose `shards`,
+  `shardsCount` et, si la commande ne lit pas `DRWIL_SHARD_INDEX`, le `run` du kit, et garde les autres champs ; il dit
+  ce qu'il a remplacé. L'exception « jamais réécrit à la main » ne vaut plus pour ce contrôle ; `guarantees` continue de
+  ne jamais réécrire un contrôle `e2e` existant.
 - **D2 — nombre de tranches** : croissant avec le nombre de tests e2e (pas de N fixe).
 - **D3 — table des outils e2e** : Playwright, Vitest et Jest ; Cypress hors table (pas de tranche native).
 - **D4 — seuil de lenteur de `doctor`** : aucun ; tout contrôle e2e d'un outil connu, non découpé, est signalé. La
@@ -148,7 +154,12 @@ Tranchées par le demandeur le 2026-11-09 (l'agent n'en a tranché aucune) :
   configuration, même table que le lot 2 ; `--fix` et la mise à jour du kit posent `"auto"` sur un contrôle déclaré par le
   kit. Critère de sortie : le test shards-proposal vert (N figé, sans `shards`, déjà `"auto"`, écrit à la main, outil
   hors table, contrôle absent).
-- **Lot 4 — documentation** [IA] : CHANGELOG « Unreleased » (anglais), `docs/architecture.md`, catalogue du gabarit
+- **Lot 4 — `doctor --fix` corrige aussi un contrôle écrit à la main** [IA] : selon D1 revue (2026-11-20),
+  `--fix` passe en `"auto"` le contrôle `e2e` non découpé d'un outil de la table, écrit à la main ou par le kit (le
+  point « Contrôle lent non découpé » le dit corrigible) ; la déclaration écrite est acceptée par le moteur (QUA-013) ;
+  pour un N figé, le message rappelle la puce « Contrats modifiés » à poser. Critère de sortie : le test
+  shards-proposal vert, cas « écrit à la main » corrigé par `--fix`.
+- **Lot 5 — documentation** [IA] : CHANGELOG « Unreleased » (anglais), `docs/architecture.md`, catalogue du gabarit
   (`catalog:QUA-020`), contrats et leurs contrôles dans `.drwil/ia-first.json`.
 
 ## 7. Reprise
