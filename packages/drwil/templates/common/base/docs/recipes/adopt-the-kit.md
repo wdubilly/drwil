@@ -137,7 +137,8 @@ agent's.
    the command that hardens it, and `drwil verify` fails on a non-blocking `scopeGate` once the mandatory guarantees
    are enforced. Without writing anything, it also warns about **contract checks not grouped** (a `vitest`, `jest` or
    `npm test` command filtered by an ID, shown with its grouped form of step 5), **checks left to the CI without
-   `paths`** (`runAt: ["ci"]` alone, shown with `"paths": ["**"]`, step 4) and a coverage pair that runs the tests twice.
+   `paths`** (`runAt: ["ci"]` alone, shown with `"paths": ["**"]`, step 4) and a coverage pair that runs the tests twice;
+   `npx drwil doctor --fix` writes the safe forms into `.drwil/ia-first.json`, the others stay reported with their line.
 
 ## Human attestation in the conversation
 

@@ -478,6 +478,13 @@ test("QUA-093 projet existant : mesure à 100 % câblée à 100 %, mesure imposs
   };
   let { dir, r } = await cas([[/json-summary/, plein]]);
   assert.match(config(dir).checks.find((c) => c.id === "coverage-root").run, /--lines 100 --branches 100/);
+  assert.equal(config(dir).guarantees.layers.root, "existing");
+  const tenu = (cfg) => guaranteeFailures(dir, cfg, [{ checks: ["coverage-root", "e2e"] }]).filter((e) => /couverture/.test(e));
+  assert.deepEqual(tenu(config(dir)), [], "à 100 %, le seul coverage-root suffit à verify : le diff est forcément couvert");
+  const main = config(dir);
+  main.checks.find((c) => c.id === "coverage-root").run += " --autre";
+  assert.match(tenu(main).join("\n"), /`coverage-diff-root` non déclaré/, "réglé à la main, le diff reste exigé");
+  assert.match(tenu({ ...main, checks: "x" }).join("\n"), /`coverage-diff-root` non déclaré/);
   ({ r } = await cas([[/json-summary/, { status: 1, stdout: "" }]]));
   assert.match(r.layers[0].lines.join("\n"), /mesure de la couverture actuelle impossible/);
   ({ r } = await cas([[/json-summary/, OK]]));

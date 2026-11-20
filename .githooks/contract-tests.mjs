@@ -4,8 +4,8 @@
 // de fois qu'il y a de contrats. Ici le lanceur n'est lancé qu'une fois par passe de `run-checks` (DRWIL_PASS_ID, posé par le
 // moteur) pour tous les contrôles qui le partagent ; un reporter laisse le résultat de chaque test, lu ensuite par ID.
 // Hors passe (lancement à la main), le lanceur est rejoué.
-// Usage : node .githooks/contract-tests.mjs [--runner vitest|jest|node] <ID> [fichier…]
-//   (sans fichier : toute la suite ; avec `node --test`, un lancement par fichier)
+// Usage : node .githooks/contract-tests.mjs [--runner vitest|jest|node] <ID | --all> [fichier…]
+//   (sans fichier : toute la suite ; avec `node --test`, un lancement par fichier ; --all : tous les tests doivent passer)
 import { spawnSync } from "node:child_process";
 import { globSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -17,24 +17,28 @@ const CACHE = join(".drwil", "evidence", "passe");
 
 const TEXTS = {
   fr: {
-    usage: "usage : node .githooks/contract-tests.mjs [--runner vitest|jest|node] <ID> [fichier…]",
+    usage: "usage : node .githooks/contract-tests.mjs [--runner vitest|jest|node] <ID | --all> [fichier…]",
     missing: (r) => `${r} introuvable dans node_modules : installer les dépendances, ou déclarer le lanceur (--runner)`,
     dead: (what, code) => `${what} : aucun test joué, code ${code}`,
+    code: (what, code) => `${what} : code ${code}`,
     broken: (f) => `${f} : erreur hors de tout test (chargement, hook de suite) : ses tests ne prouvent rien`,
     failed: (f, name) => `${f} : ✗ ${name}`,
     none: (id, what) => `aucun test joué de ${what} ne porte l'ID ${id}`,
     all: "toute la suite",
     ok: (id, runner, n) => `${id} : ${n} test(s) à l'ID, verdict lu dans un lancement ${runner} partagé`,
+    okAll: (runner, n) => `${n} test(s), tous passés, lus dans un lancement ${runner} partagé`,
   },
   en: {
-    usage: "usage: node .githooks/contract-tests.mjs [--runner vitest|jest|node] <ID> [file…]",
+    usage: "usage: node .githooks/contract-tests.mjs [--runner vitest|jest|node] <ID | --all> [file…]",
     missing: (r) => `${r} not found in node_modules: install the dependencies, or declare the runner (--runner)`,
     dead: (what, code) => `${what}: no test run, code ${code}`,
+    code: (what, code) => `${what}: code ${code}`,
     broken: (f) => `${f}: error outside any test (loading, suite hook): its tests prove nothing`,
     failed: (f, name) => `${f}: ✗ ${name}`,
     none: (id, what) => `no test run from ${what} carries the ID ${id}`,
     all: "the whole suite",
     ok: (id, runner, n) => `${id}: ${n} test(s) with the ID, verdict read from a shared ${runner} run`,
+    okAll: (runner, n) => `${n} test(s), all passed, read from a shared ${runner} run`,
   },
 };
 
@@ -94,7 +98,7 @@ export function shared(runner, files, pass, root = process.cwd(), { tries = 3000
   return play(runner, files, join(base, `${key}.secours-${process.pid}`), root, node);
 }
 
-/** Verdict d'un contrat sur ses lancements [{ what, result }] : { ok, lines, count }. */
+/** Verdict d'un contrat sur ses lancements [{ what, result }] : { ok, lines, count } ; `id` null : tous les tests doivent passer. */
 export function verdict(id, launches, T = TEXTS.fr) {
   const lines = [];
   let count = 0;
@@ -104,27 +108,29 @@ export function verdict(id, launches, T = TEXTS.fr) {
   for (const { what, result: r } of launches) {
     const before = lines.length;
     const played = r.tests.filter((t) => t.state === "passed" || t.state === "failed");
-    const chosen = played.filter(mine);
+    const chosen = id ? played.filter(mine) : played;
     count += chosen.length;
     if (r.missing) lines.push(T.missing(r.missing));
     else if (!r.tests.length && !r.broken.length && r.code !== 0) lines.push(T.dead(what, r.code));
+    else if (!id && r.code !== 0) lines.push(T.code(what, r.code));
     // Un fichier en erreur hors test : sans test lu, il cachait peut-être ceux du contrat ; avec, ses tests ne prouvent rien.
-    for (const b of r.broken) if (!b.tests || chosen.some((t) => t.file === b.file)) lines.push(T.broken(b.file));
+    for (const b of r.broken) if (!id || !b.tests || chosen.some((t) => t.file === b.file)) lines.push(T.broken(b.file));
     for (const t of chosen) if (t.state === "failed") lines.push(T.failed(t.file, [...t.ancestors, t.title].join(" › ")));
     if (lines.length > before && r.output) lines.push(r.output.split("\n").slice(-40).join("\n"));
   }
-  if (!count) lines.push(T.none(id, launches.map((l) => l.what).join(", ")));
+  if (id && !count) lines.push(T.none(id, launches.map((l) => l.what).join(", ")));
   return { ok: !lines.length, lines, count };
 }
 
-/** Ligne de commande : { runner, id, files } ou null si elle est incomplète. */
+/** Ligne de commande : { runner, id, files } (`id` null pour `--all`) ou null si elle est incomplète. */
 export function parseArgs(argv, root = process.cwd()) {
   const rest = [...argv];
   let runner = detect(root);
   const at = rest.indexOf("--runner");
   if (at >= 0) [, runner] = rest.splice(at, 2);
-  const [id, ...asked] = rest;
-  if (!id || !RUNNERS.includes(runner)) return null;
+  const [first, ...asked] = rest;
+  if (!first || !RUNNERS.includes(runner)) return null;
+  const id = first === "--all" ? null : first;
   // Un motif (« src/**/*.test.js ») est développé ici : le même contrôle sous tous les interpréteurs de commandes.
   const files = asked.flatMap((f) => (f.includes("*") ? globSync(f, { cwd: root }).sort() : [f]));
   return { runner, id, files };
@@ -152,6 +158,6 @@ if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToP
   const launches = sets.map((set) => ({ what: set.join(", ") || T.all, result: shared(runner, set, process.env.DRWIL_PASS_ID) }));
   const { ok, lines, count } = verdict(id, launches, T);
   for (const l of lines) console.error(l);
-  if (ok) console.log(T.ok(id, runner, count));
+  if (ok) console.log(id ? T.ok(id, runner, count) : T.okAll(runner, count));
   process.exitCode = ok ? 0 : 1;
 }

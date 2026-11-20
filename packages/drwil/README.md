@@ -563,6 +563,7 @@ The installed `AGENTS.md` tells every agent to use it and never to run
 ```bash
 npx drwil doctor          # human-readable
 npx drwil doctor --json   # machine-readable (version 1)
+npx drwil doctor --fix    # also rewrites the declarations that have one safe form
 ```
 
 Checks the installation without running any check: configuration,
@@ -579,7 +580,14 @@ branch, required checks, no administrator bypass, GitHub auto-merge
 allowed: `drwil guarantees --protect` turns it on with the human's
 agreement). A warning "Upgrade traces" names what an upgrade removed or left
 behind: installed kit files now missing, `.bak` files, an empty `stack`, a CI
-file without project zone (QUA-287). A level it could not
+file without project zone (QUA-287). It also warns about contract checks
+filtered by ID (one test runner start per contract), checks left to CI
+without `paths`, and a coverage pair that runs the tests twice; with
+`--fix` it rewrites in `.drwil/ia-first.json` only the safe, deterministic
+forms (a bare `vitest`/`jest` command filtered by one ID, a missing
+`paths`, a pair no contract cites by its `coverage-<layer>`) and leaves
+the rest reported with the line to set; without `--fix` it writes nothing
+(QUA-318, QUA-303). A level it could not
 verify (no reachable `gh` or `glab`) is "not verified", never reached, and
 it prints the command that leads to the next level (`protection` in
 `--json`). A new install writes `scopeGate` as `blocking`; an installed

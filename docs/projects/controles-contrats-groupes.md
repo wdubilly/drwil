@@ -78,7 +78,7 @@ tests et ne garde que les tests de son ID. En CI, chaque lancement coûte enviro
 (transformation, jsdom, imports) ; les 27 démarrages font l'essentiel des 22 minutes. Chaque nouveau contrat ajoute
 le sien : le temps croît avec le registre.
 
-Le dépôt drwil a déjà résolu ce problème pour lui-même (QUA-033) : `outils/tests-par-fichier.mjs` lance chaque
+Le dépôt drwil a déjà résolu ce problème pour lui-même (QUA-033) : outils/tests-par-fichier.mjs lance chaque
 fichier de tests une seule fois par passe de `run-checks` (`DRWIL_PASS_ID`), un reporter laisse le résultat de chaque
 test, le verdict de chaque contrat est lu par ID. Mais cet outil est propre au dépôt (`outils/`), ne sait que
 `node --test`, et n'est pas livré.
@@ -141,7 +141,20 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
 - `QUA-219` — ancien critère : la commande, jointe en une ligne, passe toujours par l'interpréteur de commandes,
   stdin fermé — raison : `git commit -F -` recevait un message vide et un `-m` à parenthèses échouait (« Syntax error »)
   (validé par le demandeur le 2026-11-20, réponse « Traiter maintenant » au sondage des limites)
-- Le chantier dira si QUA-033 (règle du dépôt) devient la source livrée, ou s'il est seulement cité.
+- `QUA-033` — ancien critère : les contrôles `tests-<id>` du dépôt passent par son lanceur propre,
+  outils/tests-par-fichier.mjs (`--tous` pour l'autotest et `miroirs-gabarit`) — raison : une seule source, le module
+  livré `.githooks/contract-tests.mjs` (QUA-316, mode `--all`) (validé par le demandeur le 2026-11-20, réponse
+  « Traiter maintenant » au sondage des limites)
+- `QUA-093` — ancien critère : « à 100 %, le contrôle est câblé à 100 % », `verify` exigeant pourtant
+  `coverage-diff-<couche>` d'une couche existante — raison : `guarantees` et `verify` incohérents (« contrôle
+  `coverage-diff-<couche>` non déclaré ») (validé par le demandeur le 2026-11-20, réponse « Traiter maintenant » au
+  sondage des limites)
+- `QUA-318` — ancien critère : `doctor` signale, sans rien écrire — raison : `doctor --fix` réécrit la forme sûre
+  (validé par le demandeur le 2026-11-20, réponse « Traiter maintenant » au sondage des limites)
+- `QUA-303` — ancien critère : signal sans écriture — raison : `doctor --fix` fusionne la paire quand c'est sûr
+  (validé par le demandeur le 2026-11-20, réponse « Traiter maintenant » au sondage des limites)
+- `.githooks/engine-selftest.mjs` — l'autotest des hooks passe par le module livré (`--runner node --all`) au lieu du
+  lanceur du dépôt (validé par le demandeur le 2026-11-20, réponse « Traiter maintenant » au sondage des limites)
 
 ## 2. Hors périmètre
 
@@ -156,7 +169,7 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
 - Cause avant correctif : mesurer d'abord, sur une copie, le coût d'un lancement Vitest et le gain d'un lancement
   unique (avec reporter JSON par test) ; vérifier que `-t` et le reporter de Vitest et Jest donnent le nom complet de
   chaque test.
-- Reprendre le fonctionnement prouvé de `outils/tests-par-fichier.mjs` (passe, dossier partagé sous `.drwil/evidence`,
+- Reprendre le fonctionnement prouvé de outils/tests-par-fichier.mjs (passe, dossier partagé sous `.drwil/evidence`,
   effacé en fin de passe ; verdict refusé sans test à l'ID) sans le recopier : le dépôt l'utilise aussi, une seule
   source (`outils/miroirs.json` dit l'écart si le dépôt garde son outil).
 - Plafond de 200 lignes par fichier (QUA-001) ; on édite le gabarit puis `npm run installer-depot` (QUA-018) ;
@@ -200,7 +213,7 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
   (gabarit et copies), tests `.githooks/contract-tests.test.mjs` (couverture 100 %), recette d'adoption étape 5,
   contrats `QUA-316` et `QUA-317` avec leurs contrôles. Le moteur n'a pas eu à changer pour le lot 1 : il pose déjà
   `DRWIL_PASS_ID` et `run-checks` efface déjà le dossier des résultats partagés de la passe.
-  `outils/tests-par-fichier.mjs` (QUA-033) reste l'outil du dépôt, hors du bloc scope : sa bascule sur le module livré
+  outils/tests-par-fichier.mjs (QUA-033) reste l'outil du dépôt, hors du bloc scope : sa bascule sur le module livré
   est une limite hors cadre. Bloc scope élargi au lot 1 à `packages/drwil/templates/common/base/docs/projects/kit-mechanics.md` (et sa copie) : tout hook
   livré y est cité, sinon le rappel de cadrage d'un projet installé le dit orphelin.
 - **Lot 2 fait** (2026-11-20) : cause reproduite — **contrôle sans `paths`**, pas une passe qui ne reprend pas ses
@@ -257,8 +270,20 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
   couverture en double (248 lignes) ; `twiceDetail` dit qu'une paire réglée à la main, Vitest comprise, n'est jamais
   fusionnée, seulement signalée ; `docs/features.md` dit le saut du push prouvé ; `wait-command` (QUA-219 modifié) :
   cause reproduite (ligne jointe rejouée par `sh`, stdin fermé), plusieurs mots lancés sans interpréteur, stdin
-  redirigé transmis, programme absent en échec. Restent pour une autre session : tests-par-fichier, couche existante
-  à 100 %, `doctor --fix`.
+  redirigé transmis, programme absent en échec.
+- **Trois limites traitées sur le champ** (2026-11-20, réponse « Traiter maintenant » au sondage des limites ; bloc
+  scope élargi par deux commits de la fiche seule) : (1) **une seule source pour le lanceur par fichier** : les
+  contrôles `tests-<id>` du dépôt, `miroirs-gabarit` et l'autotest des hooks passent par le module livré
+  `.githooks/contract-tests.mjs`, qui gagne `--all` (tous les tests doivent passer, code non nul ou fichier en erreur
+  en échec, QUA-316) ; outils/tests-par-fichier.mjs et son test retirés, leurs cas prouvés par les tests de
+  QUA-316/QUA-317. Autotest seul (45 fichiers `.githooks/*.test.mjs`, hors passe partagée) : 310 s avec l'ancien
+  lanceur, 268 s avec le module livré, sur la même machine, code 0 les deux. (2) **couche existante à 100 %** :
+  reproduit (`guarantees` câblait `coverage-root` seul, `verify` disait « `coverage-diff-root` non déclaré ») ;
+  `verify` n'exige plus que `coverage-<couche>` quand sa commande est celle du kit à 100 % (QUA-093). (3) **`doctor
+  --fix`** (aucune option de correction n'existait dans `doctor`) : `packages/drwil/src/doctor-fix.ts` réécrit la forme
+  sûre (QUA-318, QUA-303), tests `packages/drwil/test/doctor-fix.test.mjs`. Limite non traitée : une paire dont un
+  contrat cite `coverage-<couche>` reste signalée (réécrire le registre sortirait du sûr) ; `drwil guarantees`, en
+  fusionnant une paire de série (QUA-302), retire `coverage-<couche>` sans regarder s'il est cité — à vérifier.
 - **Prochaine étape** : lot 5 [humain] — essai sur un vrai pipeline GitLab (`marinade-poulet` après `npx drwil init`, ou
   bac à sable) : une MR verte à jour avec la branche principale, fusionnée ; le job `plan` du pipeline de la branche
   principale dit « Checks not replayed: tree … proved », `checks` dit « this tree is proven » et garde le fichier de

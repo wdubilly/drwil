@@ -90,8 +90,15 @@ release renames this section to its version.
   `drwil doctor` warns, without writing anything, about contract checks
   filtered by ID (with their grouped form), checks left to CI without
   `paths`, and a coverage pair that runs the tests twice, a hand-tuned
-  Vitest pair included (with its single command); `drwil guarantees` also
-  merges the generated pair of a layer at 100 %. The delivered GitLab CI now
+  Vitest pair included (with its single command); `drwil doctor --fix`
+  writes these corrections into `.drwil/ia-first.json` when the rewrite is
+  safe (a bare runner filtered by one ID, a missing `paths`, a pair with the
+  same `cwd`, `runAt` and `paths` whose `coverage-<layer>` no contract
+  cites), leaves anything else reported with its line, and writes nothing on
+  a second run; `drwil guarantees` also merges the generated pair of a
+  layer at 100 %, and an existing layer measured at 100 % now passes
+  `drwil verify` with its single `coverage-<layer>` check (it used to
+  require an undeclared `coverage-diff-<layer>`). The delivered GitLab CI now
   matches the GitHub one: a main-branch pipeline whose tree the merged
   branch's green pipeline proved skips its checks and still keeps the
   verdicts the next merge request reuses, the date of the restored verdicts

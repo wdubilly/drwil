@@ -94,6 +94,23 @@ test("QUA-316 : avec `node --test`, chaque fichier est lancé une fois par passe
   assert.equal(readFileSync(join(root, "lancements.txt"), "utf8"), "xx", "hors passe, le fichier est rejoué");
 });
 
+test("QUA-316 : --all, tous les tests des fichiers doivent passer, lus dans le même lancement que les contrats", () => {
+  const root = tmp();
+  const jeu = 'import { test } from "node:test"; import { appendFileSync } from "node:fs"; appendFileSync("lancements.txt", "x");';
+  write(root, "a.test.mjs", `${jeu} test("APP-1 : a", () => {}); test("sans ID", () => {});\n`);
+  write(root, "b.test.mjs", 'import { test } from "node:test"; test("sans ID", () => { throw new Error("cassé"); });\n');
+  write(root, "c.test.mjs", 'import "./absent.mjs";\n');
+  assert.equal(cli(root, ["APP-1", "a.test.mjs"], "p1").status, 0);
+  assert.match(cli(root, ["--all", "a.test.mjs"], "p1").stdout, /^2 test\(s\), tous passés, lus dans un lancement node partagé/);
+  assert.equal(readFileSync(join(root, "lancements.txt"), "utf8"), "x", "le lancement du contrat est repris");
+  const ko = cli(root, ["--all", "a.test.mjs", "b.test.mjs"], "p1");
+  assert.equal(ko.status, 1);
+  assert.match(ko.stderr, /b\.test\.mjs : code 1[\s\S]*b\.test\.mjs : ✗ sans ID/);
+  assert.match(cli(root, ["--all", "c.test.mjs"]).stderr, /c\.test\.mjs : erreur hors de tout test/);
+  assert.deepEqual(parseArgs(["--runner", "node", "--all", "a.test.mjs"], root), { runner: "node", id: null, files: ["a.test.mjs"] });
+  assert.match(texts(root).okAll("node", 3), /3 test\(s\), tous passés/);
+});
+
 test("QUA-317 : aucun test à l'ID, un lancement qui n'a rien joué ou un fichier en erreur hors test n'est jamais un succès", () => {
   const T = texts("/nulle-part");
   const launch = (result) => [{ what: "suite", result: { tests: [], broken: [], code: 0, output: "", ...result } }];
@@ -162,6 +179,10 @@ test("QUA-316 : le lanceur est détecté dans les dépendances, ou déclaré, et
   write(root, ".drwil/ia-first.json", JSON.stringify({ lang: "en" }));
   assert.match(texts(root).all, /whole suite/);
   const en = texts(root);
+  assert.deepEqual(
+    [en.okAll("node", 1), en.code("s", 1), texts("/nulle-part").code("s", 1)],
+    ["1 test(s), all passed, read from a shared node run", "s: code 1", "s : code 1"],
+  );
   const failed = { file: "f", title: "APP-1", ancestors: [], state: "failed" };
   const one = (result) => verdict("APP-1", [{ what: "s", result: { tests: [], broken: [], code: 2, output: "", ...result } }], en).lines;
   assert.match(

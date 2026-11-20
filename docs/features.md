@@ -58,7 +58,9 @@ durée. `drwil doctor` diagnostique l'installation, `drwil contracts`
 valide le registre sans rien exécuter. `drwil verify --failed` ne rejoue
 que les contrats en échec (verdict partiel, jamais une preuve de clôture) ;
 `drwil doctor` dit le niveau de protection réellement tenu et signale après coup
-ce qu'une montée a supprimé ou laissé (fichier du kit disparu, `.bak`, stack vide, CI sans zone du projet).
+ce qu'une montée a supprimé ou laissé (fichier du kit disparu, `.bak`, stack vide, CI sans zone du projet) ;
+`drwil doctor --fix` réécrit dans `.drwil/ia-first.json` les seules déclarations à forme sûre (contrôle de contrat
+groupé, `paths` manquant, paire de couverture fusionnée), le reste restant signalé.
 `drwil contracts add` écrit un contrat propre au projet, `drwil contracts
 adopt <ID>` reprend un contrat du catalogue. `drwil report` imprime un
 rapport de défaut du kit sans donnée du projet. Un contrôle lent se découpe
