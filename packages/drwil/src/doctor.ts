@@ -13,6 +13,7 @@ import { bypassDiagnosis } from "./guarantees-forge.js";
 import { computeProtection, formatProtection, protectionJson, type Protection } from "./protection.js";
 import { upgradeTraces } from "./doctor-upgrade.js";
 import { coveragePoints } from "./doctor-coverage.js";
+import { checksPoints } from "./doctor-checks.js";
 import { defaultExec, type Exec } from "./guarantees-table.js";
 
 export type PointState = "ok" | "warning" | "problem";
@@ -96,7 +97,7 @@ export async function doctor(opts: { targetDir: string; exec?: Exec }): Promise<
       : fill(T.validContracts, contracts.length, registry),
   );
   const live = contracts.filter((k) => !k.retired); // a retired contract, without proof (QUA-298), is not counted
-  points.push(...coveragePoints(live, lang, cfg.checks));
+  points.push(...coveragePoints(live, lang, cfg.checks), ...checksPoints(cfg.checks, lang));
 
   // A hook manager of the project (husky…) is fine as long as it calls the drwil hooks.
   const path = hooksPath(root);

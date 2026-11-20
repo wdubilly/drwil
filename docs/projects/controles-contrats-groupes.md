@@ -179,6 +179,15 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
   contrats existants cités (QUA-141, QUA-113), aucun créé, le moteur inchangé. La recette livrée ne cite pas leurs ID
   (absents du registre d'un projet : `check-docs` refuse la mise à jour du kit, tests QUA-237, QUA-239, QUA-244).
   `marinade-poulet` ajoute ses `paths` dans sa propre session (hors périmètre).
-- **Prochaine étape** : lot 3 — `doctor` : avertir des contrôles `vitest|jest … -t "<ID>"` non groupés, sans rien
-  écrire, avec la forme groupée (`node .githooks/contract-tests.mjs <ID>`) ; contrat à créer. Le même avertissement
-  pourrait nommer un contrôle `runAt: ["ci"]` sans `paths` (lot 2) : à décider dans le lot, sinon limite hors cadre.
+- **Lot 3 fait** (2026-11-20) : `drwil doctor` lit les contrôles déclarés, sans rien écrire (`packages/drwil/src/doctor-checks.ts`,
+  branché d'une ligne dans `packages/drwil/src/doctor.ts`, textes français et anglais dans le module : `packages/drwil/src/doctor-texts.ts` hors du bloc scope).
+  Point « Contrôles de contrats non groupés » : commande `vitest`, `jest` ou `npm test` filtrée par `-t`/`--testNamePattern`
+  sur un ID, avec sa forme groupée (`node .githooks/contract-tests.mjs [--runner vitest|jest] <ID> [fichiers]`). Point
+  « Contrôles confiés à la CI sans paths » : `runAt: ["ci"]` seul, `paths` absent ou vide, avec la ligne
+  `"paths": ["**"]`. Contrat créé `QUA-318`, contrôle `tests-qua-318`, tests `packages/drwil/test/doctor-checks.test.mjs`.
+  Bloc scope élargi au module et à ses tests (commit de la fiche seule).
+- **Prochaine étape** : lot 4 — une seule couverture sur une couche à 100 % : `drwil guarantees` fusionne aussi la paire
+  `coverage-<couche>`/`coverage-diff-<couche>` de série d'une couche à 100 % (`packages/drwil/src/guarantees-merge.ts`,
+  `packages/drwil/src/guarantees-layers.ts`, tests `packages/drwil/test/coverage-merge.test.mjs`) ; une paire modifiée à la main n'est jamais réécrite et `doctor` la signale
+  (QUA-303 dit aujourd'hui qu'une couche à 100 % n'est pas signalée : à revoir ; `packages/drwil/src/doctor-coverage.ts` est hors du bloc
+  scope) ; QUA-302 modifié (ancien critère dans « Contrats modifiés »).

@@ -4297,6 +4297,21 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-318",
+      "name": "tests de QUA-318, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node outils/tests-par-fichier.mjs QUA-318 packages/drwil/test/doctor-checks.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        "outils/tests-par-fichier.mjs",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
       "id": "couverture-diff",
       "runAt": [
         "ci"
