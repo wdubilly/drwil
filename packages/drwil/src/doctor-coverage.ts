@@ -8,8 +8,8 @@ import { declaredPair, singleFromPair } from "./guarantees-merge.js";
 type LiveContract = Parameters<typeof lacksCoverage>[0] & { id: string };
 
 /**
- * Point `coverage-twice` (QUA-303): each layer that still declares `coverage-<layer>` and `coverage-diff-<layer>` (c8),
- * with the single command that keeps the requester's options; read only, nothing written. None: no point.
+ * Point `coverage-twice` (QUA-303): each layer that still declares `coverage-<layer>` and `coverage-diff-<layer>` (c8, or
+ * Vitest set by hand), with the single command that keeps the requester's options; read only, nothing written. None: no point.
  */
 export function doubleRunPoints(checks: unknown, lang: MessageLang): DiagnosisPoint[] {
   const list = Array.isArray(checks) ? checks : [];

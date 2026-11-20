@@ -96,6 +96,11 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
 - `QUA-302` — ancien critère : la fusion de la paire de couverture ne vise que la couche Node en dette ; une couche à
   100 % garde ses deux runs — raison : une couche à 100 % paie aussi deux runs (constat `marinade-poulet`, environ
   2 min 30 s) (validé par le demandeur le 2026-11-19)
+- `QUA-303` — ancien critère : « Un projet déjà fusionné (QUA-301, QUA-302), une couche à 100 % et une paire Python ne
+  sont pas signalés. » (seuil c8 seul) — raison : accorder la règle au code (une paire c8 à 100 % réglée à la main est
+  déjà signalée) et à QUA-302 ; cas réel `marinade-poulet` : paire Vitest à 100 % réglée à la main, hors table du kit,
+  qui joue les tests deux fois (environ 2 min 30 s), ni fusionnée ni signalée — désormais signalée avec sa commande
+  unique, jamais réécrite (validé par le demandeur le 2026-11-20)
 - `QUA-250` — ancien critère : la sauvegarde du cache à chaque fusion n'est corrigée que pour la CI GitHub livrée,
   la reprise GitLab jamais éprouvée — raison : `marinade-poulet` est sur GitLab (validé par le demandeur le
   2026-11-19)
@@ -188,15 +193,17 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
   « Contrôles confiés à la CI sans paths » : `runAt: ["ci"]` seul, `paths` absent ou vide, avec la ligne
   `"paths": ["**"]`. Contrat créé `QUA-318`, contrôle `tests-qua-318`, tests `packages/drwil/test/doctor-checks.test.mjs`.
   Bloc scope élargi au module et à ses tests (commit de la fiche seule).
-- **Lot 4 fait, sauf le texte de QUA-303** (2026-11-20) : cause reproduite — le code fusionnait déjà la paire de série
-  à 100 % (`C8_CHECK` écrit `--lines 100…` pour des seuils absents : `tool.run({})` est la commande à 100 %, que
-  `seriesThresholds` reconnaît) ; seuls le texte de QUA-302 et sa preuve l'excluaient. Aucun code de production changé
-  (commentaires de `packages/drwil/src/guarantees-merge.ts` et `packages/drwil/src/guarantees-layers.ts` seulement) ; tests
-  `packages/drwil/test/coverage-merge.test.mjs` étendus (paire de série à 100 % fusionnée, `verify` satisfait ; paire à 100 % modifiée à
-  la main intacte et signalée par `doctor`) ; QUA-302 réécrit (titre, règle, preuve, raison). `doctor` signalait déjà une
-  paire c8 à 100 % : `packages/drwil/src/doctor-coverage.ts` inchangé, bloc scope non élargi. **En attente du demandeur** : QUA-303 dit
-  « une couche à 100 % […] n'est pas signalée », alors qu'une paire c8 à 100 % l'est ; clarification proposée « une
-  couche à 100 % qui ne déclare qu'un `coverage-<couche>` », non validée, donc non faite ; `lot next` non lancé.
-  La paire de `marinade-poulet` est Vitest, réglée à la main (hors table du kit) : ni fusionnée ni signalée.
-- **Prochaine étape** : le oui (ou non) du demandeur sur la clarification de QUA-303 (à porter dans « Contrats
-  modifiés » puis dans le registre), puis `lot next` et le lot 5 — parité GitHub et GitLab de la CI livrée.
+- **Lot 4 fait** (2026-11-20) : cause reproduite — le code fusionnait déjà la paire de série à 100 % (`C8_CHECK` écrit
+  `--lines 100…` pour des seuils absents : `tool.run({})` est la commande à 100 %, que `seriesThresholds` reconnaît) ;
+  seuls le texte de QUA-302 et sa preuve l'excluaient : tests `packages/drwil/test/coverage-merge.test.mjs` étendus, QUA-302 réécrit.
+  Décisions du demandeur (2026-11-20) : QUA-303 clarifié (« une couche à 100 % qui ne déclare qu'un `coverage-<couche>` »)
+  et paire Vitest réglée à la main traitée : `singleFromPair` (`packages/drwil/src/guarantees-merge.ts`) compose aussi la commande unique
+  Vitest (`--coverage.reporter=cobertura` et `--coverage.reportsDirectory` ajoutés après `--coverage`) ; `doctor` la
+  signale, `guarantees` ne la réécrit jamais (signal seul). Commande éprouvée sur un projet Vitest 4.1 de test : échoue
+  sur seuil manqué et sur diff non couvert, passe couverte, un seul run. Tests `packages/drwil/test/coverage-vitest.test.mjs` (fichier
+  séparé : l'autre est à 200 lignes), ajoutés au contrôle `tests-qua-303`. Bloc scope élargi à
+  `packages/drwil/src/doctor-coverage.ts` et à ce test (commit de la fiche seule). Le texte `twiceDetail`
+  (`packages/drwil/src/doctor-texts.ts`, hors du bloc scope) dit « `npx drwil guarantees` le fait pour une paire de série » : vrai, mais
+  sans dire qu'une paire Vitest ne l'est jamais — limite hors cadre.
+- **Prochaine étape** : lot 5 — parité GitHub et GitLab de la CI livrée (reproduire : une MR GitLab rejoue-t-elle
+  tout ? dire la cause, corriger ; test de parité des deux CI livrées ; essai réel sur GitLab, [humain]).

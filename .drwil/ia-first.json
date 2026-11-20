@@ -4118,7 +4118,7 @@
     {
       "id": "tests-qua-303",
       "name": "tests de QUA-303, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node outils/tests-par-fichier.mjs QUA-303 packages/drwil/test/coverage-merge.test.mjs",
+      "run": "node outils/tests-par-fichier.mjs QUA-303 packages/drwil/test/coverage-merge.test.mjs packages/drwil/test/coverage-vitest.test.mjs",
       "ciJob": "checks",
       "paths": [
         "outils/tests-par-fichier.mjs",
