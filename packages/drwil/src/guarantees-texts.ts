@@ -24,6 +24,11 @@ export const TEXTS = {
     cite: "à citer dans le contrat de couverture du projet (`catalog:QUA-004`), sinon `drwil verify` ne le rejoue pas",
     e2eOk: "E2E : contrôle `e2e` déclaré et cité (exécution jugée par `drwil verify`)",
     e2eMissing: "E2E : aucun contrôle `e2e` déclaré pour rejouer le test des chemins critiques",
+    e2eKept: "contrôle `e2e` déjà déclaré : gardé tel quel, jamais réécrit",
+    e2eDeclared:
+      'contrôle `e2e` déclaré pour {0} (`{1}`), découpé en tranches (`shards: "auto"`) : la CI compte les tests et fixe le nombre de tranches',
+    e2eOutside:
+      "aucun outil e2e de la table ({0}) repéré par son fichier de configuration : le contrôle `e2e` se déclare à la main, en une seule passe",
     forgeOk: "Versionnement : dépôt, forge {0}, CI et protection de `{1}` en place",
     forgeGap: "Versionnement : {0}",
     protectHint: "protection à poser avec l'accord de l'humain : `npx drwil guarantees --protect`",
@@ -67,6 +72,9 @@ export const TEXTS = {
     cite: "to cite in the project's coverage contract (`catalog:QUA-004`), otherwise `drwil verify` does not replay it",
     e2eOk: "E2E: `e2e` check declared and cited (execution judged by `drwil verify`)",
     e2eMissing: "E2E: no `e2e` check declared to replay the test of the critical paths",
+    e2eKept: "`e2e` check already declared: kept as it is, never rewritten",
+    e2eDeclared: '`e2e` check declared for {0} (`{1}`), sliced (`shards: "auto"`): the CI counts the tests and sets the number of slices',
+    e2eOutside: "no e2e tool of the table ({0}) found by its configuration file: the `e2e` check is declared by hand, in a single pass",
     forgeOk: "Versioning: repository, forge {0}, CI and protection of `{1}` in place",
     forgeGap: "Versioning: {0}",
     protectHint: "protection to set with the human's agreement: `npx drwil guarantees --protect`",

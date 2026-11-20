@@ -164,11 +164,26 @@ Tranchées par le demandeur le 2026-11-09 (l'agent n'en a tranché aucune) :
   total hors de 1 à 16 : échec). Le comptage n'est pas lancé si une déclaration est refusée ni si la passe précédente
   de la PR a tout réglé (QUA-250). Tests : `.githooks/engine-shards.test.mjs`, `.githooks/run-checks-shards.test.mjs`,
   cas « auto » GitLab dans `packages/drwil/test/ci-shards.test.mjs`.
-- **Pour le lot 2** : la déclaration écrite par `guarantees` porte `shards: "auto"`, `shardsCount` (comptage de
-  l'outil, setup compris : le job de plan n'a que Node) et `run` citant `DRWIL_SHARD_INDEX`. Vitest et Jest n'ont pas
-  de ligne de total : la table doit fournir une commande qui imprime le nombre en dernière ligne.
+  Lot 2 fait — table des outils e2e dans `packages/drwil/src/guarantees-e2e-tools.ts` (`E2E_TOOLS`, `e2eToolOf`,
+  `e2eDeclaration`, `declareE2e`). Sonde : un fichier de configuration e2e de l'outil, à la racine puis dans chaque
+  couche (`playwright.config.*` ; `vitest.e2e.config.*` ou `vitest.config.e2e.*` ; `jest.e2e.config.*` ou
+  jest-e2e.json sous le dossier test, celui de NestJS) — jamais la configuration des tests unitaires. Déclaration exacte
+  (`e2eDeclaration(outil, fichier, couche)`) : `id: "e2e"`, `name: "e2e (<Outil>)"`, `run` (setup
+  `( [ -d node_modules ] || npm ci )`, navigateurs Playwright avec `--with-deps` en CI seulement, puis
+  `--shard=$DRWIL_SHARD_INDEX/$DRWIL_SHARD_TOTAL`), `shards: "auto"`, `shardsCount` (setup sur stderr ; Playwright
+  `--list`, Vitest `list --json` et Jest `--listTests --json` comptés par un `node -e` qui échoue sur une sortie
+  vide), `cwd` hors racine, `paths: ["**"]`, `degradable: false`. `guarantees` ne déclare rien sans code (QUA-224),
+  garde tout contrôle `e2e` existant (« déjà déclaré : gardé tel quel »), et hors table l'annonce (une seule passe, à
+  la main) ; ces lignes vont au rapport et aux raisons de la fiche e2e (`e2eLines`, textes dans
+  `packages/drwil/src/guarantees-texts.ts`). Tests (`packages/drwil/test/guarantees.test.mjs`, rattachés à QUA-089 en attendant les contrats du lot 4) :
+  les quatre configurations acceptées par `shardProblem`, cwd d'une couche, racine avant couche, contrôle gardé,
+  hors table en français et anglais, comptage via `countTests` du gabarit.
 - **Pour le lot 3** : la comparaison D6 iv de l'agrégation (`againstBase`) refuse sur une PR un `shards` changé
   (N figé vers `"auto"`) tant qu'une fiche de la branche ne le déclare pas dans « Contrats modifiés » ; à prendre en
   compte pour `doctor --fix` et la mise à jour du kit.
+- **Pour le lot 3** (suite) : `doctor` reconnaît un contrôle déclaré par le kit en le comparant à
+  `e2eDeclaration(...)` (même outil, même fichier, même couche via `e2eToolOf`) ; une déclaration du kit avec un N
+  figé n'existe pas encore (le lot 2 écrit d'emblée `"auto"`) : la « forme exacte » d'un ancien N figé est à fixer par
+  le lot 3 sans deviner.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 2 (la table des outils e2e et la déclaration).
+- **Prochaine étape** : [IA] lot 3 (l'avertissement de `doctor`).
