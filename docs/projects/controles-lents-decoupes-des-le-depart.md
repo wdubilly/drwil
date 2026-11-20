@@ -68,7 +68,7 @@ corrigés, pas seulement avertis (demandeur, 2026-11-20).
   les tests e2e par l'outil et fixe N (règle D6) à chaque CI ; la tranche et l'agrégation lisent ce N du plan ; sous 2,
   une seule passe ; un comptage impossible fait échouer le plan, jamais un succès (QUA-013) ; les YAML de CI livrés ne
   changent pas — `QUA-321`
-- Un contrôle `e2e` déjà déclaré par le projet à la main n'est jamais réécrit ; un outil e2e hors de la table n'est
+- Un contrôle `e2e` déjà déclaré par le projet à la main n'est jamais réécrit par `drwil guarantees` ; un outil e2e hors de la table n'est
   jamais découpé de force : le contrôle reste en une seule passe et la fiche de garantie le dit — `QUA-322`
 - `drwil doctor` signale un contrôle e2e d'un outil de la table déclaré sans `shards` ou avec un N figé, et donne la
   déclaration `"auto"` ; `drwil doctor --fix` la pose sur le contrôle `e2e` non découpé d'un outil de la table, écrit à la main
