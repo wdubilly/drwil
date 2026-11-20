@@ -1,4 +1,4 @@
-// Fusion des deux contrôles de couverture d'une couche en dette en un seul run (QUA-302), séparée de
+// Fusion des deux contrôles de couverture d'une couche Node, en dette ou à 100 %, en un seul run (QUA-302), séparée de
 // guarantees-layers.ts (QUA-001). Seule une paire exactement générée par le kit est réécrite : la moindre
 // différence (option ajoutée, exclusion changée) compte comme personnalisée, par prudence (QUA-019).
 import { posix } from "node:path";

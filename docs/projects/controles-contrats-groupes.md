@@ -186,8 +186,15 @@ Le projet : livrer ce mécanisme aux projets, pour les lanceurs de tests de la p
   « Contrôles confiés à la CI sans paths » : `runAt: ["ci"]` seul, `paths` absent ou vide, avec la ligne
   `"paths": ["**"]`. Contrat créé `QUA-318`, contrôle `tests-qua-318`, tests `packages/drwil/test/doctor-checks.test.mjs`.
   Bloc scope élargi au module et à ses tests (commit de la fiche seule).
-- **Prochaine étape** : lot 4 — une seule couverture sur une couche à 100 % : `drwil guarantees` fusionne aussi la paire
-  `coverage-<couche>`/`coverage-diff-<couche>` de série d'une couche à 100 % (`packages/drwil/src/guarantees-merge.ts`,
-  `packages/drwil/src/guarantees-layers.ts`, tests `packages/drwil/test/coverage-merge.test.mjs`) ; une paire modifiée à la main n'est jamais réécrite et `doctor` la signale
-  (QUA-303 dit aujourd'hui qu'une couche à 100 % n'est pas signalée : à revoir ; `packages/drwil/src/doctor-coverage.ts` est hors du bloc
-  scope) ; QUA-302 modifié (ancien critère dans « Contrats modifiés »).
+- **Lot 4 fait, sauf le texte de QUA-303** (2026-11-20) : cause reproduite — le code fusionnait déjà la paire de série
+  à 100 % (`C8_CHECK` écrit `--lines 100…` pour des seuils absents : `tool.run({})` est la commande à 100 %, que
+  `seriesThresholds` reconnaît) ; seuls le texte de QUA-302 et sa preuve l'excluaient. Aucun code de production changé
+  (commentaires de `packages/drwil/src/guarantees-merge.ts` et `packages/drwil/src/guarantees-layers.ts` seulement) ; tests
+  `packages/drwil/test/coverage-merge.test.mjs` étendus (paire de série à 100 % fusionnée, `verify` satisfait ; paire à 100 % modifiée à
+  la main intacte et signalée par `doctor`) ; QUA-302 réécrit (titre, règle, preuve, raison). `doctor` signalait déjà une
+  paire c8 à 100 % : `packages/drwil/src/doctor-coverage.ts` inchangé, bloc scope non élargi. **En attente du demandeur** : QUA-303 dit
+  « une couche à 100 % […] n'est pas signalée », alors qu'une paire c8 à 100 % l'est ; clarification proposée « une
+  couche à 100 % qui ne déclare qu'un `coverage-<couche>` », non validée, donc non faite ; `lot next` non lancé.
+  La paire de `marinade-poulet` est Vitest, réglée à la main (hors table du kit) : ni fusionnée ni signalée.
+- **Prochaine étape** : le oui (ou non) du demandeur sur la clarification de QUA-303 (à porter dans « Contrats
+  modifiés » puis dans le registre), puis `lot next` et le lot 5 — parité GitHub et GitLab de la CI livrée.

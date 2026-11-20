@@ -1,4 +1,4 @@
-// Fusion des contrôles de couverture de série d'une couche en dette en un seul run (QUA-302).
+// Fusion des contrôles de couverture de série d'une couche Node, en dette ou à 100 %, en un seul run (QUA-302).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -12,6 +12,7 @@ for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete p
 
 const NODE = toolFor(["Node.js"]);
 const SEUIL = { lines: 72, branches: 60, functions: 80, statements: 71 };
+const CENT = { lines: 100, branches: 100, functions: 100, statements: 100 };
 const OK = { status: 0, stdout: "" };
 const lire = (dir, f) => readFileSync(join(dir, f), "utf8");
 const config = (dir) => JSON.parse(lire(dir, ".drwil/ia-first.json"));
@@ -28,8 +29,8 @@ const exec = (appels) => (cmd) => {
 };
 
 /** Paire telle que le kit la câblait avant QUA-301 (seuil à part, diff à part). */
-const paire = (ex = []) => [
-  { id: "coverage-root", name: "coverage ratchet of . (c8)", run: NODE.run(SEUIL, ex), paths: ["**"], degradable: false },
+const paire = (ex = [], t = SEUIL) => [
+  { id: "coverage-root", name: "coverage ratchet of . (c8)", run: NODE.run(t, ex), paths: ["**"], degradable: false },
   { id: "coverage-diff-root", name: "diff coverage of .", run: NODE.diff.run, paths: ["**"], degradable: false, ciJob: "checks" },
 ];
 
@@ -53,45 +54,49 @@ async function projet(checks, exclusions) {
   return dir;
 }
 
+/** Point « Couverture jouée en double » d'un diagnostic, ou undefined. */
+const enDouble = async (dir) =>
+  (await doctor({ targetDir: dir, exec: () => ({ status: 1, stdout: "" }) })).points.find((p) => p.id === "coverage-twice");
+
 const couverture = (dir) => config(dir).checks.filter((c) => /^coverage-/.test(c.id));
 
-test("QUA-302 paire de série : remplacée par le seul coverage-diff, seuil gardé, sans rien mesurer", async () => {
-  for (const ex of [[], ["src/genere/**"]]) {
-    const dir = await projet(paire(ex), ex.length ? [{ path: ex[0], reason: "code généré" }] : undefined);
-    const appels = [];
-    const r = guarantees({ targetDir: dir, exec: exec(appels) });
-    assert.ok(!appels.some((c) => /npm test/.test(c)), "rien mesuré ni joué");
-    const checks = couverture(dir);
-    assert.deepEqual(
-      checks.map((c) => c.id),
-      ["coverage-diff-root"],
-    );
-    assert.equal(checks[0].run, NODE.single(SEUIL, ex));
-    assert.equal(checks[0].run.match(/npm test/g).length, 1, "un seul run de tests");
-    assert.equal(checks[0].ciJob, "checks", "les autres champs du contrôle de diff sont gardés");
-    assert.equal(r.layers[0].status, "kept");
-    assert.equal(r.layers[0].mode, "existing");
-    assert.match(r.layers[0].lines.join("\n"), /`coverage-root` et `coverage-diff-root` fusionnés en `coverage-diff-root`.*lines 72 %/);
-    assert.equal(config(dir).guarantees.layers.root, "existing");
-    assert.ok(!guaranteeFailures(dir, config(dir), [{ checks: ["coverage-diff-root"] }]).some((e) => /coverage-/.test(e)));
-  }
+test("QUA-302 paire de série, en dette ou à 100 % : remplacée par le seul coverage-diff, seuil gardé, sans rien mesurer", async () => {
+  for (const t of [SEUIL, CENT])
+    for (const ex of [[], ["src/genere/**"]]) {
+      const dir = await projet(paire(ex, t), ex.length ? [{ path: ex[0], reason: "code généré" }] : undefined);
+      const appels = [];
+      const r = guarantees({ targetDir: dir, exec: exec(appels) });
+      assert.ok(!appels.some((c) => /npm test/.test(c)), "rien mesuré ni joué");
+      const checks = couverture(dir);
+      assert.equal(checks.map((c) => c.id).join(), "coverage-diff-root");
+      assert.equal(checks[0].run, NODE.single(t, ex));
+      assert.equal(checks[0].run.match(/npm test/g).length, 1, "un seul run de tests");
+      assert.equal(checks[0].ciJob, "checks", "les autres champs du contrôle de diff sont gardés");
+      assert.equal(r.layers[0].status, "kept");
+      assert.equal(r.layers[0].mode, "existing");
+      assert.match(r.layers[0].lines.join("\n"), new RegExp(`fusionnés en \`coverage-diff-root\`.*lines ${t.lines} %`));
+      assert.equal(config(dir).guarantees.layers.root, "existing");
+      assert.ok(!guaranteeFailures(dir, config(dir), [{ checks: ["coverage-diff-root"] }]).some((e) => /coverage-/.test(e)));
+    }
 });
 
-test("QUA-302 paire personnalisée : jamais réécrite (option ajoutée au diff ou au seuil, exclusion changée)", async () => {
+test("QUA-302 paire personnalisée, en dette ou à 100 % : jamais réécrite (option au diff ou au seuil, exclusion changée), doctor la signale", async () => {
   const cas = [
     (p) => (p[1].run = `${NODE.diff.run} --compare-branch=origin/dev`),
     (p) => (p[0].run = p[0].run.replace(" --all", " --reporter=text --all")),
     (p) => (p[0].run = p[0].run.replace(" npm test", ' --exclude="x/**" npm test')),
   ];
-  for (const modifie of cas) {
-    const p = paire();
-    modifie(p);
-    const dir = await projet(p);
-    const r = guarantees({ targetDir: dir, exec: exec([]) });
-    assert.deepEqual(couverture(dir), p, "paire laissée intacte");
-    assert.equal(r.layers[0].status, "kept");
-    assert.doesNotMatch(r.layers[0].lines.join("\n"), /fusionnés/);
-  }
+  for (const t of [SEUIL, CENT])
+    for (const modifie of cas) {
+      const p = paire([], t);
+      modifie(p);
+      const dir = await projet(p);
+      const r = guarantees({ targetDir: dir, exec: exec([]) });
+      assert.deepEqual(couverture(dir), p, "paire laissée intacte");
+      assert.equal(r.layers[0].status, "kept");
+      assert.doesNotMatch(r.layers[0].lines.join("\n"), /fusionnés/);
+      assert.ok((await enDouble(dir)).detail.includes(singleFromPair({ threshold: p[0], diff: p[1] })), "signalée par doctor");
+    }
 });
 
 test("QUA-302 déjà fusionné ou couche à 100 % : rien ne change", async () => {
@@ -123,10 +128,6 @@ test("QUA-302 Python : la paire coverage.py reste deux contrôles", () => {
   assert.equal(seriesThresholds(NODE, pairNode, []).single, NODE.single(SEUIL, []));
   assert.equal(mergeSeriesPair([{ id: "coverage-diff-api", run: "x" }], NODE, "api", "api", []), null, "paire incomplète");
 });
-
-/** Point « Couverture jouée en double » d'un diagnostic, ou undefined. */
-const enDouble = async (dir) =>
-  (await doctor({ targetDir: dir, exec: () => ({ status: 1, stdout: "" }) })).points.find((p) => p.id === "coverage-twice");
 
 test("QUA-303 doctor : une paire de série est signalée avec la commande unique, sans rien écrire", async () => {
   const ex = ["src/genere/**"];
