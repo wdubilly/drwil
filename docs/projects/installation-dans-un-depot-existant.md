@@ -2,7 +2,7 @@
 
 **Statut** : cadré le 2026-11-21.
 **Risque** : HIGH
-**Maturité** : à affiner
+**Maturité** : prêt
 **Intention** : notes du demandeur du 2026-11-21 (cette conversation), constats reproduits sur une copie de
 marinade-poulet et sur un dépôt minimal ; pas de fiche d'intention.
 
@@ -21,6 +21,7 @@ files:
   - packages/drwil/templates/common/base/.githooks/check-docs-workstreams.mjs
   - packages/drwil/templates/common/base/.githooks/run-checks.mjs
   - packages/drwil/templates/common/base/.githooks/run-checks-kit.mjs
+  - packages/drwil/templates/common/base/.githooks/pre-push
   - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml
   - .githooks/scope-gate-kit.mjs
@@ -28,6 +29,7 @@ files:
   - .githooks/check-docs-workstreams.mjs
   - .githooks/run-checks.mjs
   - .githooks/run-checks-kit.mjs
+  - .githooks/pre-push
   - .githooks/scope-gate.test.mjs
   - .githooks/scope.test.mjs
   - .githooks/check-docs.test.mjs
@@ -103,6 +105,13 @@ après clôture, `QUA-116`).
   manifeste (`nonKitFiles` vide), un contrôle du projet qui déclare `paths` est différé (« non exécuté », rejoué au push
   et en CI) ; un seul fichier hors manifeste dans le commit et les contrôles du projet sont joués comme avant — contrat
   à créer
+- Au pre-push, quand chaque commit poussé porte le trailer `Drwil-Kit-Update` et que le manifeste explique tous ses
+  fichiers (`nonKitFiles` vide), les contrôles du projet à `paths` sont différés (« non exécuté », rejoués par la CI de
+  la PR) ; un seul commit poussé qui n'en est pas un et ils sont joués comme avant — même contrat à créer
+- Une clé globale du fichier de CI que le projet et le gabarit définissent tous deux (GitLab : `workflow`, `default`,
+  `variables`, `include` ; GitHub : `on`, `env`, `permissions`) avec un contenu différent : `init` laisse le fichier
+  tel quel, nomme la clé en conflit et dit quoi faire ; rien n'est perdu, en installation comme en mise à jour —
+  `QUA-283`
 - Recette : la réinstallation à neuf et la mise à jour rejouées sur une copie de marinade-poulet avec un tarball du
   chantier, commit fait sans erreur, CI du projet conservée [humain] — contrat `Manuel` à créer
 
@@ -114,14 +123,16 @@ après clôture, `QUA-116`).
 - `QUA-238` — ancien critère : « configuration où seuls changent les réglages recalculés par `init` » (une
   configuration absente du parent est refusée) — raison : le commit d'installation crée la configuration ; elle est
   admise si aucune garde n'y est coupée ; et le pre-commit d'un commit entièrement expliqué par le manifeste diffère
-  les contrôles du projet à `paths` (validé par le demandeur le 2026-11-21, D-a et D-d)
+  les contrôles du projet à `paths`, au pre-commit comme au pre-push d'une suite de commits de kit (validé par le
+  demandeur le 2026-11-21, D-a, D-d et D-e)
 - `QUA-237` — ancien critère : chaque appel git du commit de mise à jour limité à 60 s, sortie des hooks capturée —
   raison : coupure arbitraire (ETIMEDOUT) d'un commit légitime ; plus de délai, progression montrée (validé par le
   demandeur le 2026-11-21, D-d)
 - `QUA-283` — ancien critère : « une ligne modifiée à la main hors zone est réécrite et nommée » et « sans marqueurs
   […] ne le remplace qu'après un oui […] hors terminal ou sans oui, le fichier reste tel quel » — raison : les jobs et
   stages du projet sont replacés automatiquement dans une zone projet balisée, même comportement installation et mise
-  à jour, rien n'est perdu (validé par le demandeur le 2026-11-21, D-c)
+  à jour, rien n'est perdu ; une clé globale en conflit laisse le fichier tel quel, nommée avec ce qu'il faut faire
+  (validé par le demandeur le 2026-11-21, D-c et D-f)
 - `QUA-173` — ancien critère : une fiche supprimée par la branche couvre les fichiers qu'elle citait, sans dire ce qui
   prime quand une fiche de même chemin est présente — raison : la version supprimée écrasait la version présente
   (constat b) ; la fiche présente prime (validé par le demandeur le 2026-11-21)
@@ -132,9 +143,13 @@ après clôture, `QUA-116`).
 - `.githooks/check-docs-workstreams.mjs` — gardé à sa version de la branche (QUA-113) : seulement si la cause de b
   l'exige, même règle pour les fichiers dérivés (`closedBriefTexts`) (validé par le demandeur le 2026-11-21)
 - `.githooks/run-checks.mjs` — gardé à sa version de la branche (QUA-113) : au pre-commit d'un commit de `init`
-  entièrement expliqué par le manifeste, les fichiers du kit sortent de la liste qui juge les `paths` ; ce tri vit dans
+  entièrement expliqué par le manifeste, et au pre-push d'une suite de tels commits, les fichiers du kit sortent de
+  la liste qui juge les `paths` ; ce tri vit dans
   sa découpe neuve, .githooks/run-checks-kit.mjs, à déclarer ici par son nom entre accents graves dès sa création
   (validé par le demandeur le 2026-11-21)
+- `.githooks/pre-push` — gardé à sa version de la branche (QUA-113) : transmet aussi les commits poussés (SHA local et
+  distant de chaque référence) pour que `.githooks/run-checks.mjs` reconnaisse une suite de commits de kit et diffère les
+  contrôles du projet à `paths` (validé par le demandeur le 2026-11-21, D-e)
 - `.githooks/scope-gate.test.mjs` — gardé à sa version de la branche (QUA-113) : cas du commit d'installation reconnu,
   et refus maintenus (fichier hors manifeste, garde coupée) (validé par le demandeur le 2026-11-21)
 - `.githooks/check-docs.test.mjs` — gardé à sa version de la branche (QUA-113) : cas de la fiche supprimée puis
@@ -176,14 +191,17 @@ après clôture, `QUA-116`).
   contrôles de code projet ne sont pas rejoués sur un commit qui ne touche que des fichiers du kit, sans affaiblir
   `QUA-238` : la barrière reconnaît la mise à jour du kit par son manifeste.
 
+- D-e (2026-11-21) : pre-push d'une branche de kit, différer aussi. Le pre-push ne rejoue pas les contrôles de code
+  projet quand chaque commit poussé est un commit de kit reconnu par le manifeste ; la CI de la PR les rejoue.
+  Écartée : garder le rejeu au push (142 s mesurés sur marinade, pour des fichiers que le projet n'a pas écrits).
+- D-f (2026-11-21) : clé globale de CI en conflit (GitLab `workflow`, `default`, `variables`, `include` ; GitHub `on`,
+  `env`, `permissions`), ne rien réécrire. `init` laisse le fichier tel quel et nomme la clé en conflit avec ce qu'il
+  faut faire ; rien n'est perdu. Écartée : fusionner la clé du projet avec celle du gabarit (fusion YAML
+  sémantique, risque de garde du kit affaiblie sans que rien ne le dise).
+
 ## 5. Points à trancher
 
-- [décision] Pre-push d'une branche de kit : les contrôles différés au commit (D-d) sont rejoués au push (142 s
-  mesurés sur marinade). Les différer aussi au pre-push quand chaque commit poussé est un commit de kit reconnu par le
-  manifeste, ou garder le rejeu au push ? (la CI les rejoue dans les deux cas.)
-- [décision] Clé globale du projet que le gabarit de CI définit aussi (`workflow`, `default`, `variables`, `include`
-  sous GitLab ; `on`, `env`, `permissions` sous GitHub) : ni job ni stage, elle ne peut pas aller dans une zone. La
-  fusionner, ou ne rien réécrire et nommer la clé (rien n'est perdu, D-c) ?
+Aucun.
 
 ## 6. Increments
 
@@ -196,11 +214,12 @@ après clôture, `QUA-116`).
   même chemin, hook neuf cité) en échec contre le code actuel ; correctif de `outsideBriefs` (et des fichiers dérivés
   si la cause l'exige) ; `QUA-173` réécrit. Critère de sortie : `.githooks/scope.test.mjs` et `.githooks/check-docs.test.mjs` verts.
 - **Lot 3 — c : jobs et stages du projet replacés** [IA] : tests sur les deux forges, fichier balisé avec jobs hors
-  zone et fichier sans balises, en installation et en mise à jour ; packages/drwil/src/ci-zone-move.ts (neuf), zone `stages` du gabarit
+  zone, fichier sans balises et clé globale en conflit (D-f), en installation et en mise à jour ; packages/drwil/src/ci-zone-move.ts (neuf), zone `stages` du gabarit
   GitLab, message juste ; `QUA-283` réécrit. Critère de sortie : `packages/drwil/test/montee-de-version.test.mjs` et `packages/drwil/test/kit-ci.test.mjs`
   verts, rejeu sans effet.
 - **Lot 4 — d : commit du kit sans coupure ni contrôles du projet** [IA] : test d'un contrôle projet `paths: ["**"]`
-  différé sur un commit de kit et joué dès qu'un fichier hors manifeste s'y ajoute ; délai retiré, sortie montrée ;
+  différé sur un commit de kit et au pre-push d'une suite de commits de kit (D-e), joué dès qu'un fichier ou un commit
+  hors kit s'y ajoute ; `.githooks/pre-push` transmet les commits poussés ; délai retiré, sortie montrée ;
   .githooks/run-checks-kit.mjs (neuf), carte et `docs/projects/kit-mechanics.md` ; contrat créé, `QUA-237` réécrit. Critère de
   sortie : `.githooks/run-checks.test.mjs` et `packages/drwil/test/kit-mise-a-jour.test.mjs` verts.
 - **Lot 5 — documentation et CHANGELOG** [IA] : `INSTALL.md` et `packages/drwil/README.md` (installation sur dépôt
@@ -210,9 +229,8 @@ après clôture, `QUA-116`).
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-21) : cadrage écrit ; deux points à trancher (pre-push d'une branche de kit, clé globale
-  de CI en conflit).
+- **Dernier état** (2026-11-21) : cadrage terminé ; D-e et D-f tranchées par le demandeur.
 - **Travail non commité** : aucun. Dossier de reproduction (hors dépôt, peut disparaître) :
   `/tmp/claude-1000/-home-wdubilly-projects-drwil/853fbde2-e7f4-4598-86e4-35a450054ace/scratchpad/repro-marinade`,
   branche `reinstall`, installation non commitée.
-- **Prochaine étape** : [décision] trancher les deux points, puis [humain] `/drwil-start`.
+- **Prochaine étape** : [humain] `/drwil-start`.
