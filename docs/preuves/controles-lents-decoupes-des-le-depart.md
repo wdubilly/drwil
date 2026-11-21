@@ -1,7 +1,7 @@
 # Preuve de clôture — controles-lents-decoupes-des-le-depart
 
 **Clos le** : 2026-11-21
-**Commit vérifié** : `b0d369aca0` — verdict `drwil verify` : PASS
+**Commit vérifié** : `5083369d64` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:d2225a9fe87dfdc2`, acceptés par l'humain au lancement le 2026-11-21
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
