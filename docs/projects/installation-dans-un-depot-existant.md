@@ -108,11 +108,11 @@ après clôture, `QUA-116`).
   pendant qu'il tourne — `QUA-237`
 - Au pre-commit d'un commit posé par `init` (variable `DRWIL_KIT_UPDATE`) dont tous les fichiers sont expliqués par le
   manifeste (`nonKitFiles` vide), un contrôle du projet qui déclare `paths` est différé (« non exécuté », rejoué au push
-  et en CI) ; un seul fichier hors manifeste dans le commit et les contrôles du projet sont joués comme avant — contrat
-  à créer
+  et en CI) ; un seul fichier hors manifeste dans le commit et les contrôles du projet sont joués comme avant —
+  `QUA-325`
 - Au pre-push, quand chaque commit poussé porte le trailer `Drwil-Kit-Update` et que le manifeste explique tous ses
   fichiers (`nonKitFiles` vide), les contrôles du projet à `paths` sont différés (« non exécuté », rejoués par la CI de
-  la PR) ; un seul commit poussé qui n'en est pas un et ils sont joués comme avant — même contrat à créer
+  la PR) ; un seul commit poussé qui n'en est pas un et ils sont joués comme avant — `QUA-325`
 - Une clé globale du fichier de CI que le projet et le gabarit définissent tous deux (GitLab : `workflow`, `default`,
   `variables`, `include` ; GitHub : `on`, `env`, `permissions`) avec un contenu différent : `init` laisse le fichier
   tel quel, nomme la clé en conflit et dit quoi faire ; rien n'est perdu, en installation comme en mise à jour —
