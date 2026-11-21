@@ -3,7 +3,6 @@
 // (ci-zone-move.ts) ; ici, ce qu'il en dit.
 import { CI_FILES } from "./config.js";
 import { placeProject, zonesOf } from "./ci-zone-move.js";
-import { texts } from "./cli-texts.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 
 export const isCiFile = (rel: string): boolean => Object.values(CI_FILES).some((f) => f.includes(rel));
@@ -28,9 +27,6 @@ export function namesOf(removed: string[]): string[] {
   const others = removed.length - named.length;
   return others > 0 ? [...named, `${others}`] : named;
 }
-
-/** The human's answer on an unmarked CI file, no longer asked: what is not the kit's is moved into the project zone. */
-export type ConfirmCi = (rel: string, names: string[], removed: string[]) => Promise<boolean>;
 
 const TEXTS = {
   fr: {
@@ -86,13 +82,3 @@ export async function ciContent(
   if (removed.length) console.warn(fill(T.outside, rel, removed.length, describe(namesOf(removed), lang), kept));
   return placed.content;
 }
-
-/** The terminal's confirmation: the removed lines as a diff, then the human's yes (`ask` reads one answer). */
-export const confirmCiWith =
-  (ask: (question: string) => Promise<string>): ConfirmCi =>
-  async (rel, names, removed) => {
-    const shown = removed.slice(0, 40).map((l) => `- ${l}`);
-    if (removed.length > 40) shown.push(`… (${removed.length - 40})`);
-    const answer = await ask(fill(texts().ciQuestion, rel, describe(names, projectLang(process.cwd())), shown.join("\n")));
-    return /^(y|yes|o|oui)$/i.test(answer.trim());
-  };

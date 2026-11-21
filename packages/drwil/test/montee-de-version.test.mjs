@@ -9,7 +9,6 @@ import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { doctor, init } from "../dist/index.js";
 import { engineVersion } from "../dist/install-record.js";
-import { confirmCiWith } from "../dist/ci-zone.js";
 import { placeProject } from "../dist/ci-zone-move.js";
 import { confirmDriftWith } from "../dist/drift.js";
 
@@ -214,19 +213,6 @@ test("QUA-283 : un CI sans marqueurs tel qu'installé est remis au gabarit sans 
   await silence(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "gitlab", tools: "claude" }));
   const apres = readFileSync(chemin, "utf8");
   assert.ok(apres.includes("node:24") && apres.includes("# drwil-project-begin steps"));
-});
-
-test("QUA-283 : la confirmation au terminal montre le diff et n'accepte que oui", async () => {
-  const questions = [];
-  const lignes = Array.from({ length: 45 }, (_, i) => `ligne ${i}`);
-  const oui = await confirmCiWith(async (q) => {
-    questions.push(q);
-    return "o";
-  })("ci.yml", ["a", "3"], lignes);
-  const non = await confirmCiWith(async () => "")("ci.yml", [], []);
-  assert.equal(oui, true);
-  assert.equal(non, false);
-  assert.match(questions[0], /ci\.yml.*\n- ligne 0\n[\s\S]*- ligne 39\n… \(5\)\n/);
 });
 
 test("QUA-283 : hors zone, un job du kit renommé à la main devient un job du projet, replacé dans la zone ; le job du kit est remis", async () => {

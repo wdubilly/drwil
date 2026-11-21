@@ -3,13 +3,12 @@
 // depuis la branche principale, comme pour la mise à jour (kit-update.ts), et y commite le kit avec le trailer que la
 // barrière reconnaît par le manifeste (QUA-238).
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { Addition } from "./complete.js";
 import { hooksPath } from "./essentials.js";
 import { commitKit } from "./install.js";
 import { cutBranch, prepareUpdate, type KitTexts, type UpdatePlan } from "./kit-update.js";
-import { readManifest, sha256 } from "./manifest.js";
+import { readManifest } from "./manifest.js";
 import { fill, type MessageLang } from "./i18n.js";
 
 // Branche de l'installation, dépôt neuf (`setupGit`) ou existant : jamais de commit direct sur la branche principale.
@@ -130,19 +129,4 @@ export function prepareKitCommit(dir: string, lang: MessageLang): UpdatePlan | n
   if (update || !existsSync(join(dir, ".git")) || Object.keys(readManifest(dir)).length) return update;
   const cut = cutBranch(dir, INSTALL_BRANCH, TEXTS[lang]);
   return cut && { ...cut, previousVersion: null, texts: TEXTS, subject };
-}
-
-/**
- * The installation's commit (no previous manifest): the project's own files `init` completed without overwriting them
- * (AGENTS.md, .gitignore…) stay out of the manifest; their fingerprint after completion is noted aside, as for an
- * update (manifest-completed.ts, QUA-244), so the scope gate admits them in this commit and never an edit by hand.
- */
-export function noteInstallCompletions(
-  dir: string,
-  plan: UpdatePlan | null,
-  fp: { previous: Record<string, string>; manifest: Record<string, string>; completed: Record<string, string> },
-  added: Addition[],
-): void {
-  if (!plan || Object.keys(fp.previous).length) return;
-  for (const { file } of added) if (!(file in fp.manifest)) fp.completed[file] = sha256(readFileSync(join(dir, file), "utf8"));
 }

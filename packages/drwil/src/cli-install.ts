@@ -4,7 +4,6 @@ import { texts } from "./cli-texts.js";
 import { readConfig } from "./config.js";
 import { fill } from "./i18n.js";
 import { assertVersion } from "./install.js";
-import { confirmCiWith } from "./ci-zone.js";
 import { type ConfirmDrift, confirmDriftWith } from "./drift.js";
 
 const DEFAULT = (v: string) => `(default: value of an installed project, else ${v})`;
@@ -121,7 +120,6 @@ export function registerInstall(program: Command): void {
           opts.tools = await chooseTools(process.cwd(), opts.tools, interactive, askTerminal);
           opts.serveAutostart = await chooseServeAutostart(process.cwd(), opts.serveAutostart, opts.tools, interactive, askTerminal);
           if (interactive) {
-            opts.confirmCi = confirmCiWith(askTerminal);
             opts.confirmDrift = confirmDriftWith(askTerminal);
           }
         } catch (e) {

@@ -39,7 +39,7 @@ import { type ConfirmDrift, isProjectFile, replaceOnConfirm } from "./drift.js";
 import { assertSafeManifest, engineVersion, removeObsolete, writeInstall, writeManifest } from "./manifest.js";
 import { formatMigration, migrate } from "./migration.js";
 import { finishUpdate } from "./kit-update.js";
-import { noteInstallCompletions, prepareKitCommit, setupGit } from "./kit-install.js";
+import { prepareKitCommit, setupGit } from "./kit-install.js";
 import { complete, type Addition } from "./complete.js";
 import { writeCompleted } from "./manifest-completed.js";
 import { formatGaps } from "./essentials.js";
@@ -130,8 +130,7 @@ export async function init(opts: InitOptions & { confirmDrift?: ConfirmDrift }):
   await scaffold(r, { shouldOverwrite, drifted: flagged, manifest, expected, ci: { lang: r.lang, commit: update ?? undefined } });
   const drifted = flagged.filter((f) => !isProjectFile(f));
   const completed: Record<string, string> = {};
-  const { added } = await complete(r, { manifest, previous, completed });
-  noteInstallCompletions(opts.targetDir, update, { previous, manifest, completed }, added);
+  const { added } = await complete(r, { manifest, previous, completed, committed: update !== null });
   const obsolete = await removeObsolete(opts.targetDir, previous, expected);
   await writeManifest(opts.targetDir, manifest, obsolete);
   await writeCompleted(opts.targetDir, completed);
