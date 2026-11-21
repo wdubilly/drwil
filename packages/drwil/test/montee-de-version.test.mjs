@@ -7,7 +7,7 @@ import { appendFileSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmS
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { doctor, init } from "../dist/index.js";
+import { doctor, formatPreview, init, previewInit } from "../dist/index.js";
 import { engineVersion } from "../dist/install-record.js";
 import { placeProject } from "../dist/ci-zone-move.js";
 import { confirmDriftWith } from "../dist/drift.js";
@@ -579,6 +579,23 @@ test("QUA-283 : installation sur un dépôt existant au CI GitLab sans balises :
     assert.ok(jobs.includes(l), `perdue : ${l}`);
   assert.match(sortie, /replacé\(s\) dans la zone du projet : image, build, unit, stage build\./);
   assert.equal(git(dir, "status", "--porcelain").stdout.trim(), "", sortie);
+});
+
+test("QUA-283 : l'aperçu (init --dry-run) n'annonce plus le job checks manquant d'un CI qu'init réécrit ; il l'annonce si une clé en conflit garde le fichier", async () => {
+  const dir = tmp();
+  const chemin = join(dir, ".gitlab-ci.yml");
+  const manqueCi = async () => {
+    const a = await previewInit({ lang: "fr", targetDir: dir, ci: "gitlab", tools: "claude", git: false });
+    return { gap: a.gaps.some((g) => g.kind === "ci"), texte: formatPreview(a) };
+  };
+  writeFileSync(chemin, CI_PROJET.join("\n"));
+  const reecrit = await manqueCi();
+  assert.equal(reecrit.gap, false, reecrit.texte);
+  assert.doesNotMatch(reecrit.texte, /job `checks` absent/);
+  writeFileSync(chemin, [...CI_PROJET, "", "workflow:", "  name: projet"].join("\n"));
+  const garde = await manqueCi();
+  assert.equal(garde.gap, true, garde.texte);
+  assert.match(garde.texte, /job `checks` absent/);
 });
 
 // D-f : une clé globale définie par le projet et par le gabarit, de contenu différent : rien n'est réécrit.

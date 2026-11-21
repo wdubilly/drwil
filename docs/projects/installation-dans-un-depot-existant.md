@@ -166,7 +166,8 @@ après clôture, `QUA-116`).
 - `QUA-315` — ancien critère : aucun test de `packages/drwil/test/kit-installation.test.mjs` ne change — raison : D-c
   rend faux deux tests qui affirmaient « à l'installation, le CI du projet n'est jamais réécrit » (« projet existant :
   init complète sans écraser… », « projet existant : doctor signale ce qui manque… ») ; leurs noms et leur place restent,
-  leur corps suit D-c (kit écrit, job du projet dans la zone ; doctor partant d'un CI sans job du kit) (validé par le
+  leur corps suit D-c (kit écrit, job du projet dans la zone ; doctor partant d'un CI sans job du kit ; l'aperçu
+  n'annonce plus le manque « ci » qu'init traite, limite traitée le 2026-11-21) (validé par le
   demandeur le 2026-11-21)
 - `QUA-244` — ancien critère : rien n'est noté à une première installation — raison : l'installation dans un dépôt
   existant est commitée et note à part les fichiers complétés (QUA-206, D-a) (validé par le demandeur le 2026-11-21,
@@ -286,12 +287,11 @@ Aucun.
 - **Limites traitées** (2026-11-21, « Traiter maintenant » au sondage des limites) : `QUA-244` — `recordCompletion`
   (packages/drwil/src/manifest-completed.ts) note à part les complétions de toute passe que `init` commite (champ
   `committed`), `noteInstallCompletions` retiré, contrat réécrit ; `confirmCi`/`confirmCiWith`, `ConfirmCi` et
-  `ciQuestion` retirés avec leur branchement et leur test ; commentaire de `replaceOnConfirm` corrigé. **En attente** :
-  l'aperçu `init --dry-run` qui n'annonce plus le manque « ci » d'un CI qu'`init` réécrit (filtre dans
-  packages/drwil/src/preview.ts et test de packages/drwil/test/montee-de-version.test.mjs, vu échouer puis passer)
-  rend faux une assertion du test figé « projet existant : init complète sans écraser… »
-  (packages/drwil/test/kit-installation.test.mjs, `["ci", "hooksPath"]`) : sa modification attend le oui du
-  demandeur (QUA-315).
+  `ciQuestion` retirés avec leur branchement et leur test ; commentaire de `replaceOnConfirm` corrigé ; l'aperçu
+  `init --dry-run` n'annonce plus le manque « ci » d'un CI qu'`init` réécrit, seulement quand une clé en conflit le
+  garde (filtre dans packages/drwil/src/preview.ts, test de packages/drwil/test/montee-de-version.test.mjs vu échouer
+  puis passer) ; l'assertion du test figé « projet existant : init complète sans écraser… » alignée (`["hooksPath"]`,
+  oui du demandeur le 2026-11-21, QUA-315).
 - **Travail non commité** : aucun. Dossier de reproduction (hors dépôt, peut disparaître) :
   `/tmp/claude-1000/-home-wdubilly-projects-drwil/853fbde2-e7f4-4598-86e4-35a450054ace/scratchpad/repro-marinade`,
   branche `reinstall`, installation non commitée.

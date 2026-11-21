@@ -276,7 +276,11 @@ test("projet existant : init complète sans écraser, l'aperçu l'annonce, un se
     "AGENTS.md",
     "CLAUDE.md",
   ]);
-  assert.deepEqual(a.gaps.map((g) => g.kind).sort(), ["ci", "hooksPath"], "CI et hooks : laissés à l'humain");
+  assert.deepEqual(
+    a.gaps.map((g) => g.kind).sort(),
+    ["hooksPath"],
+    "hooks laissés à l'humain ; le CI, init le réécrit (jobs du projet replacés)",
+  );
   assert.equal(read(dir, "AGENTS.md"), fichiers["AGENTS.md"], "l'aperçu n'écrit rien");
 
   const lignes = await capture(() => init({ lang: "fr", targetDir: dir }));
