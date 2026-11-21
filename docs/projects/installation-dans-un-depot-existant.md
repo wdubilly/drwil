@@ -16,6 +16,11 @@ files:
   - packages/drwil/src/ci-zone-move.ts
   - packages/drwil/src/render.ts
   - packages/drwil/src/cli-texts.ts
+  - packages/drwil/src/manifest-completed.ts
+  - packages/drwil/src/cli-install.ts
+  - packages/drwil/src/config.ts
+  - packages/drwil/src/preview.ts
+  - packages/drwil/src/drift.ts
   - packages/drwil/templates/common/base/.githooks/scope-gate-kit.mjs
   - packages/drwil/templates/common/base/.githooks/scope.mjs
   - packages/drwil/templates/common/base/.githooks/check-docs-workstreams.mjs
@@ -163,6 +168,9 @@ après clôture, `QUA-116`).
   init complète sans écraser… », « projet existant : doctor signale ce qui manque… ») ; leurs noms et leur place restent,
   leur corps suit D-c (kit écrit, job du projet dans la zone ; doctor partant d'un CI sans job du kit) (validé par le
   demandeur le 2026-11-21)
+- `QUA-244` — ancien critère : rien n'est noté à une première installation — raison : l'installation dans un dépôt
+  existant est commitée et note à part les fichiers complétés (QUA-206, D-a) (validé par le demandeur le 2026-11-21,
+  sondage des limites)
 
 ## 2. Hors périmètre
 
