@@ -940,3 +940,126 @@ test("QUA-088 marques : le lot et la ligne d'index d'une garantie sont [IA], sau
     }
   }
 });
+
+// Table des outils e2e : le kit déclare lui-même le contrôle `e2e`, découpé (`shards: "auto"`), jamais par-dessus une déclaration.
+const { E2E_TOOLS, e2eDeclaration } = await import("../dist/guarantees-e2e-tools.js");
+const MOTEUR = join(TEMPLATES, "base", ".githooks");
+const { shardProblem } = await import(join(MOTEUR, "engine-shards.mjs"));
+const { countTests } = await import(join(MOTEUR, "run-checks-shards.mjs"));
+const { texts: moteurTextes } = await import(join(MOTEUR, "engine-texts.mjs"));
+const E2E_EXEC = () => faux([[/c8 --version/, OK], ...FORGE_OK]);
+
+test("QUA-320 outil e2e de la table : guarantees déclare `e2e` en tranches « auto », que le moteur accepte (QUA-013)", async () => {
+  const cas = [
+    ["playwright.config.ts", "Playwright", "."],
+    ["vitest.e2e.config.mts", "Vitest", "."],
+    ["jest.e2e.config.js", "Jest", "."],
+    ["test/jest-e2e.json", "Jest", "."],
+  ];
+  for (const [fichier, outil] of cas) {
+    const dir = await projet();
+    ecrire(dir, fichier, "export default {};\n");
+    const r = guarantees({ targetDir: dir, exec: E2E_EXEC() });
+    const e2e = config(dir).checks.find((c) => c.id === "e2e");
+    const ligne = E2E_TOOLS.find((t) => t.tool === outil);
+    assert.deepEqual(e2e, e2eDeclaration(ligne, fichier, "."), fichier);
+    assert.equal(e2e.shards, "auto");
+    assert.match(e2e.run, /DRWIL_SHARD_INDEX\/\$DRWIL_SHARD_TOTAL/);
+    assert.match(e2e.run, /npm ci/, "setup dans la commande : le job de tranche n'a que Node");
+    assert.match(e2e.shardsCount, /npm ci \) >&2 && /, "setup du comptage sur stderr : le job de plan n'a que Node");
+    assert.equal(e2e.cwd, undefined);
+    for (const lang of ["fr", "en"]) assert.equal(shardProblem(e2e, "e2e", moteurTextes(lang)), null, `${fichier} refusé par le moteur`);
+    // Déclaré mais cité par aucun contrat : la garantie reste à tenir, et la fiche dit ce que le kit a fait.
+    assert.equal(r.e2e, false);
+    const fiche = lire(dir, "docs/projects/e2e-chemins-critiques.md");
+    assert.ok(
+      fiche.includes(`contrôle \`e2e\` déclaré pour ${outil} (\`${fichier}\`), découpé en tranches`),
+      `fiche e2e sans la déclaration pour ${outil}`,
+    );
+    assert.ok(formatGuarantees(r).some((l) => l.includes(`déclaré pour ${outil}`)));
+  }
+});
+
+test("QUA-320 outil e2e d'une couche : la déclaration porte son cwd ; la racine passe avant les couches", async () => {
+  const dir = await projet();
+  ecrire(dir, "front/package.json", JSON.stringify({ name: "f" }));
+  ecrire(dir, "front/src/a.js", "export const a = 1;\n");
+  ecrire(dir, "front/playwright.config.js", "export default {};\n");
+  const cfg = config(dir);
+  cfg.layers = ["front"];
+  ecrireConfig(dir, cfg);
+  guarantees({ targetDir: dir, exec: E2E_EXEC() });
+  const e2e = config(dir).checks.find((c) => c.id === "e2e");
+  assert.deepEqual(e2e, e2eDeclaration(E2E_TOOLS[0], "playwright.config.js", "front"));
+  assert.equal(e2e.cwd, "front");
+  assert.equal(shardProblem(e2e, "e2e", moteurTextes("fr")), null);
+
+  const racine = await projet();
+  ecrire(racine, "vitest.e2e.config.ts", "export default {};\n");
+  ecrire(racine, "front/playwright.config.js", "export default {};\n");
+  ecrire(racine, "front/src/a.js", "export const a = 1;\n");
+  const cfg2 = config(racine);
+  cfg2.layers = [".", "front"];
+  ecrireConfig(racine, cfg2);
+  const r = guarantees({ targetDir: racine, exec: E2E_EXEC() });
+  assert.ok(
+    r.e2eLines.some((l) => /Vitest/.test(l)),
+    r.e2eLines.join("\n"),
+  );
+  assert.equal(config(racine).checks.find((c) => c.id === "e2e").cwd, undefined);
+});
+
+test("QUA-322 contrôle `e2e` déjà déclaré : jamais réécrit, même pour un outil de la table", async () => {
+  const dir = await projet();
+  ecrire(dir, "playwright.config.ts", "export default {};\n");
+  const cfg = config(dir);
+  const main = { id: "e2e", name: "e2e", run: "npx playwright test", shards: 4 };
+  cfg.checks.push(main);
+  ecrireConfig(dir, cfg);
+  const r = guarantees({ targetDir: dir, exec: E2E_EXEC() });
+  assert.deepEqual(
+    config(dir).checks.filter((c) => c.id === "e2e"),
+    [main],
+  );
+  assert.deepEqual(r.e2eLines, ["contrôle `e2e` déjà déclaré : gardé tel quel, jamais réécrit"]);
+});
+
+test("QUA-322 outil e2e hors de la table : rien n'est découpé de force, la fiche le dit (français et anglais)", async () => {
+  for (const lang of ["fr", "en"]) {
+    const dir = await projet({ lang });
+    ecrire(dir, "cypress.config.js", "export default {};\n");
+    const r = guarantees({ targetDir: dir, exec: E2E_EXEC() });
+    assert.ok(!(config(dir).checks ?? []).some((c) => c.id === "e2e"));
+    const fiche = lire(dir, r.briefs.find((b) => b.kind === "e2e").path);
+    const attendu =
+      lang === "fr"
+        ? /table \(Playwright, Vitest, Jest\).*à la main, en une seule passe/
+        : /table \(Playwright, Vitest, Jest\).*by hand, in a single pass/;
+    assert.match(fiche, attendu);
+  }
+  // Sans code : pas encore applicable (QUA-224), rien n'est déclaré ni annoncé.
+  const vide = await projet({ code: false });
+  ecrire(vide, "playwright.config.ts", "export default {};\n");
+  const r = guarantees({ targetDir: vide, exec: E2E_EXEC() });
+  assert.deepEqual(r.e2eLines, []);
+  assert.ok(!(config(vide).checks ?? []).some((c) => c.id === "e2e"));
+});
+
+test("QUA-320 comptage des tests de la table (QUA-013) : un nombre en dernière ligne, une liste illisible fait échouer le plan", () => {
+  const T = moteurTextes("fr");
+  const compteur = (outil) =>
+    E2E_TOOLS.find((t) => t.tool === outil)
+      .count("c")
+      .split(" | ")
+      .at(-1);
+  for (const outil of ["Vitest", "Jest"]) {
+    const liste = JSON.stringify(Array.from({ length: 23 }, (_, i) => ({ name: `t${i}` })));
+    const ok = countTests({ shardsCount: `echo '${liste}' | ${compteur(outil)}` }, "e2e", T);
+    assert.deepEqual(ok, { total: 5 }, outil);
+    const vide = countTests({ shardsCount: `true | ${compteur(outil)}` }, "e2e", T);
+    assert.ok(vide.problem, `${outil} : une liste vide de sortie n'est jamais « 0 test »`);
+  }
+  // Playwright : la dernière ligne de `--list` porte le total.
+  assert.match(E2E_TOOLS[0].count("c"), /--list$/);
+  assert.deepEqual(countTests({ shardsCount: "echo 'Total: 12 tests in 3 files'" }, "e2e", T), { total: 3 });
+});

@@ -1,5 +1,5 @@
-// Slices of a slow check (`shards: N` in its declaration), split from engine.mjs: validation of the setting, variables given to the
-// command, and the aggregation of the slices' verdicts. A slice divides the work, never the requirement: a check that lacks a slice,
+// Slices of a slow check (`shards: N` or `shards: "auto"` in its declaration), split from engine.mjs: validation of the setting, variables
+// given to the command, and the aggregation of the slices' verdicts. With "auto", N is the CI plan's (run-checks-shards.mjs), never stored. A slice divides the work, never the requirement: a check that lacks a slice,
 // has a failed one, or one of another commit or fingerprint is not passed (QUA-013).
 import { spawnSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
@@ -10,11 +10,14 @@ export const SHARD_MAX = 16;
 export const SHARDS_DIR = ".drwil/evidence/shards";
 
 const isSharded = (c) => c.shards !== undefined;
+const isAuto = (c) => c.shards === "auto";
 
 /** The problem of a declaration (message), or null: a check that ignored the variables would play the whole check N times. */
 export function shardProblem(c, name, T) {
   if (!isSharded(c)) return null;
-  if (!Number.isInteger(c.shards) || c.shards < 2 || c.shards > SHARD_MAX) return T.shardsRange(name, SHARD_MAX);
+  if (isAuto(c)) {
+    if (typeof c.shardsCount !== "string" || !c.shardsCount.trim()) return T.shardsNoCount(name);
+  } else if (!Number.isInteger(c.shards) || c.shards < 2 || c.shards > SHARD_MAX) return T.shardsRange(name, SHARD_MAX);
   if (c.reuse === "tree") return T.shardsTree(name);
   if (typeof c.run !== "string" || !c.run.includes("DRWIL_SHARD_INDEX")) return T.shardsNoVariable(name);
   return null;
@@ -23,13 +26,17 @@ export function shardProblem(c, name, T) {
 /**
  * Matrix of the CI's slices (`--shard-plan`): `include` lists `{ index, total }`, `problems` refuses a declaration or several totals (one pass
  * per total is not planned). No slice is planned when `covered` (ids) holds every sharded check: the pull request's previous pass settled them.
+ * A `"auto"` check takes its N from `count(c, name)` (`{ total }` or `{ problem }`), asked only for a plan to play.
  */
-export function shardMatrix(cfg, T, covered = new Set()) {
+export function shardMatrix(cfg, T, covered = new Set(), count) {
   const sharded = (Array.isArray(cfg.checks) ? cfg.checks : []).filter(isSharded);
   const problems = sharded.map((c) => shardProblem(c, c.name ?? c.run, T)).filter(Boolean);
-  const totals = [...new Set(sharded.map((c) => c.shards))];
+  const settled = covered.size && sharded.every((c) => covered.has(c.id ?? `project:${c.name ?? c.run}`));
+  const counted = problems.length || settled ? [] : sharded.filter(isAuto).map((c) => count(c, c.name ?? c.run));
+  problems.push(...counted.filter((r) => r.problem).map((r) => r.problem));
+  const totals = [...new Set([...sharded.filter((c) => !isAuto(c)).map((c) => c.shards), ...counted.map((r) => r.total)])];
   if (totals.length > 1) problems.push(T.shardsSeveral(totals.join(", ")));
-  const total = covered.size && sharded.every((c) => covered.has(c.id ?? `project:${c.name ?? c.run}`)) ? 0 : (totals[0] ?? 0);
+  const total = settled ? 0 : (totals[0] ?? 0);
   return { include: problems.length ? [] : Array.from({ length: total }, (_, i) => ({ index: i + 1, total })), problems };
 }
 
@@ -68,7 +75,8 @@ export function shardPlan(c, shard, { env, root, list, id, name, T, cfg }) {
     return { skip: () => ({ status: "not-applicable", detail: T.shardsEntrusted }) };
   }
   const [index, total] = shard ? [shard.index, shard.total] : [1, 1];
-  if (shard && total !== c.shards) return { skip: () => ({ status: "fail", message: T.shardsMismatch(name, total, c.shards) }) };
+  if (shard && !isAuto(c) && total !== c.shards)
+    return { skip: () => ({ status: "fail", message: T.shardsMismatch(name, total, c.shards) }) };
   return { env: { ...env, DRWIL_SHARD_INDEX: String(index), DRWIL_SHARD_TOTAL: String(total) } };
 }
 
@@ -87,7 +95,10 @@ function jsonFiles(dir) {
   }
 }
 
-/** The result of an aggregated check: "ok" only if its N slices, all of this commit and this fingerprint, are "ok" and none is missing or doubled. */
+/**
+ * The result of an aggregated check: "ok" only if its N slices, all of this commit and this fingerprint, are "ok" and none is missing or doubled.
+ * With "auto", N is the single total its slices carry (the CI plan's): no slice, or several totals, is no plan (QUA-013).
+ */
 export function aggregateShards({ root, dir, c, id, name, fingerprint, T, env = {}, cfg = {}, commit = gitCommit(root) }) {
   const mine = [];
   const problems = [];
@@ -101,18 +112,23 @@ export function aggregateShards({ root, dir, c, id, name, fingerprint, T, env = 
     }
     if (v?.check === id) mine.push(v);
   }
+  const totals = [...new Set(mine.map((v) => v.total))];
+  if (isAuto(c) && !totals.length) return { status: "fail", message: T.shardsAutoNoPlan(name) };
+  if (isAuto(c) && (totals.length > 1 || !Number.isInteger(totals[0]) || totals[0] > SHARD_MAX))
+    return { status: "fail", message: T.shardsAutoTotals(name, totals.join(", ")) };
+  const want = isAuto(c) ? totals[0] : c.shards;
   const control = fingerprint();
   const seen = new Set();
   for (const v of mine) {
     const at = `${v.index}/${v.total}`;
     if (seen.has(v.index)) problems.push(T.shardsDuplicate(at));
     seen.add(v.index);
-    if (v.total !== c.shards || !Number.isInteger(v.index) || v.index < 1 || v.index > c.shards) problems.push(T.shardsTotal(at, c.shards));
+    if (v.total !== want || !Number.isInteger(v.index) || v.index < 1 || v.index > want) problems.push(T.shardsTotal(at, want));
     if (!commit || v.commit !== commit) problems.push(T.shardsCommit(at));
     if (v.control !== control) problems.push(T.shardsControl(at));
     if (v.status !== "ok") problems.push(T.shardsFailed(at));
   }
-  for (let i = 1; i <= c.shards; i++) if (!seen.has(i)) problems.push(T.shardsMissing(`${i}/${c.shards}`));
+  for (let i = 1; i <= want; i++) if (!seen.has(i)) problems.push(T.shardsMissing(`${i}/${want}`));
   const base = againstBase({ root, c, id, name, env, cfg, T });
   if (base?.problem) problems.push(base.problem);
   if (!problems.length) return { status: "ok", ...(base?.note ? { output: `[ia-first-warning] ${base.note}` } : {}) };

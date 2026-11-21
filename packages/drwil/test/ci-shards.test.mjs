@@ -50,7 +50,14 @@ function projet(shards) {
   const racine = mkdtempSync(join(tmpdir(), "drwil-ci-gitlab-"));
   cpSync(join(TEMPLATES, "base", ".githooks"), join(racine, ".githooks"), { recursive: true });
   const checks = [
-    { name: "e2e", run: 'echo "e2e $DRWIL_SHARD_INDEX/$DRWIL_SHARD_TOTAL" >> trace.txt', paths: ["e2e/**"], ...(shards && { shards }) },
+    {
+      name: "e2e",
+      run: 'echo "e2e $DRWIL_SHARD_INDEX/$DRWIL_SHARD_TOTAL" >> trace.txt',
+      paths: ["e2e/**"],
+      ...(shards && { shards }),
+      // « auto » : N compté par le plan (D6 : 12 tests, 3 tranches), le YAML livré inchangé.
+      ...(shards === "auto" && { shardsCount: "echo 'Total: 12 tests in 3 files'" }),
+    },
   ];
   mkdirSync(join(racine, "e2e"));
   writeFileSync(join(racine, "e2e", "t.txt"), "un\n");
@@ -79,27 +86,34 @@ const bash = (racine, script, env = {}) =>
     },
   });
 
+// Chaque tranche GitLab joue la sienne ; celles au-delà de N ne jouent rien et ne laissent aucun verdict.
+function tranchesGitlab(t, shards, indices, attendues) {
+  if (process.platform === "win32") return t.skip("bash");
+  const racine = projet(shards);
+  t.after(() => rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
+  const plan = bash(racine, ci.plan.script.join("\n"));
+  assert.equal(plan.status, 0, plan.stdout + plan.stderr);
+  const script = ci.shards.script.join("\n");
+  for (const i of indices) {
+    const r = bash(racine, script, { CI_NODE_INDEX: String(i), CI_NODE_TOTAL: "16" });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.equal(/not applicable/.test(r.stdout), i > attendues.length, `tranche ${i}`);
+  }
+  const jouees = existsSync(join(racine, "trace.txt")) ? readFileSync(join(racine, "trace.txt"), "utf8").trim().split("\n") : [];
+  assert.deepEqual(jouees, attendues);
+  const verdicts = existsSync(join(racine, DOSSIER)) ? readdirSync(join(racine, DOSSIER)) : [];
+  assert.equal(verdicts.length, attendues.length, verdicts.join());
+}
+
 for (const [shards, indices, attendues] of [
   [3, [1, 2, 3, 4], ["e2e 1/3", "e2e 2/3", "e2e 3/3"]],
   [undefined, [1, 2], []],
 ])
-  test(`QUA-288 : GitLab, ${shards ? `${shards} tranches` : "aucun contrôle découpé"} — chaque tranche joue la sienne, celles au-delà de N ne jouent rien et ne laissent aucun verdict`, (t) => {
-    if (process.platform === "win32") return t.skip("bash");
-    const racine = projet(shards);
-    t.after(() => rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
-    const plan = bash(racine, ci.plan.script.join("\n"));
-    assert.equal(plan.status, 0, plan.stdout + plan.stderr);
-    const script = ci.shards.script.join("\n");
-    for (const i of indices) {
-      const r = bash(racine, script, { CI_NODE_INDEX: String(i), CI_NODE_TOTAL: "16" });
-      assert.equal(r.status, 0, r.stdout + r.stderr);
-      assert.equal(/not applicable/.test(r.stdout), i > (shards ?? 0), `tranche ${i}`);
-    }
-    const jouees = existsSync(join(racine, "trace.txt")) ? readFileSync(join(racine, "trace.txt"), "utf8").trim().split("\n") : [];
-    assert.deepEqual(jouees, attendues);
-    const verdicts = existsSync(join(racine, DOSSIER)) ? readdirSync(join(racine, DOSSIER)) : [];
-    assert.equal(verdicts.length, attendues.length, verdicts.join());
-  });
+  test(`QUA-288 : GitLab, ${shards ? `${shards} tranches` : "aucun contrôle découpé"} — chaque tranche joue la sienne, celles au-delà de N ne jouent rien et ne laissent aucun verdict`, (t) =>
+    tranchesGitlab(t, shards, indices, attendues));
+
+test("QUA-321 : GitLab, « shards: auto » (N du plan) — chaque tranche joue la sienne, celles au-delà de N ne jouent rien et ne laissent aucun verdict", (t) =>
+  tranchesGitlab(t, "auto", [1, 2, 3, 4], ["e2e 1/3", "e2e 2/3", "e2e 3/3"]));
 
 test("QUA-288 : GitLab, sans plan lisible la tranche échoue, elle ne réussit jamais par défaut", (t) => {
   if (process.platform === "win32") return t.skip("bash");

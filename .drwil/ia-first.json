@@ -4575,6 +4575,79 @@
       "needsBuild": true
     },
     {
+      "id": "tests-qua-320",
+      "name": "tests de QUA-320, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-320 packages/drwil/test/guarantees.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-321",
+      "name": "tests de QUA-321, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-321 .githooks/engine-shards.test.mjs .githooks/run-checks-shards.test.mjs packages/drwil/test/ci-shards.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/**", "packages/drwil/**", ".drwil/ia-first.json"],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-322",
+      "name": "tests de QUA-322, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-322 packages/drwil/test/guarantees.test.mjs packages/drwil/test/shards-proposal.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-323",
+      "name": "tests de QUA-323, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-323 packages/drwil/test/shards-proposal.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-324",
+      "name": "tests de QUA-324, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-324 packages/drwil/test/shards-proposal.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
       "id": "couverture-diff",
       "runAt": [
         "ci"

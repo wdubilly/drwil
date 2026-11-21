@@ -6,6 +6,8 @@ import { join } from "node:path";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { hooksPath } from "./essentials.js";
 import { readInstall, readManifest } from "./manifest.js";
+import { readConfig } from "./config.js";
+import { shardsPoints } from "./doctor-shards.js";
 
 export const UPDATE_BRANCH = "workstream/kit-update";
 /** Trailer et variable que la barrière de périmètre reconnaît (scope-gate-kit.mjs, livré par le gabarit). */
@@ -42,6 +44,7 @@ const TEXTS = {
       "Reste à décider : {0} fichier(s) modifié(s) à la main n'ont pas été réécrits — `npx drwil init` dans un terminal propose le diff de chacun.",
     next: "Commande suivante : `git push -u origin {0}`, puis `gh pr create --base {1}` ; une fois fusionnée, `git checkout {1}`.",
     hooks: "Les hooks du projet sont gérés par un autre outil (core.hooksPath = {0}) : ils jugent ce commit à leur façon.",
+    shards: "Reste à décider : {0} — {1}. La mise à jour n'y écrit rien : lancer `npx drwil doctor --fix`.",
   },
   en: {
     dirty:
@@ -63,6 +66,7 @@ const TEXTS = {
     drift: "Left to decide: {0} file(s) modified by hand were not rewritten — `npx drwil init` in a terminal offers the diff of each.",
     next: "Next command: `git push -u origin {0}`, then `gh pr create --base {1}`; once merged, `git checkout {1}`.",
     hooks: "The project's hooks are managed by another tool (core.hooksPath = {0}): they judge this commit their own way.",
+    shards: "Left to decide: {0} — {1}. The update writes nothing to it: run `npx drwil doctor --fix`.",
   },
 };
 
@@ -151,6 +155,8 @@ export function finishUpdate(dir: string, lang: MessageLang, plan: UpdatePlan, v
   } catch (e) {
     console.warn(fill(T.notCommitted, plan.branch, firstLines(e)));
   }
+  // Never written here: the scope gate (QUA-238) would refuse a changed check in this commit; `doctor --fix` sets it.
+  for (const p of shardsPoints(dir, readConfig(dir)?.checks, lang)) console.log(fill(T.shards, p.label, p.detail));
   const hooks = hooksPath(dir);
   if (hooks && hooks !== ".githooks") console.log(fill(T.hooks, hooks));
   if (drifted) console.log(fill(T.drift, drifted));

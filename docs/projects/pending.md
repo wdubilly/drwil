@@ -154,9 +154,6 @@ d'un outil) la dit dans son statut.
 
 ### Vitesse
 
-- [ ] [IA] [P0] (0.11.2) Un contrôle lent est découpé en tranches dès sa déclaration chez tout adoptant : table des
-  outils e2e, déclaré par `guarantees` et signalé par `drwil doctor` ; prêt, décisions D1 à D6 tranchées (cadré le
-  2026-11-09) — `docs/projects/controles-lents-decoupes-des-le-depart.md`.
 - [ ] [IA] [P1] (0.11.3) Les rejeux d'une clôture sont mesurés et le pre-push juge le commit réellement poussé ; prêt,
   D1 à D3 tranchées (cadré le 2026-11-11) — `docs/projects/preuves-fiables-rejeux-mesures.md`.
 - [ ] [IA] [P1] (0.11.3) Le temps passé dans les contrôles d'un chantier est journalisé à la clôture, dans

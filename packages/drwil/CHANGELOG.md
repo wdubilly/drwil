@@ -103,6 +103,19 @@ release renames this section to its version.
   branch's green pipeline proved skips its checks and still keeps the
   verdicts the next merge request reuses, the date of the restored verdicts
   is logged, and a test keeps both CIs on par.
+- A slow e2e check is split into parallel CI slices from the start. For a
+  tool of the kit's e2e table (Playwright, Vitest, Jest, found by its e2e
+  configuration file at the root or in a layer), `npx drwil guarantees`
+  declares the `e2e` check itself, setup included, with `shards: "auto"`:
+  the CI plan counts the tests at each run and sets the number of slices
+  (one per 5 tests, 2 to 16; a single pass under 2), so it follows the
+  suite as it grows; a count that fails makes the plan fail, never pass.
+  An existing `e2e` check is never rewritten by `guarantees`, and a tool
+  outside the table keeps a single pass. `npx drwil doctor` flags an `e2e`
+  check of a tool of the table declared without `shards` or with a fixed
+  number, and `npx drwil doctor --fix` sets `"auto"` on it, whoever wrote
+  it, keeping its other fields; a kit update writes nothing on it and its
+  report invites you to run `npx drwil doctor --fix`.
 
 ### Changed
 

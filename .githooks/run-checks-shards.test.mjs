@@ -7,6 +7,8 @@ import { dirname, join } from "node:path";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { replay } from "./base-checks.mjs";
+import { texts } from "./engine-texts.mjs";
+import { countTests, shardsFor } from "./run-checks-shards.mjs";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 delete process.env.DRWIL_CI_REUSE;
@@ -151,6 +153,71 @@ test("QUA-288 : --shard-plan refuse une déclaration invalide (code 1, rien sur 
     assert.equal(r.stdout, "");
     assert.match(r.stderr, attendu);
   }
+});
+
+/** Projet d'essai « auto » : le contrôle e2e compte ses tests par `shardsCount` (ici, la sortie de Playwright `--list`). */
+function projetAuto(shardsCount) {
+  const racine = projet();
+  const e2e = {
+    name: "e2e",
+    run: 'echo "e2e $DRWIL_SHARD_INDEX/$DRWIL_SHARD_TOTAL" >> trace.txt',
+    shards: "auto",
+    shardsCount,
+    paths: ["e2e/**"],
+  };
+  ecrire(racine, ".drwil/ia-first.json", JSON.stringify({ checks: [e2e, { name: "lint", run: "echo lint >> trace.txt" }] }));
+  spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qam", "auto"], { cwd: racine });
+  return racine;
+}
+
+test("QUA-321 : D6 : N = nombre de tests / 5 arrondi au-dessus, borné à 16 ; sous 2, une seule tranche", () => {
+  assert.deepEqual([0, 1, 5, 6, 10, 11, 80, 81, 500].map(shardsFor), [1, 1, 1, 2, 2, 3, 16, 16, 16]);
+});
+
+test("QUA-321 : countTests : le premier entier de la dernière ligne non vide, dans le dossier du contrôle ; sinon un problème", () => {
+  const T = texts("fr");
+  const racine = tmp();
+  ecrire(racine, "e2e/n.txt", "Total: 23 tests in 4 files\n\n");
+  assert.deepEqual(countTests({ shardsCount: "cat n.txt", cwd: "e2e" }, "e2e", T, racine), { total: 5 });
+  assert.deepEqual(countTests({ shardsCount: "echo 7" }, "e2e", T), { total: 2 });
+  assert.match(
+    countTests({ shardsCount: "echo aucun" }, "e2e", T, racine).problem,
+    /e2e : « shardsCount » n'a pas donné de nombre de tests \(code 0\)/,
+  );
+  assert.match(countTests({ shardsCount: "echo 12; exit 4" }, "e2e", T, racine).problem, /\(code 4\)/);
+});
+
+test("QUA-321 : --shard-plan avec « auto » : N compté à chaque plan, suit la suite ; tranches et agrégation lisent ce N", () => {
+  const racine = projetAuto("echo 'Listing tests:'; echo 'Total: 12 tests in 3 files'");
+  const plan = passe(racine, "--shard-plan");
+  assert.equal(plan.status, 0, plan.stderr);
+  assert.deepEqual(JSON.parse(plan.stdout), { include: [1, 2, 3].map((index) => ({ index, total: 3 })) });
+  assert.deepEqual(trace(racine), []);
+  for (const i of ["1/3", "2/3", "3/3"]) assert.equal(passe(racine, "--shard", i).status, 0);
+  const r = passe(racine, "--aggregate-shards", DOSSIER);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.deepEqual(trace(racine).toSorted(), ["e2e 1/3", "e2e 2/3", "e2e 3/3", "lint"]);
+  assert.equal(lire(racine, ".drwil/evidence/run-checks-verdicts.json").checks["project:e2e"].status, "ok");
+});
+
+test("QUA-321 : « auto » sous 2 : une seule tranche 1/1 ; sans aucune tranche, l'agrégation échoue", () => {
+  const racine = projetAuto("echo 4");
+  assert.deepEqual(JSON.parse(passe(racine, "--shard-plan").stdout), { include: [{ index: 1, total: 1 }] });
+  const sans = passe(racine, "--aggregate-shards", DOSSIER);
+  assert.equal(sans.status, 1);
+  assert.match(sans.stdout, /aucune tranche du plan de la CI/);
+  assert.equal(passe(racine, "--shard", "1/1").status, 0);
+  assert.equal(passe(racine, "--aggregate-shards", DOSSIER).status, 0);
+  assert.deepEqual(trace(racine).toSorted(), ["e2e 1/1", "lint", "lint"]);
+});
+
+test("QUA-321 : --shard-plan « auto » : un comptage impossible fait échouer le plan (code 1, rien sur la sortie)", () => {
+  const racine = projetAuto("echo 'Error: no config' >&2; exit 1");
+  const r = passe(racine, "--shard-plan");
+  assert.equal(r.status, 1);
+  assert.equal(r.stdout, "");
+  assert.match(r.stderr, /Error: no config/);
+  assert.match(r.stderr, /e2e : « shardsCount » n'a pas donné de nombre de tests \(code 1\)/);
 });
 
 /** Dépôt d'essai du rejeu : le run-checks de chaque branche note ses arguments dans `args.txt` ; `base` pose ou non .githooks/ sur main. */

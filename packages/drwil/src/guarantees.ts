@@ -11,6 +11,7 @@ import { briefTitle, type GuaranteeBrief, writeBriefs } from "./guarantees-brief
 import { readAutoMerge } from "./protection.js";
 import { coverageFailures } from "./guarantees-verify.js";
 import { type ForgeReport, inspectForge, protectBranch } from "./guarantees-forge.js";
+import { declareE2e } from "./guarantees-e2e-tools.js";
 
 // QUA-227 : le lecteur canonique livré par le kit, pas une seconde grammaire des contrats.
 const { readContracts } = await import(new URL("../templates/common/base/.githooks/contracts.mjs", import.meta.url).href);
@@ -30,6 +31,8 @@ export interface GuaranteesReport {
   layers: LayerReport[];
   /** null : pas encore applicable ; true : déclaré et cité, pas une preuve d'exécution. */
   e2e: boolean | null;
+  /** What `guarantees` did with the `e2e` check: declared (table tool), kept, or left to the human. */
+  e2eLines?: string[];
   gaps?: string[];
   forge: ForgeReport;
   skeleton: string[];
@@ -57,6 +60,7 @@ export function guarantees(opts: GuaranteesOptions): GuaranteesReport {
   const briefs: GuaranteeBrief[] = [];
   const ctx: LayerContext = { root, cfg, exec, lang, checks, briefs };
   const layers = layersOf(root, cfg).map(({ layer, technos }) => coverLayer(ctx, layer, technos));
+  const e2eLines = declareE2e(root, layers, checks, lang);
   const registry = join(root, cfg.dirs?.contracts ?? "docs/contracts.md");
   const contracts = existsSync(registry) ? readContracts(readFileSync(registry, "utf8")) : [];
   const judged = {
@@ -88,7 +92,7 @@ export function guarantees(opts: GuaranteesOptions): GuaranteesReport {
       kind: "e2e",
       path: "docs/projects/e2e-chemins-critiques.md",
       title: briefTitle("e2e", "", lang),
-      reasons: gaps.filter((g) => g.layer === null).map((g) => g.reason),
+      reasons: [...gaps.filter((g) => g.layer === null).map((g) => g.reason), ...e2eLines],
       blocking: true,
     });
   let forge = inspectForge(root, cfg, exec, lang);
@@ -141,6 +145,7 @@ export function guarantees(opts: GuaranteesOptions): GuaranteesReport {
     dryRun: Boolean(opts.dryRun),
     layers,
     e2e,
+    e2eLines,
     gaps: gaps.map((g) => g.reason),
     forge,
     skeleton,
@@ -160,6 +165,7 @@ export function formatGuarantees(r: GuaranteesReport): string[] {
     out.push(fill(T.layer, l.layer, l.tool ?? "?"));
     out.push(...l.lines.map((x) => `  ${l.status === "blocked" ? "✗" : "-"} ${x}`));
   }
+  out.push(...(r.e2eLines ?? []).map((x) => `- ${x}`));
   if (r.e2e !== false) out.push(r.e2e === null ? `- ${T.e2ePending}` : `✓ ${T.e2eOk}`);
   out.push(...(r.gaps ?? []).map((gap) => `✗ ${gap}`));
   if (r.protectedNow) out.push(`✓ ${fill(T.protected, r.forge.branch, r.forge.forge)}`);
