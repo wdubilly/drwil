@@ -4743,3 +4743,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Intention couverte** : la note du 2026-11-09 « Rendre le découpage en tranches systématique pour l'adoptant » (`docs/intentions/notes.md`) est couverte et retirée.
 - **Critères et preuves** : `.githooks/engine-shards.test.mjs`, `.githooks/run-checks-shards.test.mjs`, `packages/drwil/test/ci-shards.test.mjs`, `packages/drwil/test/guarantees.test.mjs`, `packages/drwil/test/shards-proposal.test.mjs` ; `drwil verify --agent` : `GOVERNANCE: PASS (CI pending)` (308 contrats : 287 PASS, 21 ATTESTED, 0 FAIL, 0 MANUAL, 0 ERROR).
 - **Limites connues** : aucune limite hors cadre relevée pendant le chantier (aucune fiche d'intention créée). Reste la mesure sur la CI réelle d'un adoptant (par exemple `drwil_walk`) après sa mise à jour et `npx drwil doctor --fix`.
+
+## controles-lents-decoupes-des-le-depart
+
+- **Preuve de clôture** : `docs/preuves/controles-lents-decoupes-des-le-depart.md`.
