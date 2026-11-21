@@ -4742,6 +4742,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Attestations renouvelées** : QUA-092 et QUA-236 (par le demandeur, 2026-11-21 ; QUA-236 après le détour #463).
 - **Intention couverte** : la note du 2026-11-09 « Rendre le découpage en tranches systématique pour l'adoptant » (`docs/intentions/notes.md`) est couverte et retirée.
 - **Critères et preuves** : `.githooks/engine-shards.test.mjs`, `.githooks/run-checks-shards.test.mjs`, `packages/drwil/test/ci-shards.test.mjs`, `packages/drwil/test/guarantees.test.mjs`, `packages/drwil/test/shards-proposal.test.mjs` ; `drwil verify --agent` : `GOVERNANCE: PASS (CI pending)` (308 contrats : 287 PASS, 21 ATTESTED, 0 FAIL, 0 MANUAL, 0 ERROR).
+- **Réouverture (QUA-116)** : la PR #464 a révélé une alerte CodeQL (`js/incomplete-sanitization`) dans un test du lot 2 (`packages/drwil/test/guarantees.test.mjs`, RegExp construite avec un échappement des seuls points) ; le test compare désormais la chaîne exacte (`includes`).
 - **Limites connues** : aucune limite hors cadre relevée pendant le chantier (aucune fiche d'intention créée). Reste la mesure sur la CI réelle d'un adoptant (par exemple `drwil_walk`) après sa mise à jour et `npx drwil doctor --fix`.
 
 ## controles-lents-decoupes-des-le-depart
