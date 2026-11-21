@@ -33,6 +33,9 @@ const COMMON = {
   },
 };
 
+// Claude Code retire `multiSelect` à false (valeur par défaut) avant les hooks, Copilot CLI l'écrit : absent vaut false.
+const withDefaults = (poll) => ({ ...poll, questions: poll.questions.map((q) => ({ ...q, multiSelect: q.multiSelect ?? false })) });
+
 /** Première différence entre la préparation et le sondage posé : champ ajouté, ou valeur (ligne) qui diffère. */
 export function pollDifference(prepared, asked, path = "") {
   if (prepared && typeof prepared === "object" && asked && typeof asked === "object" && Array.isArray(prepared) === Array.isArray(asked)) {
@@ -87,7 +90,7 @@ export function readPoll(input, header, pattern) {
   ]
     .filter(([wrong]) => wrong)
     .map(([, cause, detail]) => ({ cause, detail }))[0];
-  return { valid: !refusal, refusal, match, asked: { questions: e.questions } };
+  return { valid: !refusal, refusal, match, asked: refusal ? { questions: e.questions } : withDefaults({ questions: e.questions }) };
 }
 
 /** Sondage à deux options : la première confirme (null) ; la seconde est le refus de l'humain ; une autre, illisible. */
@@ -166,7 +169,7 @@ export async function preparedPollHook(input, { root, tell, deny = console.error
       rmSync(file, { force: true });
       const prepared = await spec.prepare(mod, poll.match, root);
       if (!prepared.poll) return refuse({ cause: "absente", detail: prepared.message }, prepared.message || undefined);
-      const difference = pollDifference(prepared.poll, poll.asked);
+      const difference = pollDifference(withDefaults(prepared.poll), poll.asked);
       if (difference) return refuse(difference);
       mkdirSync(dir, { recursive: true });
       writeFileSync(file, JSON.stringify({ poll: poll.asked, data: prepared.data, askedAt: new Date().toISOString() }));

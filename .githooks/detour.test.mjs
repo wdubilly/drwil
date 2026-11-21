@@ -351,7 +351,7 @@ test("QUA-117 : le oui au détour ou à la réouverture se donne aussi par le so
   assert.deepEqual(sondage, detourPoll(racine).poll);
   const q = sondage.questions[0];
   assert.equal(q.header, "drwil-detour");
-  assert.equal(q.multiSelect, false);
+  assert.ok(!("multiSelect" in q), "multiSelect:false n'est jamais écrit : Claude Code le retire avant le hook");
   assert.match(
     q.question,
     /^drwil-detour detour\/date-mal-lue\nLe détour detour\/date-mal-lue change les règles du jeu .*\n\nL'autoriser à changer les règles du jeu \?$/,

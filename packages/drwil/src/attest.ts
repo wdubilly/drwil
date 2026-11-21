@@ -110,7 +110,8 @@ export interface AttestationPollOptions extends Omit<AttestOptions, "confirm" | 
 export interface AttestationQuestion {
   header: string;
   question: string;
-  multiSelect: boolean;
+  /** Écrit seulement à true : Claude Code retire la valeur par défaut (false) avant les hooks. */
+  multiSelect?: true;
   options: { label: string; description: string }[];
 }
 
@@ -156,7 +157,7 @@ export async function prepareAttestationPoll(o: AttestationPollOptions): Promise
   const options = batch
     ? judged.map((j) => ({ label: j.id, description: `${j.title} — ${L.trial} : ${tried}` }))
     : L.single.map((x) => ({ ...x }));
-  const poll = { questions: [{ header: "drwil-attest", question, multiSelect: batch, options }] };
+  const poll = { questions: [{ header: "drwil-attest", question, ...(batch ? { multiSelect: true as const } : {}), options }] };
   const snapshots = Object.fromEntries(judged.map((j) => [j.id, j.snapshot]));
   return { code: 0, message: "", poll, snapshot: batch ? JSON.stringify(snapshots) : judged[0].snapshot, snapshots };
 }

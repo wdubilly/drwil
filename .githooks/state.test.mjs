@@ -2329,7 +2329,7 @@ test("QUA-175 : le sondage drwil-accept se prépare sans rien écrire ; il ne s'
   const sondage = JSON.parse(r.sortie);
   const q = sondage.questions[0];
   assert.equal(q.header, "drwil-accept");
-  assert.equal(q.multiSelect, false);
+  assert.ok(!("multiSelect" in q), "multiSelect:false n'est jamais écrit : Claude Code le retire avant le hook");
   assert.match(
     q.question,
     /^drwil-accept docs\/projects\/exemple\.md\nCritères de docs\/projects\/exemple\.md :\n- Un critère modifié sur deux lignes/,
@@ -2427,7 +2427,7 @@ test("QUA-117 : le sondage drwil-move se prépare sans rien écrire ; seule la r
   assert.equal(r.code, 0, r.erreurs);
   const q = JSON.parse(r.sortie).questions[0];
   assert.equal(q.header, "drwil-move");
-  assert.equal(q.multiSelect, false);
+  assert.ok(!("multiSelect" in q), "multiSelect:false n'est jamais écrit : Claude Code le retire avant le hook");
   assert.equal(
     q.question,
     `drwil-move EXPECTATION {"brief":"${FICHE}"}\nTransition : SCOPING → EXPECTATION\nFiche : ${FICHE}\n\nAutoriser cette transition ?`,

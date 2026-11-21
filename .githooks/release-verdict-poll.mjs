@@ -73,7 +73,7 @@ export function verdictPoll(root, args, { run = runner(root) } = {}) {
     T.ask,
   ].join("\n");
   const options = T.options.map((o) => ({ ...o }));
-  const poll = { questions: [{ header: "drwil-verdict", question, multiSelect: false, options }] };
+  const poll = { questions: [{ header: "drwil-verdict", question, options }] };
   return { code: 0, message: "", poll, data: { args: [opts.tag, ...canonical(opts)], sheet: print(c.sheet) } };
 }
 

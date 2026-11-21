@@ -1195,6 +1195,48 @@ function copilote(dir, poll, ctx = {}) {
   return { args, pre, post, hook, output, denied };
 }
 
+// Défaut du 2026-11-20 : AskUserQuestion retire `multiSelect` quand il vaut false (valeur par défaut) avant les
+// hooks ; la préparation l'écrivait, le hook refusait (« questions[0].multiSelect … ≠ false »).
+test("QUA-235 : Claude Code retire multiSelect:false avant le hook — les cinq sondages préparés n'en écrivent pas et, posés sans lui, sont acceptés", async () => {
+  const sansDefaut = (input) => {
+    const x = structuredClone(input);
+    for (const q of x.tool_input.questions) if (q.multiSelect === false) delete q.multiSelect;
+    return x;
+  };
+  const cas = [
+    ["drwil-move", sondageTransition, (s) => s.prepare(), /^✓ SCOPING → EXPECTATION$/],
+    ["drwil-detour", sondageDetour, (s) => s.prepare(), /^✓ réouverture de docs\/projects\/exemple\.md autorisée/],
+    ["drwil-accept", projetAcceptation, (s) => s.prepare(), /^✓ critères de docs\/projects\/exemple\.md acceptés/],
+    ["drwil-verdict", projetVerdict, (s) => s.prepare(), /verdict « approuvée avec réserves » enregistré/],
+    ["drwil-attest", projetAttestation, (s) => s.prepare(), /APP-009 attesté/],
+  ];
+  for (const [header, creer, preparer, effet] of cas) {
+    const s = await creer();
+    try {
+      const prepare = await preparer(s);
+      assert.equal(prepare.tool_input.questions[0].header, header);
+      assert.ok(!("multiSelect" in prepare.tool_input.questions[0]), `${header} : la préparation n'écrit pas multiSelect:false`);
+      const input = sansDefaut(prepare);
+      assert.equal(await s.hook(input), 0, `${header} : question posée sans multiSelect acceptée`);
+      assert.equal(await s.hook(s.post(input)), 0);
+      assert.match(s.output.at(-1), effet, `${header} : la réponse de l'humain applique le geste`);
+    } finally {
+      rmSync(s.dir, { recursive: true, force: true });
+    }
+  }
+  // L'autre sens : préparation sans le champ, question posée avec multiSelect:false (forme de Copilot CLI).
+  const s = await sondageTransition();
+  try {
+    const input = s.prepare();
+    input.tool_input.questions[0].multiSelect = false;
+    assert.equal(await s.hook(input), 0);
+    assert.equal(await s.hook(s.post(input)), 0);
+    assert.equal(s.output.at(-1), "✓ SCOPING → EXPECTATION");
+  } finally {
+    rmSync(s.dir, { recursive: true, force: true });
+  }
+});
+
 test("QUA-235 : Copilot CLI — les cinq sondages préparés, sous la forme réelle de ask_user, passent par le socle ; seule la réponse de l'humain applique le geste", async () => {
   const move = await sondageTransition();
   try {

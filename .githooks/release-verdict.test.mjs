@@ -260,7 +260,7 @@ test("QUA-053 : sondage drwil-verdict — préparé avec les contrôles du termi
   const [q] = r.poll.questions;
   assert.equal(r.poll.questions.length, 1);
   assert.equal(q.header, "drwil-verdict");
-  assert.equal(q.multiSelect, false);
+  assert.ok(!("multiSelect" in q), "multiSelect:false n'est jamais écrit : Claude Code le retire avant le hook");
   assert.equal(
     q.question,
     [
