@@ -1,39 +1,13 @@
-// Zone du projet du fichier de CI (QUA-283) : deux paires de marqueurs en commentaire, l'une dans les étapes du job
-// `checks`, l'autre parmi les jobs. `init` réécrit tout ce qui est hors zone et reprend la zone du projet telle quelle.
+// Zones du projet du fichier de CI (QUA-283) : paires de marqueurs en commentaire (étapes du job `checks`, jobs, stages
+// GitLab). `init` réécrit tout ce qui est hors zone, reprend les zones telles quelles et y replace ce qui n'est pas du kit
+// (ci-zone-move.ts) ; ici, ce qu'il en dit.
 import { CI_FILES } from "./config.js";
+import { placeProject, zonesOf } from "./ci-zone-move.js";
 import { texts } from "./cli-texts.js";
-import { fill, projectLang } from "./i18n.js";
+import { fill, projectLang, type MessageLang } from "./i18n.js";
 
-export const ZONES = ["steps", "jobs"] as const;
-const marker = (kind: "begin" | "end", zone: string) => new RegExp(`^\\s*# drwil-project-${kind} ${zone}\\s*$`);
 export const isCiFile = (rel: string): boolean => Object.values(CI_FILES).some((f) => f.includes(rel));
 const lines = (text: string): string[] => text.split(/\r?\n/);
-
-/** Lines inside each zone, or null when a zone is missing or its markers are not in order. */
-export function zonesOf(text: string): Record<string, string[]> | null {
-  const all = lines(text);
-  const out: Record<string, string[]> = {};
-  for (const zone of ZONES) {
-    const from = all.findIndex((l) => marker("begin", zone).test(l));
-    const to = all.findIndex((l) => marker("end", zone).test(l));
-    if (from < 0 || to < from) return null;
-    out[zone] = all.slice(from + 1, to);
-  }
-  return out;
-}
-
-/** The template with the project's zones, as found in `existing`, in place of its own. */
-export function mergeZones(template: string, existing: string): string {
-  const kept = zonesOf(existing);
-  if (!kept) return template;
-  let result = lines(template);
-  for (const zone of ZONES) {
-    const from = result.findIndex((l) => marker("begin", zone).test(l));
-    const to = result.findIndex((l) => marker("end", zone).test(l));
-    result = [...result.slice(0, from + 1), ...kept[zone], ...result.slice(to)];
-  }
-  return result.join(/\r\n/.test(existing) ? "\r\n" : "\n");
-}
 
 /** Lines of `existing` that `incoming` does not have (a multiset: a line repeated once more counts). */
 export function removedLines(incoming: string, existing: string): string[] {
@@ -55,21 +29,24 @@ export function namesOf(removed: string[]): string[] {
   return others > 0 ? [...named, `${others}`] : named;
 }
 
-/** The human's answer on an unmarked CI file: the names that would disappear and the removed lines, shown as a diff. */
+/** The human's answer on an unmarked CI file, no longer asked: what is not the kit's is moved into the project zone. */
 export type ConfirmCi = (rel: string, names: string[], removed: string[]) => Promise<boolean>;
 
 const TEXTS = {
   fr: {
-    outside:
-      "⚠ {0} : réécrit hors de la zone du projet, {1} ligne(s) modifiée(s) à la main perdues ({2}) ; la branche de mise à jour garde l'ancienne version.",
-    unmarked:
-      "⚠ {0} n'a pas de zone du projet (marqueurs « drwil-project-begin/end ») : le mettre à jour supprimerait {1}. Rien n'a été changé ; relancer `npx drwil init` dans un terminal pour confirmer.",
+    outside: "⚠ {0} : réécrit hors de la zone du projet d'après le gabarit du kit, {1} ligne(s) qui en différaient remplacée(s) ({2}){3}.",
+    kept: " ; la branche « {0} » garde l'ancienne version",
+    moved: "{0} : replacé(s) dans la zone du projet : {1}.",
+    conflict:
+      "⚠ {0} : clé(s) {1} définie(s) par le projet et par le kit avec un contenu différent, ou sans place dans une zone du projet. Rien n'a été changé : ramener ces clés à la version du kit (gabarit) et porter le réglage du projet dans ses propres jobs ou dans la zone du projet, puis relancer `npx drwil init`.",
     others: "{0} autre(s) ligne(s)",
   },
   en: {
-    outside: "⚠ {0}: rewritten outside the project zone, {1} line(s) edited by hand lost ({2}); the update branch keeps the old version.",
-    unmarked:
-      '⚠ {0} has no project zone ("drwil-project-begin/end" markers): updating it would remove {1}. Nothing was changed; run `npx drwil init` again in a terminal to confirm.',
+    outside: "⚠ {0}: rewritten outside the project zone from the kit's template, {1} line(s) that differed from it replaced ({2}){3}.",
+    kept: '; branch "{0}" keeps the old version',
+    moved: "{0}: moved into the project zone: {1}.",
+    conflict:
+      "⚠ {0}: key(s) {1} defined by the project and by the kit with different content, or with no place in a project zone. Nothing was changed: bring these keys back to the kit's version (template) and carry the project's setting into its own jobs or into the project zone, then run `npx drwil init` again.",
     others: "{0} other line(s)",
   },
 };
@@ -77,17 +54,13 @@ const TEXTS = {
 export const describe = (names: string[], lang: "fr" | "en") =>
   names.map((n, i) => (i === names.length - 1 && /^\d+$/.test(n) ? fill(TEXTS[lang].others, n) : n)).join(", ");
 
-/** Warns about what a rewrite outside the zone removed from a marked file. */
-export function warnOutside(dir: string, rel: string, removed: string[]): void {
-  if (removed.length)
-    console.warn(fill(TEXTS[projectLang(dir)].outside, rel, removed.length, describe(namesOf(removed), projectLang(dir))));
-}
+/** The messages' language, and the branch of the commit `init` makes (absent: none), whose main branch keeps the old version. */
+export type CiContext = { lang: MessageLang; commit?: { branch: string; main: string } };
 
 /**
- * What `init` writes over an existing CI file, or null to keep it (undefined: not a CI file). Marked file: the kit's new content around the
- * project's zones. Unmarked: the kit's content when the file is the one installed (`pristine`, nothing of the project
- * in it) or when nothing would disappear; otherwise only on the human's confirmation, the names that would disappear
- * always said. `quiet`: a preview, nothing is asked or said.
+ * What `init` writes over an existing CI file, or null to keep it (undefined: not a CI file). The kit's part from the
+ * template, the project's zones kept and what is not the kit's moved into them, said; a conflicting key keeps the file,
+ * named. An unmarked file as installed (`pristine`) is the template. A preview (`simulation`) says nothing.
  */
 export async function ciContent(
   dir: string,
@@ -95,21 +68,23 @@ export async function ciContent(
   incoming: string,
   existing: string,
   pristine: boolean,
-  w: { confirmCi?: ConfirmCi; simulation?: unknown },
+  w: { ci?: CiContext; simulation?: unknown },
 ): Promise<string | null | undefined> {
   if (!isCiFile(rel)) return undefined;
-  const o = { pristine, confirm: w.confirmCi, quiet: !!w.simulation };
-  if (zonesOf(existing)) {
-    const merged = mergeZones(incoming, existing);
-    if (!o.quiet) warnOutside(dir, rel, removedLines(merged, existing));
-    return merged;
+  if (pristine && !zonesOf(existing)) return incoming;
+  const placed = placeProject(rel.endsWith(".gitlab-ci.yml") ? "gitlab" : "github", incoming, existing);
+  if (w.simulation) return placed.content;
+  const lang = w.ci?.lang ?? projectLang(dir);
+  const T = TEXTS[lang];
+  if (placed.content === null) {
+    console.warn(fill(T.conflict, rel, placed.conflicts.join(", ")));
+    return null;
   }
-  const removed = removedLines(incoming, existing);
-  if (o.pristine || !removed.length) return incoming;
-  const names = namesOf(removed);
-  if (!o.quiet && o.confirm && (await o.confirm(rel, names, removed))) return incoming;
-  if (!o.quiet && !o.confirm) console.warn(fill(TEXTS[projectLang(dir)].unmarked, rel, describe(names, projectLang(dir))));
-  return null;
+  if (placed.moved.length) console.log(fill(T.moved, rel, placed.moved.join(", ")));
+  const removed = removedLines(placed.content, existing);
+  const kept = w.ci?.commit ? fill(T.kept, w.ci.commit.main) : "";
+  if (removed.length) console.warn(fill(T.outside, rel, removed.length, describe(namesOf(removed), lang), kept));
+  return placed.content;
 }
 
 /** The terminal's confirmation: the removed lines as a diff, then the human's yes (`ask` reads one answer). */

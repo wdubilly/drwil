@@ -154,6 +154,11 @@ après clôture, `QUA-116`).
   et refus maintenus (fichier hors manifeste, garde coupée) (validé par le demandeur le 2026-11-21)
 - `.githooks/check-docs.test.mjs` — gardé à sa version de la branche (QUA-113) : cas de la fiche supprimée puis
   recréée au même chemin, ses fichiers couverts (validé par le demandeur le 2026-11-21)
+- `QUA-315` — ancien critère : aucun test de `packages/drwil/test/kit-installation.test.mjs` ne change — raison : D-c
+  rend faux deux tests qui affirmaient « à l'installation, le CI du projet n'est jamais réécrit » (« projet existant :
+  init complète sans écraser… », « projet existant : doctor signale ce qui manque… ») ; leurs noms et leur place restent,
+  leur corps suit D-c (kit écrit, job du projet dans la zone ; doctor partant d'un CI sans job du kit) (validé par le
+  demandeur le 2026-11-21)
 
 ## 2. Hors périmètre
 
@@ -229,7 +234,7 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-21) : lots 1 (a) et 2 (b) commités. Lot 1 : `init` sur un dépôt git qui a des commits et
+- **Dernier état** (2026-11-21) : lots 1 (a), 2 (b) et 3 (c) commités. Lot 1 : `init` sur un dépôt git qui a des commits et
   pas de manifeste coupe `workstream/kit-installation` depuis la principale (packages/drwil/src/kit-install.ts,
   `prepareKitCommit` ; préconditions et commit partagés avec la mise à jour : `cutBranch` et `finishUpdate` de
   `packages/drwil/src/kit-update.ts`) et y commite le kit avec le trailer ; la configuration créée est admise par
@@ -240,14 +245,30 @@ Aucun.
   présente prime) ; `.githooks/check-docs-workstreams.mjs` inchangé (les fichiers dérivés parcourent les deux
   versions, la présente d'abord, sans remplacement). `QUA-206`, `QUA-238` et `QUA-173` réécrits. Les fichiers
   `packages/drwil/test/kit-<thème>.test.mjs` sont figés par `QUA-315` (inventaire de la découpe) : les tests du paquet
-  vont dans packages/drwil/test/montee-de-version.test.mjs.
+  vont dans packages/drwil/test/montee-de-version.test.mjs. Lot 3 : `placeProject` (packages/drwil/src/ci-zone-move.ts)
+  découpe le fichier de CI en blocs (clés de premier niveau GitLab, jobs GitHub), replace dans la zone `jobs` ce que le
+  gabarit n'a pas et dans la zone `stages` (neuve, gabarit GitLab, après `test`) les stages qui ne sont pas du kit ;
+  conflit (fichier tel quel, clé nommée, D-f) : clé de la zone que le gabarit a aussi, clé du gabarit de contenu
+  différent dans un fichier sans balises, clé GitHub de premier niveau sans place. Hors zone d'un fichier balisé, une
+  clé du gabarit reste celle du kit (réécrite, signalée). `ciContent` (packages/drwil/src/ci-zone.ts) ne cite la
+  branche principale que si `init` commite sur sa branche ; même correction dans `driftQuestion` et `ciQuestion`
+  (packages/drwil/src/cli-texts.ts). Deux tests de packages/drwil/test/kit-installation.test.mjs alignés sur D-c (noms
+  inchangés, exception `QUA-315` validée le 2026-11-21). `QUA-283` réécrit ; rejeu sur le fichier de CI GitLab de
+  marinade `main` : aucune ligne du projet perdue.
 - **Travail non commité** : aucun. Dossier de reproduction (hors dépôt, peut disparaître) :
   `/tmp/claude-1000/-home-wdubilly-projects-drwil/853fbde2-e7f4-4598-86e4-35a450054ace/scratchpad/repro-marinade`,
   branche `reinstall`, installation non commitée.
 - **Limite hors cadre relevée au lot 1** : `QUA-244` dit « rien n'y est noté à une première installation » et le
   commentaire de `recordCompletion` (packages/drwil/src/manifest-completed.ts) aussi ; l'installation commitée note
-  désormais à part les fichiers complétés. Contrat et fichier hors du cadrage : à soumettre au sondage des limites.
-- **Prochaine étape** : lot 3 — c, jobs et stages du projet replacés : tests en échec d'abord sur les deux forges
-  (fichier balisé avec jobs hors zone, fichier sans balises, clé globale en conflit D-f, en installation et en mise à
-  jour) dans packages/drwil/test/montee-de-version.test.mjs (pas dans un `kit-*.test.mjs`, figé), puis
-  packages/drwil/src/ci-zone-move.ts (neuf), zone `stages` du gabarit GitLab, message juste ; `QUA-283` réécrit.
+  désormais à part les fichiers complétés. Contrat et fichier hors du cadrage : à soumettre au sondage des limites
+  (intention prévue : `docs/intentions/` à nommer par la session principale).
+- **Limites hors cadre relevées au lot 3** (au sondage des limites, fin de BUILD) : `ci-confirmation-morte` —
+  `confirmCi`/`confirmCiWith` ne sont plus appelés mais `packages/drwil/src/cli-install.ts` et
+  `packages/drwil/src/config.ts` les branchent encore (intention à créer : ci-confirmation-morte, sous docs/intentions/) ;
+  `apercu-ci-replace` — l'aperçu (`packages/drwil/src/preview.ts`) annonce encore le manque « ci » qu'`init` traite
+  désormais (intention à créer : apercu-ci-replace, sous docs/intentions/). Le commentaire de `packages/drwil/src/drift.ts` dit
+  encore « the update branch keeps the old version ».
+- **Prochaine étape** : lot 4 — d, commit du kit sans coupure ni contrôles du projet : test d'un contrôle projet
+  `paths: ["**"]` différé sur un commit de kit et au pre-push d'une suite de commits de kit (D-e), joué dès qu'un
+  fichier ou un commit hors kit s'y ajoute ; `.githooks/pre-push` transmet les commits poussés ; délai retiré, sortie
+  montrée ; .githooks/run-checks-kit.mjs (neuf) ; contrat créé, `QUA-237` réécrit.

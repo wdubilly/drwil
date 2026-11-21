@@ -7,7 +7,7 @@ import { usesClaudeTree } from "./config-tools.js";
 import { sha256 } from "./manifest.js";
 import { geminiNode } from "./render-gemini.js";
 import { stackAllow } from "./render-stack.js";
-import { ciContent, type ConfirmCi } from "./ci-zone.js";
+import { ciContent, type CiContext } from "./ci-zone.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -122,8 +122,8 @@ export interface WriteOptions {
   simulation?: { created: string[]; kept: string[]; replaced: string[] };
   // resolve-drift on the kit's prose: the template's content of each file, as the install renders it.
   rendered?: Map<string, string>;
-  /** CI file (QUA-283): asked before an unmarked one, modified since the install, is replaced (absent: kept). */
-  confirmCi?: ConfirmCi;
+  /** CI file (QUA-283): the messages' language and the branch of the commit `init` makes (absent: none). */
+  ci?: CiContext;
 }
 
 async function writeOut(target: string, content: string, targetDir: string, w: WriteOptions): Promise<void> {

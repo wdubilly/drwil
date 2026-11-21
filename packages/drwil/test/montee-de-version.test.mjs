@@ -10,6 +10,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { doctor, init } from "../dist/index.js";
 import { engineVersion } from "../dist/install-record.js";
 import { confirmCiWith } from "../dist/ci-zone.js";
+import { placeProject } from "../dist/ci-zone-move.js";
 import { confirmDriftWith } from "../dist/drift.js";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
@@ -115,6 +116,15 @@ const AJOUTS = {
     jobs: ["deploiement-projet:", "  stage: test", "  script:", "    - echo deploy"],
   },
 };
+// Lignes d'une zone du projet (entre ses marqueurs), null sans zone.
+const zone = (texte, nom) => {
+  const l = texte.split("\n");
+  const [de, a] = [
+    l.findIndex((x) => x.trim() === `# drwil-project-begin ${nom}`),
+    l.findIndex((x) => x.trim() === `# drwil-project-end ${nom}`),
+  ];
+  return de < 0 || a < de ? null : l.slice(de + 1, a);
+};
 const poser = (texte, zone, lignes) => texte.replace(new RegExp(`(# drwil-project-begin ${zone}\\r?\\n)`), `$1${lignes.join("\n")}\n`);
 
 async function avertissements(fn) {
@@ -158,47 +168,32 @@ for (const ci of ["github", "gitlab"]) {
   });
 }
 
-test("QUA-283 : un CI sans marqueurs reste intact tant que rien n'est confirmé, et nomme ce qui disparaîtrait", async () => {
+test("QUA-283 : un CI sans marqueurs modifié : ses jobs du projet sont replacés dans la zone et nommés, sans question", async () => {
   const dir = await projetCi("github");
   const chemin = join(dir, FICHIER_CI.github);
+  const job = ["  mon-deploiement:", "    runs-on: x", "    steps:", "      - name: Publier", "        run: echo p"];
   const sansMarqueurs = [
     ...readFileSync(chemin, "utf8")
       .split("\n")
       .filter((l) => !l.includes("drwil-project-")),
-    "  mon-deploiement:",
-    "    runs-on: x",
-    "    steps:",
-    "      - name: Publier",
-    "        run: echo p",
+    ...job,
     "",
   ].join("\n");
   writeFileSync(chemin, sansMarqueurs);
-  const vus = await avertissements(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "github", tools: "claude" }));
-  assert.equal(readFileSync(chemin, "utf8"), sansMarqueurs);
-  assert.match(vus.join("\n"), /ia-first\.yml n'a pas de zone du projet.*supprimerait mon-deploiement, Publier/s);
-  let demande = null;
-  await silence(() =>
-    init({
-      lang: "fr",
-      targetDir: dir,
-      name: "demo",
-      git: false,
-      ci: "github",
-      tools: "claude",
-      confirmCi: async (rel, noms, lignes) => {
-        demande = { rel, noms, lignes };
-        return false;
-      },
-    }),
-  );
-  assert.equal(readFileSync(chemin, "utf8"), sansMarqueurs, "refus : rien ne change");
-  assert.deepEqual(demande.noms, ["mon-deploiement", "Publier", "3"]);
-  assert.ok(demande.lignes.includes("  mon-deploiement:"));
-  await silence(() =>
-    init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "github", tools: "claude", confirmCi: async () => true }),
-  );
+  const sortie = await sortieDe(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "github", tools: "claude" }));
   const apres = readFileSync(chemin, "utf8");
-  assert.ok(!apres.includes("mon-deploiement") && apres.includes("# drwil-project-begin jobs"), "confirmé : gabarit, zone vide");
+  assert.deepEqual(
+    zone(apres, "jobs").filter((l) => !l.trim().startsWith("#")),
+    ["", ...job],
+    "replacé dans la zone jobs",
+  );
+  assert.match(sortie, /ia-first\.yml : replacé\(s\) dans la zone du projet : mon-deploiement/);
+  assert.doesNotMatch(sortie, /n'a pas de zone|branche de mise à jour/);
+  assert.doesNotMatch(
+    await sortieDe(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "github", tools: "claude" })),
+    /replacé|réécrit hors/,
+  );
+  assert.equal(readFileSync(chemin, "utf8"), apres, "rejouer ne change rien");
 });
 
 test("QUA-283 : un CI sans marqueurs tel qu'installé est remis au gabarit sans question", async () => {
@@ -234,13 +229,14 @@ test("QUA-283 : la confirmation au terminal montre le diff et n'accepte que oui"
   assert.match(questions[0], /ci\.yml.*\n- ligne 0\n[\s\S]*- ligne 39\n… \(5\)\n/);
 });
 
-test("QUA-283 : hors zone, une ligne modifiée à la main est réécrite et signalée", async () => {
+test("QUA-283 : hors zone, un job du kit renommé à la main devient un job du projet, replacé dans la zone ; le job du kit est remis", async () => {
   const dir = await projetCi("github");
   const chemin = join(dir, FICHIER_CI.github);
   writeFileSync(chemin, readFileSync(chemin, "utf8").replace("  checks:", "  checks-maison:"));
-  const vus = await avertissements(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "github", tools: "claude" }));
-  assert.match(vus.join("\n"), /réécrit hors de la zone du projet.*checks-maison/);
-  assert.ok(readFileSync(chemin, "utf8").includes("  checks:"));
+  const sortie = await sortieDe(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "github", tools: "claude" }));
+  assert.match(sortie, /replacé\(s\) dans la zone du projet : checks-maison/);
+  const apres = readFileSync(chemin, "utf8");
+  assert.ok(apres.includes("\n  checks:\n") && zone(apres, "jobs").includes("  checks-maison:"));
 });
 
 const PROJET = ["AGENTS.md", "docs/recipes/run-locally.md", "docs/intentions/README.md", "docs/contracts-catalog.md"];
@@ -506,4 +502,170 @@ test("QUA-206 : installation sur un dépôt existant refusée avant d'écrire : 
   await silence(() => init({ lang: "en", targetDir: dir, name: "demo" }));
   assert.match(git(dir, "log", "-1", "--format=%s").stdout, /^Install the drwil kit \d+\.\d+\.\d+/);
   assert.equal(git(dir, "status", "--porcelain").stdout.trim(), "");
+});
+
+// Jobs et stages du projet hors zone (QUA-283, D-c) : cas réel de marinade-poulet (kit 0.11.1, fichier balisé, sans zone
+// `stages`), son job `build`, ses stages `build`/`deploy` et ses clés globales posées dans la zone `jobs`.
+const BUILD = [
+  "build:",
+  "  stage: build",
+  "  image: node:24",
+  "  script:",
+  "    - npm ci",
+  "    - npm run build",
+  '    - echo "Build successful"',
+];
+const BUILD_FIN = ["  artifacts:", "    expire_in: 1 hour", "    paths:", "      - build", "  only:", "    - main"];
+const GLOBALES = ["variables:", '  ONNXRUNTIME_NODE_INSTALL: "skip"', "", "default:", "  before_script:", "    - npm ci"];
+const marinade = (kit) =>
+  poser(kit, "jobs", GLOBALES).replace(
+    /^stages:\n(?:.*\n)*?\n/m,
+    ["stages:", "  - test", "  - build", "  - deploy", "", ...BUILD, ...BUILD_FIN, "", ""].join("\n"),
+  );
+
+test("QUA-283 : GitLab balisé, job et stages du projet hors zone (cas marinade-poulet) : replacés et nommés, rien perdu, rejeu sans effet", async () => {
+  const dir = await projetCi("gitlab");
+  const chemin = join(dir, FICHIER_CI.gitlab);
+  const kit = readFileSync(chemin, "utf8");
+  assert.ok(zone(kit, "stages"), "le gabarit GitLab a une zone stages");
+  writeFileSync(chemin, marinade(kit));
+  const sortie = await sortieDe(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "gitlab", tools: "claude" }));
+  const apres = readFileSync(chemin, "utf8");
+  assert.deepEqual(
+    zone(apres, "stages").filter((l) => !l.trim().startsWith("#")),
+    ["  - build", "  - deploy"],
+  );
+  const jobs = zone(apres, "jobs").join("\n");
+  for (const l of [...GLOBALES, ...BUILD, ...BUILD_FIN]) assert.ok(jobs.includes(l), `perdue : ${l}`);
+  assert.equal(apres.match(/^ {2}- test$/gm).length, 1, "le stage test du kit n'est pas doublé");
+  assert.match(sortie, /\.gitlab-ci\.yml : replacé\(s\) dans la zone du projet : build, stage build, stage deploy\./);
+  assert.doesNotMatch(sortie, /branche de mise à jour/, "aucune branche : le message n'en cite pas");
+  assert.doesNotMatch(
+    await sortieDe(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "gitlab", tools: "claude" })),
+    /replacé|réécrit hors/,
+  );
+  assert.equal(readFileSync(chemin, "utf8"), apres, "rejouer ne change rien");
+});
+
+test("QUA-283 : GitHub balisé, un job du projet hors zone est replacé dans la zone jobs", async () => {
+  const dir = await projetCi("github");
+  const chemin = join(dir, FICHIER_CI.github);
+  const job = ["  deploiement-hors-zone:", "    runs-on: ubuntu-latest", "    steps:", "      - run: echo d"];
+  writeFileSync(chemin, `${readFileSync(chemin, "utf8").trimEnd()}\n${job.join("\n")}\n`);
+  const sortie = await sortieDe(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "github", tools: "claude" }));
+  assert.match(sortie, /replacé\(s\) dans la zone du projet : deploiement-hors-zone/);
+  assert.ok(zone(readFileSync(chemin, "utf8"), "jobs").join("\n").includes(job.join("\n")));
+});
+
+// Dépôt minimal (constat c) : son propre .gitlab-ci.yml, sans balises ; avant, l'installation refusait d'y toucher.
+const CI_PROJET = [
+  "stages:",
+  "  - build",
+  "  - test",
+  "",
+  "image: node:20",
+  "",
+  ...BUILD.slice(0, 2),
+  "  script:",
+  "    - npm run build",
+  "",
+  "unit:",
+  "  stage: test",
+  "  script:",
+  "    - npm test",
+  "",
+];
+
+test("QUA-283 : installation sur un dépôt existant au CI GitLab sans balises : kit installé, jobs et stages du projet dans la zone, commit sur la branche d'installation", async () => {
+  const dir = depotExistant();
+  writeFileSync(join(dir, ".gitlab-ci.yml"), CI_PROJET.join("\n"));
+  git(dir, "add", "-A");
+  assert.equal(git(dir, "commit", "-q", "-m", "ci du projet").status, 0);
+  const sortie = await sortieDe(() => init({ lang: "fr", targetDir: dir, name: "demo", ci: "gitlab", tools: "claude" }));
+  const apres = readFileSync(join(dir, ".gitlab-ci.yml"), "utf8");
+  assert.match(apres, /^checks:$/m, sortie);
+  assert.deepEqual(
+    zone(apres, "stages").filter((l) => !l.trim().startsWith("#")),
+    ["  - build"],
+  );
+  const jobs = zone(apres, "jobs").join("\n");
+  for (const l of ["image: node:20", "build:", "    - npm run build", "unit:", "    - npm test"])
+    assert.ok(jobs.includes(l), `perdue : ${l}`);
+  assert.match(sortie, /replacé\(s\) dans la zone du projet : image, build, unit, stage build\./);
+  assert.equal(git(dir, "status", "--porcelain").stdout.trim(), "", sortie);
+});
+
+// D-f : une clé globale définie par le projet et par le gabarit, de contenu différent : rien n'est réécrit.
+const conflit = async (ci, avant) => {
+  const dir = await projetCi(ci);
+  const chemin = join(dir, FICHIER_CI[ci]);
+  const texte = avant(readFileSync(chemin, "utf8"));
+  writeFileSync(chemin, texte);
+  const vus = await avertissements(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci, tools: "claude" }));
+  assert.equal(readFileSync(chemin, "utf8"), texte, "fichier laissé tel quel");
+  return vus.join("\n");
+};
+
+test("QUA-283 : clé globale en conflit (D-f), GitLab et GitHub, fichier balisé ou non : fichier tel quel, clé nommée et quoi faire", async () => {
+  const sansBalises = (t) =>
+    t
+      .split("\n")
+      .filter((l) => !l.includes("drwil-project-"))
+      .join("\n");
+  const workflow = (t) => t.replace("      when: never\n", "      when: always\n");
+  assert.match(
+    await conflit("gitlab", (t) => sansBalises(workflow(t))),
+    /\.gitlab-ci\.yml : clé\(s\) workflow .*Rien n'a été changé.*relancer `npx drwil init`/s,
+  );
+  assert.match(await conflit("gitlab", (t) => poser(t, "jobs", ["workflow:", "  name: projet"])), /clé\(s\) workflow /);
+  assert.match(
+    await conflit("github", (t) => sansBalises(t).replace("on: [push, pull_request]", "on: push")),
+    /ia-first\.yml : clé\(s\) on /,
+  );
+  assert.match(await conflit("github", (t) => t.replace("jobs:\n", "env:\n  A: b\njobs:\n")), /clé\(s\) env /);
+});
+
+test("QUA-283 : mise à jour dans un dépôt git : le message nomme la branche principale qui garde l'ancienne version", async () => {
+  const dir = tmp();
+  git(dir, "init", "-q", "-b", "master");
+  git(dir, "config", "core.autocrlf", "false");
+  await silence(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "gitlab", tools: "claude" }));
+  enregistrer(dir, "0.0.1");
+  const chemin = join(dir, FICHIER_CI.gitlab);
+  writeFileSync(chemin, marinade(readFileSync(chemin, "utf8").replace("node:24", "node:99")));
+  git(dir, "add", "-A");
+  assert.equal(git(dir, "commit", "-q", "-m", "kit ancien").status, 0);
+  const sortie = await sortieDe(() => init({ lang: "fr", targetDir: dir, name: "demo", ci: "gitlab", tools: "claude" }));
+  assert.match(sortie, /réécrit hors de la zone du projet.*la branche « master » garde l'ancienne version/s);
+  assert.match(sortie, /replacé\(s\) dans la zone du projet : build, stage build, stage deploy/);
+  assert.equal(git(dir, "symbolic-ref", "--short", "HEAD").stdout.trim(), "workstream/kit-update");
+  assert.equal(git(dir, "status", "--porcelain").stdout.trim(), "", sortie);
+});
+
+test("QUA-283 : stages en liste en ligne, guillemets, doublons et fins de ligne CRLF : chaque stage du projet une fois, fichier en CRLF", () => {
+  const gabarit = [
+    "stages:",
+    "  - test",
+    "  # drwil-project-begin stages",
+    "  # drwil-project-end stages",
+    "",
+    "checks:",
+    "  script:",
+    "    - x",
+    "    # drwil-project-begin steps",
+    "    # drwil-project-end steps",
+    "",
+    "# drwil-project-begin jobs",
+    "# drwil-project-end jobs",
+    "",
+  ].join("\n");
+  const projet = ['stages: [test, "build", build, deploy]', "", "build:", "  script: [b]", ""].join("\r\n");
+  const r = placeProject("gitlab", gabarit, projet);
+  assert.deepEqual(r.moved, ["build", "stage build", "stage deploy"]);
+  assert.match(r.content, /# drwil-project-begin stages\r\n {2}- build\r\n {2}- deploy\r\n {2}# drwil-project-end stages/);
+  assert.deepEqual(placeProject("github", "name: x\non: push\n", "name: x\non: push\n"), {
+    content: "name: x\non: push\n",
+    moved: [],
+    conflicts: [],
+  });
 });

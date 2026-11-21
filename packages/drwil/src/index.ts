@@ -127,7 +127,7 @@ export async function init(opts: InitOptions & { confirmDrift?: ConfirmDrift }):
   const flagged: string[] = [];
   const manifest: Record<string, string> = {};
   const expected: string[] = [];
-  await scaffold(r, { shouldOverwrite, drifted: flagged, manifest, expected, confirmCi: opts.confirmCi });
+  await scaffold(r, { shouldOverwrite, drifted: flagged, manifest, expected, ci: { lang: r.lang, commit: update ?? undefined } });
   const drifted = flagged.filter((f) => !isProjectFile(f));
   const completed: Record<string, string> = {};
   const { added } = await complete(r, { manifest, previous, completed });

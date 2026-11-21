@@ -1,7 +1,5 @@
-# QUA-263: one pipeline per push, the branch pipeline, which the merge request shows as its own: no
-# merge request pipeline replays the same commit a second time (`workflow: rules` refuses them). GitLab
-# sets the variable CI, so run-checks also plays the checks left to CI (`runAt: ["ci"]`, QUA-208),
-# proven by that pipeline only (QUA-262).
+# QUA-263: one pipeline per push, the branch pipeline, which the merge request shows as its own: no merge request pipeline replays the same
+# commit a second time (`workflow: rules` refuses them). GitLab sets CI, so run-checks also plays the checks left to CI (`runAt: ["ci"]`, QUA-208), proven by that pipeline only (QUA-262).
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -12,6 +10,9 @@ stages:
   - plan
   - slices
   - test
+  # drwil-project-begin stages
+  # Stages of the project, after the kit's checks: kept as they are by `drwil init`, which moves here any stage that is not the kit's.
+  # drwil-project-end stages
   - alert
 
 # Sharded checks (`shards: N` in .drwil/ia-first.json, never in this file). The plan stage reads N from the configuration; `parallel:` is
@@ -151,7 +152,7 @@ checks:
     # QUA-296: last line of the kit, so laid only when every line above succeeded: the tree this pipeline proved.
     - '[ -n "$CI_COMMIT_TAG" ] || [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ] || git rev-parse "HEAD^{tree}" > .drwil/evidence/pr-verdicts/proven-tree.txt'
     # drwil-project-begin steps
-    # Script lines of the project: kept as they are by `drwil init`, which rewrites everything outside the two zones.
+    # Script lines of the project: kept as they are by `drwil init`, which rewrites everything outside the project zones.
     # drwil-project-end steps
   # QUA-250: only a main-branch pipeline, which never asks for reuse and so replays everything,
   # keeps its verdicts (even when a check failed: an "ok" stays true); elsewhere the file is
@@ -170,7 +171,7 @@ checks:
       - .drwil/evidence/pr-verdicts
 
 # drwil-project-begin jobs
-# Jobs of the project: kept as they are by `drwil init`, which rewrites everything outside the two zones.
+# Jobs of the project: kept as they are by `drwil init`, which rewrites everything outside the project zones.
 # drwil-project-end jobs
 
 # No branch protection is possible on an equivalent GitLab plan (merging stays an unconditional click): only an after-the-fact alert.
