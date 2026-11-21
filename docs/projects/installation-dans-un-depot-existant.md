@@ -118,7 +118,7 @@ après clôture, `QUA-116`).
   tel quel, nomme la clé en conflit et dit quoi faire ; rien n'est perdu, en installation comme en mise à jour —
   `QUA-283`
 - Recette : la réinstallation à neuf et la mise à jour rejouées sur une copie de marinade-poulet avec un tarball du
-  chantier, commit fait sans erreur, CI du projet conservée [humain] — contrat `Manuel` à créer
+  chantier, commit fait sans erreur, CI du projet conservée [humain] — `QUA-326`
 
 ## Contrats modifiés
 

@@ -3193,3 +3193,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/run-checks.test.mjs`
 **Origine** : installation-dans-un-depot-existant — « Au pre-commit d'un commit posé par `init` (variable `DRWIL_KIT_UPDATE`) dont tous les fichiers sont expliqués par le manifeste (`nonKitFiles` vide), un contrôle du projet qui déclare `paths` est différé » et « Au pre-push, quand chaque commit poussé porte le trailer `Drwil-Kit-Update` et que le manifeste explique tous ses fichiers, les contrôles du projet à `paths` sont différés »
 **Raison** : Le 2026-11-21, sur une copie de marinade-poulet, le commit de mise à jour du kit durait 142 s, dont cliquet de couverture 85 s et couverture du diff 52 s, des contrôles du code projet rejoués sur des fichiers que le projet n'a pas écrits (D-d, D-e).
+
+## QUA-326 — `drwil init` s'installe et se met à jour sur un vrai dépôt existant sans commit refusé ni CI du projet perdue
+**Règle** : Propre à ce dépôt. Avant la clôture d'un chantier qui change l'installation ou la mise à jour du kit dans un dépôt existant, l'humain rejoue sur une copie de marinade-poulet, avec un tarball du chantier, la réinstallation à neuf et la mise à jour : le commit posé par `init` est fait sans erreur, et le fichier de CI garde chaque job et chaque stage du projet.
+**Périmètre** : `drwil init` (installation et mise à jour) sur une copie d'un vrai projet ; jugement humain toujours requis.
+**Source de vérité** : `packages/drwil/src/kit-install.ts`, `packages/drwil/src/kit-update.ts`, `packages/drwil/src/ci-zone-move.ts`, `.githooks/run-checks-kit.mjs`.
+**Preuve** : recette humaine sur une copie de marinade-poulet ; aucun agent n'enregistre ce jugement.
+**Manuel** : Installer le tarball du chantier sur une copie de marinade-poulet, à neuf puis en mise à jour ; confirmer que le commit d'`init` est fait sans erreur et que la CI du projet est conservée.
+**Couvre** : `packages/drwil/src/kit-install.ts`, `packages/drwil/src/kit-update.ts`, `packages/drwil/src/ci-zone-move.ts`, `.githooks/run-checks-kit.mjs`
+**Origine** : installation-dans-un-depot-existant — « Recette : la réinstallation à neuf et la mise à jour rejouées sur une copie de marinade-poulet avec un tarball du chantier, commit fait sans erreur, CI du projet conservée [humain] »
+**Raison** : Le 2026-11-21, l'installation et la mise à jour sur une copie de marinade-poulet ont échoué (commit refusé, CI du projet perdue) alors que les tests sur des dépôts d'essai passaient : seul un vrai projet le montre.
