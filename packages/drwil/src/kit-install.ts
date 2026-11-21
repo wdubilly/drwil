@@ -81,6 +81,7 @@ const TEXTS: Record<MessageLang, KitTexts> = {
     noMain:
       "⚠ branche principale introuvable (origin/HEAD, master, main) : l'installation reste dans l'arbre de travail, sans commit ni branche dédiée.",
     upToDate: "Rien à commiter, retour sur la branche « {0} ».",
+    committing: "Commit de l'installation en cours : les hooks du projet jouent leurs contrôles, sans délai imposé…",
     committed: "Fait : kit {0} installé et commité sur la branche « {1} » (créée depuis « {2} »), {3} fichier(s).",
     notCommitted:
       "⚠ Kit installé sur la branche « {0} » mais commit non fait ({1}) : les fichiers sont dans l'arbre de travail, à commiter une fois la cause levée.",
@@ -104,6 +105,7 @@ const TEXTS: Record<MessageLang, KitTexts> = {
     noMain:
       "⚠ main branch not found (origin/HEAD, master, main): the installation stays in the working tree, with no commit or dedicated branch.",
     upToDate: 'Nothing to commit, back on branch "{0}".',
+    committing: "Committing the installation: the project's hooks run their checks, with no time limit…",
     committed: 'Done: kit {0} installed and committed on branch "{1}" (created from "{2}"), {3} file(s).',
     notCommitted:
       '⚠ Kit installed on branch "{0}" but not committed ({1}): the files are in the working tree, to be committed once the cause is fixed.',

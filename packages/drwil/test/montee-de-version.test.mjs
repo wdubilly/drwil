@@ -669,3 +669,48 @@ test("QUA-283 : stages en liste en ligne, guillemets, doublons et fins de ligne 
     conflicts: [],
   });
 });
+
+test("QUA-237 : le commit de la mise à jour va au bout et montre la sortie des hooks ; un contrôle du projet à paths y est différé (QUA-325)", async () => {
+  const dir = tmp();
+  git(dir, "init", "-q", "-b", "master");
+  git(dir, "config", "core.autocrlf", "false");
+  git(dir, "config", "user.email", "t@t");
+  git(dir, "config", "user.name", "t");
+  await silence(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
+  enregistrer(dir, "0.0.1");
+  // Contrôle du projet en échec à `paths: ["**"]` : rejoué sur le commit du kit, il le refusait (cliquet de couverture de marinade-poulet).
+  const cfg = JSON.parse(readFileSync(join(dir, ".drwil/ia-first.json"), "utf8"));
+  cfg.checks = [...(cfg.checks ?? []), { id: "lent", name: "lent", run: 'node -e "process.exit(1)"', paths: ["**"] }];
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg, null, 2));
+  assert.equal(git(dir, "add", "-A").status, 0);
+  assert.equal(git(dir, "commit", "-q", "-m", "kit ancien").status, 0);
+  const r = cli(dir, "init", "--tools", "claude");
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /Commit de la mise à jour en cours : les hooks du projet jouent leurs contrôles/);
+  // Git envoie la sortie des hooks sur stderr : elle passe par celle d'init, plus capturée.
+  assert.match(r.stderr, /^\[ia-first\] contrôles exécutés : OK/m, `sortie des hooks montrée\n${r.stdout}${r.stderr}`);
+  assert.match(r.stdout, /Fait : mise à jour du kit vers .* commitée/);
+  assert.equal(git(dir, "status", "--porcelain").stdout.trim(), "", r.stdout);
+  const journal = readFileSync(join(dir, ".drwil/evidence/run-checks.log"), "utf8");
+  assert.match(journal, /non exécuté : lent \(commit du kit, reconnu par son manifeste/);
+});
+
+test("QUA-237 : un contrôle du projet sans paths en échec refuse le commit de la mise à jour : sortie des hooks montrée, mise à jour laissée dans l'arbre", async () => {
+  const dir = tmp();
+  git(dir, "init", "-q", "-b", "master");
+  git(dir, "config", "core.autocrlf", "false");
+  git(dir, "config", "user.email", "t@t");
+  git(dir, "config", "user.name", "t");
+  await silence(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false }));
+  enregistrer(dir, "0.0.1");
+  const cfg = JSON.parse(readFileSync(join(dir, ".drwil/ia-first.json"), "utf8"));
+  cfg.checks = [...(cfg.checks ?? []), { id: "rouge", name: "rouge", run: 'node -e "process.exit(1)"' }];
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify(cfg, null, 2));
+  assert.equal(git(dir, "add", "-A").status, 0);
+  assert.equal(git(dir, "commit", "-q", "-m", "kit ancien").status, 0);
+  const r = cli(dir, "init", "--tools", "claude");
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stderr, /✗ échec : rouge/, "un contrôle sans paths joue, sa sortie est montrée");
+  assert.match(r.stderr, /Mise à jour appliquée sur la branche « workstream\/kit-update » mais commit non fait/);
+  assert.notEqual(git(dir, "status", "--porcelain").stdout.trim(), "");
+});

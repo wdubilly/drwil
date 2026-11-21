@@ -147,6 +147,10 @@ après clôture, `QUA-116`).
   la liste qui juge les `paths` ; ce tri vit dans
   sa découpe neuve, .githooks/run-checks-kit.mjs, à déclarer ici par son nom entre accents graves dès sa création
   (validé par le demandeur le 2026-11-21)
+- `.githooks/run-checks-kit.mjs` — gardé à sa version de la branche (QUA-113) : découpe neuve de
+  `.githooks/run-checks.mjs` (plafond de 200 lignes), créée au lot 4 ; reconnaît par le manifeste le commit de `init`
+  ou la suite de commits du kit poussée et diffère les contrôles du projet à `paths` (QUA-325), déclarée ici à sa
+  création comme prévu par la puce de `.githooks/run-checks.mjs` (validé par le demandeur le 2026-11-21, D-d)
 - `.githooks/pre-push` — gardé à sa version de la branche (QUA-113) : transmet aussi les commits poussés (SHA local et
   distant de chaque référence) pour que `.githooks/run-checks.mjs` reconnaisse une suite de commits de kit et diffère les
   contrôles du projet à `paths` (validé par le demandeur le 2026-11-21, D-e)
@@ -234,7 +238,7 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-21) : lots 1 (a), 2 (b) et 3 (c) commités. Lot 1 : `init` sur un dépôt git qui a des commits et
+- **Dernier état** (2026-11-21) : lots 1 (a), 2 (b), 3 (c) et 4 (d) commités. Lot 1 : `init` sur un dépôt git qui a des commits et
   pas de manifeste coupe `workstream/kit-installation` depuis la principale (packages/drwil/src/kit-install.ts,
   `prepareKitCommit` ; préconditions et commit partagés avec la mise à jour : `cutBranch` et `finishUpdate` de
   `packages/drwil/src/kit-update.ts`) et y commite le kit avec le trailer ; la configuration créée est admise par
@@ -254,7 +258,17 @@ Aucun.
   branche principale que si `init` commite sur sa branche ; même correction dans `driftQuestion` et `ciQuestion`
   (packages/drwil/src/cli-texts.ts). Deux tests de packages/drwil/test/kit-installation.test.mjs alignés sur D-c (noms
   inchangés, exception `QUA-315` validée le 2026-11-21). `QUA-283` réécrit ; rejeu sur le fichier de CI GitLab de
-  marinade `main` : aucune ligne du projet perdue.
+  marinade `main` : aucune ligne du projet perdue. Lot 4 : cause de d — `finishUpdate` lançait `git commit` avec
+  `timeout: 60_000` et la sortie capturée, et les contrôles du projet à `paths: ["**"]` jugeaient les fichiers du kit ;
+  le commit n'a plus de délai, s'annonce (`committing`) et laisse passer la sortie des hooks (git l'envoie sur stderr) ;
+  `kitDeferral` (.githooks/run-checks-kit.mjs, neuf, `stagedFiles` y a déménagé) retire de la configuration du moteur
+  les contrôles du projet à `paths` (hors confiés à la CI) quand le commit posé par `init` est entièrement expliqué
+  par le manifeste, ou quand chaque commit poussé (`DRWIL_PUSH_COMMITS`, transmis par `.githooks/pre-push`) a un seul
+  parent, le trailer et tous ses fichiers expliqués ; ils sont nommés « non exécuté » ; jamais en CI. Contrat
+  `QUA-325` créé (contrôle `tests-qua-325`), `QUA-237` réécrit ; puce de `.githooks/run-checks-kit.mjs` ajoutée.
+  Mesure sur une copie jetable de la reproduction (`main`, kit 0.11.1, tarball de la branche) : `init` complet en 2,3 s
+  (au lieu de 142 s pour le seul commit), commit fait avec le trailer, arbre propre, 29 contrôles du projet différés
+  (dont le cliquet de couverture et la couverture du diff) ; pre-push simulé de la branche (sans pousser) : 2 s.
 - **Travail non commité** : aucun. Dossier de reproduction (hors dépôt, peut disparaître) :
   `/tmp/claude-1000/-home-wdubilly-projects-drwil/853fbde2-e7f4-4598-86e4-35a450054ace/scratchpad/repro-marinade`,
   branche `reinstall`, installation non commitée.
@@ -268,7 +282,7 @@ Aucun.
   `apercu-ci-replace` — l'aperçu (`packages/drwil/src/preview.ts`) annonce encore le manque « ci » qu'`init` traite
   désormais (intention à créer : apercu-ci-replace, sous docs/intentions/). Le commentaire de `packages/drwil/src/drift.ts` dit
   encore « the update branch keeps the old version ».
-- **Prochaine étape** : lot 4 — d, commit du kit sans coupure ni contrôles du projet : test d'un contrôle projet
-  `paths: ["**"]` différé sur un commit de kit et au pre-push d'une suite de commits de kit (D-e), joué dès qu'un
-  fichier ou un commit hors kit s'y ajoute ; `.githooks/pre-push` transmet les commits poussés ; délai retiré, sortie
-  montrée ; .githooks/run-checks-kit.mjs (neuf) ; contrat créé, `QUA-237` réécrit.
+- **Prochaine étape** : lot 5 — documentation et CHANGELOG : `INSTALL.md` et `packages/drwil/README.md` (installation
+  sur dépôt existant, branche, PR, CI conservée, commit du kit sans contrôles du projet rejoués), ligne « Unreleased »
+  de `packages/drwil/CHANGELOG.md`, en anglais ; puis `node .githooks/run-checks.mjs` sans échec, `drwil verify
+  --agent` en `GOVERNANCE: PASS`, recette humaine sur une copie de marinade-poulet.

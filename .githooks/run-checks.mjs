@@ -12,13 +12,13 @@
 // last pass is not replayed (`--tout-rejouer` / `--replay-all` replays everything); its verdict keeps its own fingerprint only.
 // QUA-152: the pre-push does the same, from the verdicts of `run-checks` and its own (a separate file `verify` ignores), only when the
 // working tree is the pushed commit; never in CI.
-import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { intentsLeftBehind, staleIntents } from "./briefs.mjs";
 import { checks, projectRoot, startParallel, treeFingerprint } from "./engine.mjs";
 import { ciTexts, WITH_CI_CHECKS } from "./engine-runat.mjs";
 import { annotate, glossary } from "./glossary.mjs";
+import { kitDeferral, stagedFiles } from "./run-checks-kit.mjs";
 import { loadReuse, saveVerdicts } from "./run-checks-verdicts.mjs";
 import { shardOptions, writeShardVerdicts } from "./run-checks-shards.mjs";
 import { TEXTS } from "./run-checks-texts.mjs";
@@ -31,13 +31,7 @@ try {
 const lang = cfg.lang === "en" ? "en" : "fr";
 const T = TEXTS[lang];
 const shard = shardOptions(process.argv, T, cfg);
-// At pre-commit only (DRWIL_HOOK=pre-commit, set by .githooks/pre-commit), the engine defers
-// a project check outside its `paths`. If git does not answer, everything runs (never deferred by default).
-function stagedFiles() {
-  if (process.env.DRWIL_HOOK !== "pre-commit") return null;
-  const r = spawnSync("git", ["diff", "--cached", "--name-only", "--no-renames", "-z"], { encoding: "utf8" });
-  return r.status === 0 ? r.stdout.split("\0").filter(Boolean) : null;
-}
+// At pre-commit only (DRWIL_HOOK=pre-commit, set by .githooks/pre-commit), the engine defers a project check outside its `paths`.
 
 // Only the commit may leave a check unrun (a check deferred outside its `paths` is replayed on push
 // and in CI): everywhere else a check that did not run fails, never a green light (QUA-013).
@@ -68,7 +62,10 @@ const ranAt = new Date().toISOString();
 const reusableByVerify = (id) => id !== "secrets" || Boolean(process.env.CI);
 // QUA-261: the option also plays the checks left to CI (`runAt: ["ci"]`, QUA-208), to reproduce a CI failure locally.
 const withCiChecks = process.argv.includes(WITH_CI_CHECKS);
-const list = checks(root, { cfg, staged, withCiChecks, shard });
+// QUA-325: a commit or a push of the kit by `init`, explained by its manifest, defers the project checks declaring `paths`.
+const kit = kitDeferral(root, cfg, staged);
+const list = checks(root, { cfg: kit.cfg, staged, withCiChecks, shard });
+for (const d of kit.deferred) unrun(d, true);
 // QUA-141: the verdicts of the last pass, to keep an "ok" whose check files did not change (never in a hook, in CI only when asked, QUA-250,
 // never with the option).
 const replayAll = process.argv.some((a) => a === "--tout-rejouer" || a === "--replay-all");

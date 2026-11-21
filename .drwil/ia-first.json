@@ -3320,7 +3320,7 @@
     {
       "id": "tests-qua-237",
       "name": "tests de QUA-237, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node .githooks/contract-tests.mjs QUA-237 packages/drwil/test/kit-mise-a-jour.test.mjs",
+      "run": "node .githooks/contract-tests.mjs QUA-237 packages/drwil/test/kit-mise-a-jour.test.mjs packages/drwil/test/montee-de-version.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/contract-tests.mjs",
@@ -4646,6 +4646,22 @@
       ],
       "degradable": false,
       "needsBuild": true
+    },
+    {
+      "id": "tests-qua-325",
+      "name": "tests de QUA-325, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-325 .githooks/run-checks.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
     },
     {
       "id": "couverture-diff",

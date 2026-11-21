@@ -41,6 +41,7 @@ const TEXTS = {
     noMain:
       "⚠ branche principale introuvable (origin/HEAD, master, main) : la mise à jour reste dans l'arbre de travail, sans commit ni branche dédiée.",
     upToDate: "Kit déjà à jour : rien à commiter, retour sur la branche « {0} ».",
+    committing: "Commit de la mise à jour en cours : les hooks du projet jouent leurs contrôles, sans délai imposé…",
     committed: "Fait : mise à jour du kit vers {0} commitée sur la branche « {1} » (créée depuis « {2} »), {3} fichier(s).",
     notCommitted:
       "⚠ Mise à jour appliquée sur la branche « {0} » mais commit non fait ({1}) : les fichiers sont dans l'arbre de travail, à commiter une fois la cause levée.",
@@ -64,6 +65,7 @@ const TEXTS = {
     noMain:
       "⚠ main branch not found (origin/HEAD, master, main): the update stays in the working tree, with no commit or dedicated branch.",
     upToDate: 'Kit already up to date: nothing to commit, back on branch "{0}".',
+    committing: "Committing the update: the project's hooks run their checks, with no time limit…",
     committed: 'Done: kit update to {0} committed on branch "{1}" (created from "{2}"), {3} file(s).',
     notCommitted:
       '⚠ Update applied on branch "{0}" but not committed ({1}): the files are in the working tree, to be committed once the cause is fixed.',
@@ -75,10 +77,8 @@ const TEXTS = {
   },
 };
 
-const run = (dir: string, args: string[], env?: NodeJS.ProcessEnv): string =>
-  execFileSync("git", args, { cwd: dir, stdio: "pipe", env: env ?? process.env, timeout: 60_000 })
-    .toString()
-    .trim();
+const run = (dir: string, args: string[]): string =>
+  execFileSync("git", args, { cwd: dir, stdio: "pipe", timeout: 60_000 }).toString().trim();
 const ok = (dir: string, args: string[]): boolean => {
   try {
     run(dir, args);
@@ -159,7 +159,13 @@ export function finishUpdate(dir: string, lang: MessageLang, plan: UpdatePlan, v
   }
   try {
     run(dir, ["add", "-A"]);
-    run(dir, ["commit", "--quiet", "-m", plan.subject(lang, version), "-m", `${TRAILER}: ${version}`], { ...process.env, [ENV]: version });
+    console.log(T.committing);
+    // No time limit (QUA-237): the project's hooks may take minutes; their output is shown as they run.
+    execFileSync("git", ["commit", "--quiet", "-m", plan.subject(lang, version), "-m", `${TRAILER}: ${version}`], {
+      cwd: dir,
+      stdio: ["ignore", "inherit", "inherit"],
+      env: { ...process.env, [ENV]: version },
+    });
     console.log(fill(T.committed, version, plan.branch, plan.main, changed.split("\n").length));
   } catch (e) {
     console.warn(fill(T.notCommitted, plan.branch, firstLines(e)));

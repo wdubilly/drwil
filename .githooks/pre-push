@@ -19,10 +19,13 @@ fi
 # current branch: pushing `recette/vX.Y.Z` from master does not touch master.
 # The remote ($1: its name or its URL) is passed along (DRWIL_PUSH_REMOTE): a remote with no branch
 # at all accepts the very first push of the main branch, once (QUA-017).
+# QUA-325: the pushed commits (`<local sha1>:<remote sha1>` of each pushed branch, DRWIL_PUSH_COMMITS) let
+# run-checks recognise a push of kit commits only, by the kit manifest, and defer the project checks to CI.
 any_ref=0
 tags_only=1
 no_branch=1
 pushed=""
+pushed_commits=""
 while IFS=' ' read -r local_ref local_sha1 remote_ref remote_sha1; do
   any_ref=1
   case "$local_sha1" in
@@ -35,6 +38,7 @@ while IFS=' ' read -r local_ref local_sha1 remote_ref remote_sha1; do
        if [ "$deletion" = "0" ]; then
          no_branch=0
          pushed="$pushed $remote_ref"
+         pushed_commits="$pushed_commits $local_sha1:$remote_sha1"
        fi ;;
   esac
 done
@@ -46,6 +50,6 @@ if [ "$any_ref" = "1" ] && [ "$no_branch" = "1" ]; then
   DRWIL_PUSH_NO_BRANCH=1 exec node "$(dirname "$0")/run-checks.mjs"
 fi
 if [ "$any_ref" = "1" ]; then
-  DRWIL_PUSH_REFS="$pushed" DRWIL_PUSH_REMOTE="$1" exec node "$(dirname "$0")/run-checks.mjs"
+  DRWIL_PUSH_REFS="$pushed" DRWIL_PUSH_COMMITS="$pushed_commits" DRWIL_PUSH_REMOTE="$1" exec node "$(dirname "$0")/run-checks.mjs"
 fi
 exec node "$(dirname "$0")/run-checks.mjs"
