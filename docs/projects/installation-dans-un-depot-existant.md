@@ -122,9 +122,9 @@ après clôture, `QUA-116`).
   coupée de la branche principale (validé par le demandeur le 2026-11-21, D-a)
 - `QUA-238` — ancien critère : « configuration où seuls changent les réglages recalculés par `init` » (une
   configuration absente du parent est refusée) — raison : le commit d'installation crée la configuration ; elle est
-  admise si aucune garde n'y est coupée ; et le pre-commit d'un commit entièrement expliqué par le manifeste diffère
-  les contrôles du projet à `paths`, au pre-commit comme au pre-push d'une suite de commits de kit (validé par le
-  demandeur le 2026-11-21, D-a, D-d et D-e)
+  admise si aucune garde n'y est coupée (validé par le demandeur le 2026-11-21, D-a). Le report des contrôles du
+  projet à `paths` sur un commit ou une suite de commits de kit (D-d, D-e) est porté par le contrat créé `QUA-325`,
+  qui s'appuie sur `nonKitFiles` sans changer la règle de `QUA-238`
 - `QUA-237` — ancien critère : chaque appel git du commit de mise à jour limité à 60 s, sortie des hooks capturée —
   raison : coupure arbitraire (ETIMEDOUT) d'un commit légitime ; plus de délai, progression montrée (validé par le
   demandeur le 2026-11-21, D-d)
@@ -238,7 +238,7 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-21) : lots 1 (a), 2 (b), 3 (c) et 4 (d) commités. Lot 1 : `init` sur un dépôt git qui a des commits et
+- **Dernier état** (2026-11-21) : lots 1 (a), 2 (b), 3 (c), 4 (d) et 5 (documentation) commités. Lot 1 : `init` sur un dépôt git qui a des commits et
   pas de manifeste coupe `workstream/kit-installation` depuis la principale (packages/drwil/src/kit-install.ts,
   `prepareKitCommit` ; préconditions et commit partagés avec la mise à jour : `cutBranch` et `finishUpdate` de
   `packages/drwil/src/kit-update.ts`) et y commite le kit avec le trailer ; la configuration créée est admise par
@@ -269,6 +269,12 @@ Aucun.
   Mesure sur une copie jetable de la reproduction (`main`, kit 0.11.1, tarball de la branche) : `init` complet en 2,3 s
   (au lieu de 142 s pour le seul commit), commit fait avec le trailer, arbre propre, 29 contrôles du projet différés
   (dont le cliquet de couverture et la couverture du diff) ; pre-push simulé de la branche (sans pousser) : 2 s.
+  Lot 5 : `INSTALL.md` (sections « First installation in an existing repository » et « The project's CI is kept »,
+  commit du kit sans délai ni contrôles du projet rejoués), `packages/drwil/README.md` (projet existant : branche,
+  PR, CI conservée ; mise à jour : commit sans délai, contrôles différés) et trois lignes « Changed » et une « Fixed »
+  sous « Unreleased » de `packages/drwil/CHANGELOG.md` ; `docs/architecture.md` déjà à jour (lots 1, 3 et 4). Puce
+  `QUA-238` de « Contrats modifiés » mise en cohérence : le report des contrôles à `paths` est porté par `QUA-325`,
+  `QUA-238` n'a changé que pour D-a.
 - **Travail non commité** : aucun. Dossier de reproduction (hors dépôt, peut disparaître) :
   `/tmp/claude-1000/-home-wdubilly-projects-drwil/853fbde2-e7f4-4598-86e4-35a450054ace/scratchpad/repro-marinade`,
   branche `reinstall`, installation non commitée.
@@ -282,7 +288,5 @@ Aucun.
   `apercu-ci-replace` — l'aperçu (`packages/drwil/src/preview.ts`) annonce encore le manque « ci » qu'`init` traite
   désormais (intention à créer : apercu-ci-replace, sous docs/intentions/). Le commentaire de `packages/drwil/src/drift.ts` dit
   encore « the update branch keeps the old version ».
-- **Prochaine étape** : lot 5 — documentation et CHANGELOG : `INSTALL.md` et `packages/drwil/README.md` (installation
-  sur dépôt existant, branche, PR, CI conservée, commit du kit sans contrôles du projet rejoués), ligne « Unreleased »
-  de `packages/drwil/CHANGELOG.md`, en anglais ; puis `node .githooks/run-checks.mjs` sans échec, `drwil verify
-  --agent` en `GOVERNANCE: PASS`, recette humaine sur une copie de marinade-poulet.
+- **Prochaine étape** : sondage des limites hors cadre (`drwil-limite`, session principale), puis EVIDENCE/VERIFY :
+  `drwil verify --agent` en `GOVERNANCE: PASS`, recette humaine sur une copie de marinade-poulet, clôture.

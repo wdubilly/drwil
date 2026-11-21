@@ -349,7 +349,13 @@ A single command for every case:
 - **Existing project** (code, Git history, dependencies): detects the
   stack (subfolders become the layers) and the CI already in use
   (`.github/workflows/` or the GitLab CI configuration), and installs the kit on top
-  **without ever overwriting a project file**; no new Git repository.
+  **without ever overwriting a project file**; no new Git repository. When
+  the repository already has commits, `init` commits the kit itself on a
+  `workstream/kit-installation` branch cut from the main branch (trailer
+  `Drwil-Kit-Update`, recognised by the scope gate through the kit
+  manifest), with the same refusals before writing as an update (dirty
+  tree, no git identity, main branch behind the remote, branch already
+  present); merge it through a pull request.
   `/drwil-adopt` then builds the map `docs/architecture.md` from the real
   code; drwil keeps it current (the `architecture-map` check reports a
   code folder it does not cite).
@@ -364,9 +370,16 @@ A single command for every case:
     in, your keys and rules are kept;
   - `.gitleaks.toml`: the kit manifest is added to the allowlist.
 
-  Two things stay yours, reported with the fix to paste: the `checks` job
-  in an existing CI file, and a `core.hooksPath` already set by a hook
-  manager (husky, lefthook…) — it is never switched off: call the drwil
+  An existing GitHub or GitLab CI file is kept: `init` writes the kit's
+  part and moves every job (and GitLab stage) that is not the kit's into a
+  project zone (`# drwil-project-begin` / `# drwil-project-end`), naming
+  what it moved; nothing of yours is lost, at installation as at update. A
+  global key you and the kit both define differently (GitLab `workflow`,
+  `default`, `variables`, `include`; GitHub `on`, `env`, `permissions`)
+  leaves the file as it is, the key named with what to do.
+  One thing stays yours, reported with the fix to paste: a `core.hooksPath`
+  already set by a hook manager (husky, lefthook…) — it is never switched
+  off: call the drwil
   hooks from yours (`.githooks/pre-commit "$@" || exit $?`), or set
   `git config core.hooksPath .githooks`.
 - **Update** (project already equipped): creates what is missing,
@@ -381,7 +394,12 @@ A single command for every case:
   the kit manifest), so a project in SCOPING is not blocked by its own update.
   It refuses, before writing anything and saying what to do, on a dirty tree,
   without a git identity, or when the main branch is behind the remote; it ends
-  by saying what it did, what is left to decide and the next command. A project equipped by an older,
+  by saying what it did, what is left to decide and the next command. The
+  commit `init` makes (installation or update) has no time limit and shows
+  the hooks' output; when the kit manifest explains every file it holds,
+  the project's checks that declare `paths` are « not run » at commit, and
+  at push when every pushed commit is such a kit commit: the pull request's
+  CI replays them. A project equipped by an older,
   French-named version is migrated first (see `CHANGELOG.md`).
 
 The project's settings (`.drwil/ia-first.json`: language, tools, layers,
