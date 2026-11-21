@@ -972,9 +972,9 @@ test("QUA-320 outil e2e de la table : guarantees déclare `e2e` en tranches « a
     // Déclaré mais cité par aucun contrat : la garantie reste à tenir, et la fiche dit ce que le kit a fait.
     assert.equal(r.e2e, false);
     const fiche = lire(dir, "docs/projects/e2e-chemins-critiques.md");
-    assert.match(
-      fiche,
-      new RegExp(`contrôle \`e2e\` déclaré pour ${outil} \\(\`${fichier.replace(/\./g, "\\.")}\`\\), découpé en tranches`),
+    assert.ok(
+      fiche.includes(`contrôle \`e2e\` déclaré pour ${outil} (\`${fichier}\`), découpé en tranches`),
+      `fiche e2e sans la déclaration pour ${outil}`,
     );
     assert.ok(formatGuarantees(r).some((l) => l.includes(`déclaré pour ${outil}`)));
   }
