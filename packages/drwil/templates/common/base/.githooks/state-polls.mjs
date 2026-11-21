@@ -64,7 +64,7 @@ export function movePoll(root, { to, brief, request } = {}) {
   const lines = [fill(T.show, from, to), ...Object.entries(args).map(([k, v]) => fill(T[k], v))];
   const question = [`drwil-move ${to} ${JSON.stringify(args)}`, ...lines, "", T.ask].join("\n");
   const options = T.options.map((o) => ({ label: o.label, description: fill(o.description, from, to) }));
-  const poll = { questions: [{ header: "drwil-move", question, multiSelect: false, options }] };
+  const poll = { questions: [{ header: "drwil-move", question, options }] };
   const { activity, since, active_brief } = read.state;
   return { code: 0, message: "", poll, data: { to, ...args, state: { activity, since, active_brief } } };
 }

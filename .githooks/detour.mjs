@@ -110,7 +110,7 @@ export function detourPoll(root) {
   if (!target) return refused(T.noDetour);
   const question = [`drwil-detour ${target.name}`, fill(target.reopened ? T.reopenAsk : T.ask, target.name)].join("\n");
   const options = T.options.map((o) => ({ ...o }));
-  return { ...done(""), poll: { questions: [{ header: "drwil-detour", question, multiSelect: false, options }] }, data: target };
+  return { ...done(""), poll: { questions: [{ header: "drwil-detour", question, options }] }, data: target };
 }
 
 /**

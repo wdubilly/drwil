@@ -153,7 +153,7 @@ export function acceptancePoll(root) {
   if (c.message) return { code: 1, message: c.message };
   const question = [`drwil-accept ${c.brief}`, ...c.shown, "", T.ask].join("\n");
   const options = T.options.map((o) => ({ ...o }));
-  const poll = { questions: [{ header: "drwil-accept", question, multiSelect: false, options }] };
+  const poll = { questions: [{ header: "drwil-accept", question, options }] };
   return { code: 0, message: "", poll, data: { brief: c.brief, fingerprint: c.print } };
 }
 
