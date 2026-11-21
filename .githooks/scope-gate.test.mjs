@@ -965,6 +965,49 @@ test("QUA-238 : des contrôles absents avant la mise à jour ne se reconnaissent
   assert.equal(checkScope(racine, { ...blocage, staged: fichiers, env: MAJ }).status, "fail");
 });
 
+/** Commit d'installation dans un dépôt existant : parent sans manifeste, kit, manifeste et configuration créés. */
+function appliquerInstallation({ extra = {}, config = { scopeGate: "blocking", layers: [], checks: [{ id: "a" }] } } = {}) {
+  const racine = depot();
+  git(racine, "checkout", "-q", "-b", "workstream/kit-installation");
+  const kit = { ".githooks/pre-push": "hook\n", "docs/recipes/x.md": "recette\n" };
+  for (const [f, c] of Object.entries(kit)) ecrire(racine, f, c);
+  ecrireManifeste(racine, kit);
+  ecrire(racine, ".drwil/install.json", '{"format":1,"version":"2.0.0"}\n');
+  ecrire(racine, ".drwil/ia-first.json", JSON.stringify(config));
+  for (const [f, c] of Object.entries(extra)) ecrire(racine, f, c);
+  git(racine, "add", "-A");
+  return { racine, fichiers: git(racine, "diff", "--cached", "--name-only").split("\n") };
+}
+
+test("QUA-238 : le commit d'installation de init (parent sans manifeste, configuration créée) passe la barrière au commit et au rejeu", () => {
+  const { racine, fichiers } = appliquerInstallation();
+  assert.equal(checkScope(racine, { ...blocage, staged: fichiers }).status, "fail", "sans le signal de init, refusé en SCOPING");
+  assert.deepEqual(checkScope(racine, { ...blocage, staged: fichiers, env: MAJ }).problems, []);
+  commiterMaj(racine, true);
+  assert.equal(checkScope(racine, { ...blocage, env: { DRWIL_BASE: "main" } }).status, "ok");
+});
+
+test("QUA-238 : dans le commit d'installation, un fichier hors manifeste ou une garde coupée dans la configuration créée restent refusés", () => {
+  for (const [nom, options] of [
+    ["fichier hors manifeste", { extra: { "src/x.js": "x\n" } }],
+    ["barrière coupée", { config: { scopeGate: "off", layers: [] } }],
+    ["transitions laissées à l'agent", { config: { scopeGate: "blocking", transitions: "agent" } }],
+  ]) {
+    const { racine, fichiers } = appliquerInstallation(options);
+    const r = checkScope(racine, { ...blocage, staged: fichiers, env: MAJ });
+    assert.equal(r.status, "fail", nom);
+    assert.match(r.problems.join("\n"), /1 fichier\(s\)/, nom);
+    commiterMaj(racine, true);
+    assert.equal(checkScope(racine, { ...blocage, env: { DRWIL_BASE: "main" } }).status, "fail", `${nom} (rejeu)`);
+  }
+  // Seul un parent sans manifeste vaut installation : une configuration créée par une mise à jour reste refusée.
+  const racine = projetEquipe();
+  git(racine, "rm", "-q", ".drwil/ia-first.json");
+  git(racine, "commit", "-q", "-m", "configuration retirée");
+  const fichiers = appliquerMiseAJour(racine, { config: { scopeGate: "blocking", layers: [] } });
+  assert.equal(checkScope(racine, { ...blocage, staged: fichiers, env: MAJ }).status, "fail", "configuration créée par une mise à jour");
+});
+
 // Fichiers dérivés du périmètre (scope-derived.mjs) : admis d'office, jamais un fichier de règles.
 /** Dépôt cadré sur `src/a.js`, registre et fiche à critères commités sur main, puis une branche de chantier en BUILD. */
 function depotDerive({ registre = "", criteres = "", motifs = ["src/a.js"] } = {}) {

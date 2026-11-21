@@ -1,4 +1,4 @@
-// Montée de version sûre : `init` refuse la mauvaise version, la montée ne laisse aucun `.bak` (QUA-282), garde le CI (QUA-283), les fichiers du projet (QUA-284) et les réglages (QUA-285), traite les fichiers modifiés (QUA-286) ; `doctor` signale après coup ce qu'une montée a supprimé (QUA-287).
+// Montée de version sûre : `init` refuse la mauvaise version, la montée ne laisse aucun `.bak` (QUA-282), garde le CI (QUA-283), les fichiers du projet (QUA-284) et les réglages (QUA-285), traite les fichiers modifiés (QUA-286) ; `doctor` signale après coup ce qu'une montée a supprimé (QUA-287) ; l'installation dans un dépôt existant, commitée sur sa branche (QUA-206).
 import { test, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import { appendFileSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { doctor, init } from "../dist/index.js";
 import { engineVersion } from "../dist/install-record.js";
 import { confirmCiWith } from "../dist/ci-zone.js";
@@ -424,4 +424,86 @@ test("QUA-287 : scénario de montée dans un dépôt git : les données du proje
   assert.equal(apres.scopeGate, "warning");
   assert.match(readFileSync(join(dir, "AGENTS.md"), "utf8"), /Propre au projet\./);
   assert.equal((await traces(dir)).state, "ok");
+});
+
+// Dépôt d'un projet existant (commits sur main, sans kit) : init y coupe sa branche et commite le kit (QUA-206, D-a).
+function depotExistant() {
+  const dir = tmp();
+  git(dir, "init", "-q", "-b", "main");
+  git(dir, "config", "core.autocrlf", "false");
+  git(dir, "config", "user.email", "t@t");
+  git(dir, "config", "user.name", "t");
+  writeFileSync(join(dir, "README.md"), "# projet existant\n");
+  // Fichiers du projet que init complète sans les écraser : hors manifeste, notés à part pour la barrière (QUA-238).
+  writeFileSync(join(dir, ".gitignore"), "/node_modules\n");
+  writeFileSync(join(dir, "AGENTS.md"), "# Mon projet\nRègles maison.\n");
+  writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "app", dependencies: { react: "18" } }, null, 2));
+  git(dir, "add", "-A");
+  assert.equal(git(dir, "commit", "-q", "-m", "projet").status, 0);
+  return dir;
+}
+
+const sortieDe = async (fn) => {
+  const [log, warn] = [console.log, console.warn];
+  const lignes = [];
+  console.log = console.warn = (...a) => lignes.push(a.join(" "));
+  try {
+    await fn();
+    return lignes.join("\n");
+  } finally {
+    console.log = log;
+    console.warn = warn;
+  }
+};
+
+test("QUA-206 : init sur un dépôt existant sans kit coupe workstream/kit-installation depuis la principale et y commite le kit ; la barrière l'accepte en SCOPING", async () => {
+  const dir = depotExistant();
+  const principale = git(dir, "rev-parse", "main").stdout;
+  const sortie = await sortieDe(() => init({ lang: "fr", targetDir: dir, name: "demo" }));
+  assert.equal(git(dir, "symbolic-ref", "--short", "HEAD").stdout.trim(), "workstream/kit-installation", sortie);
+  assert.equal(git(dir, "status", "--porcelain").stdout.trim(), "", `arbre propre : la barrière a accepté le commit\n${sortie}`);
+  assert.equal(git(dir, "rev-parse", "HEAD^").stdout, principale, "coupée depuis la branche principale");
+  assert.equal(git(dir, "rev-parse", "main").stdout, principale, "la principale reste intacte");
+  assert.match(git(dir, "log", "-1", "--format=%B").stdout, /^Drwil-Kit-Update: \d+\.\d+\.\d+$/m);
+  assert.ok(git(dir, "ls-files", ".githooks/state.mjs").stdout.includes("state.mjs"), "kit suivi");
+  assert.match(sortie, /Fait : kit .* installé et commité sur la branche « workstream\/kit-installation »/);
+  assert.match(sortie, /pull request.*\n.*gh pr create --base main/, "dit de fusionner par une PR");
+  const barriere = await import(`${pathToFileURL(join(dir, ".githooks/scope-gate.mjs")).href}?${Date.now()}`);
+  const cfg = JSON.parse(readFileSync(join(dir, ".drwil/ia-first.json"), "utf8"));
+  const rejeu = barriere.checkScope(dir, { cfg, env: { DRWIL_BASE: "main" } });
+  assert.deepEqual([rejeu.status, rejeu.problems], ["ok", []]);
+});
+
+test("QUA-206 : installation sur un dépôt existant refusée avant d'écrire : arbre sale, branche d'installation déjà là", async () => {
+  const dir = depotExistant();
+  const etat = () =>
+    [git(dir, "rev-parse", "HEAD").stdout, git(dir, "status", "--porcelain").stdout, existsSync(join(dir, ".drwil"))].join("|");
+  const refus = async () => {
+    try {
+      await silence(() => init({ lang: "fr", targetDir: dir, name: "demo" }));
+    } catch (e) {
+      return e.message;
+    }
+    return assert.fail("refus attendu");
+  };
+  writeFileSync(join(dir, "notes.txt"), "à moi\n");
+  const sale = etat();
+  assert.match(await refus(), /Installation refusée.*arbre de travail n'est pas propre.*git stash/);
+  assert.equal(etat(), sale, "rien n'a été écrit");
+  rmSync(join(dir, "notes.txt"));
+  git(dir, "branch", "workstream/kit-installation");
+  const avant = etat();
+  assert.match(await refus(), /« workstream\/kit-installation » existe déjà.*git branch -D/);
+  assert.equal(etat(), avant, "rien n'a été écrit");
+  git(dir, "branch", "-q", "-D", "workstream/kit-installation");
+  // Une branche « workstream » empêche git de créer « workstream/kit-installation » : refus dit, rien d'écrit.
+  git(dir, "branch", "workstream");
+  assert.match(await refus(), /« workstream\/kit-installation » n'a pas pu être créée/);
+  assert.equal(etat(), avant, "rien n'a été écrit");
+  assert.equal(git(dir, "symbolic-ref", "--short", "HEAD").stdout.trim(), "main");
+  // La cause levée, l'installation passe ; en anglais, son sujet aussi.
+  git(dir, "branch", "-q", "-D", "workstream");
+  await silence(() => init({ lang: "en", targetDir: dir, name: "demo" }));
+  assert.match(git(dir, "log", "-1", "--format=%s").stdout, /^Install the drwil kit \d+\.\d+\.\d+/);
+  assert.equal(git(dir, "status", "--porcelain").stdout.trim(), "");
 });

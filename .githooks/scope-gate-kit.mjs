@@ -2,7 +2,8 @@
 // le commit de la mise à jour tient du manifeste du kit (.drwil/installed-files.json) ; tout autre fichier du
 // même commit reste jugé comme dans un commit ordinaire. Reconnu par le trailer `Drwil-Kit-Update` (rejeu) ou
 // par `DRWIL_KIT_UPDATE` (pre-commit, posé par `init` seul), jamais sur la foi du seul trailer ou de la variable :
-// l'empreinte de chaque fichier doit être celle que le manifeste du commit déclare.
+// l'empreinte de chaque fichier doit être celle que le manifeste du commit déclare. Le commit d'installation dans
+// un dépôt existant (parent sans manifeste) crée la configuration : admise si aucune garde n'y est coupée.
 import { createHash } from "node:crypto";
 import { git } from "./scope-gate-merge.mjs";
 
@@ -87,7 +88,8 @@ export function nonKitFiles(root, before, after, files) {
   const completed = JSON.stringify({ ...parse(show(root, after, COMPLETED)) }.files);
   const fromKit = (f) => {
     if (f === MANIFEST || f === RECORD || f === COMPLETED) return true;
-    if (f === CONFIG) return configFromInit(show(root, before, f), show(root, after, f));
+    // Installation (parent sans manifeste) : configuration créée, jugée comme un ajout de réglages à une configuration vide.
+    if (f === CONFIG) return configFromInit(show(root, before, f) ?? (Object.keys(was).length ? null : "{}"), show(root, after, f));
     const content = show(root, after, f);
     if (content !== null)
       return (f in now && sha(content) === now[f]) || `${completed}`.includes(JSON.stringify({ file: f, sha256: sha(content) }));

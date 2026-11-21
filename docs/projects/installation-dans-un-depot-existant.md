@@ -229,8 +229,22 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-21) : cadrage terminé ; D-e et D-f tranchées par le demandeur.
+- **Dernier état** (2026-11-21) : lot 1 (a) commité. `init` sur un dépôt git qui a des commits et pas de manifeste
+  coupe `workstream/kit-installation` depuis la principale (packages/drwil/src/kit-install.ts, `prepareKitCommit` ;
+  préconditions et commit partagés avec la mise à jour : `cutBranch` et `finishUpdate` de
+  `packages/drwil/src/kit-update.ts`, textes et sujet portés par le plan) et y commite le kit avec le trailer. Fichiers
+  que le manifeste n'expliquait pas, établis par test : la configuration créée (admise par `.githooks/scope-gate-kit.mjs`
+  si le parent n'a pas de manifeste et qu'aucune garde n'est coupée) et les fichiers du projet complétés (`AGENTS.md`,
+  `.gitignore`…), notés à part par `noteInstallCompletions` ; fiches, registre et carte sont au manifeste. `QUA-206`
+  et `QUA-238` réécrits. Tests du paquet de l'installation dans packages/drwil/test/montee-de-version.test.mjs : les
+  fichiers `kit-<thème>.test.mjs` sont figés par `QUA-315` (inventaire de la découpe), un test ajouté y casse le
+  contrôle.
 - **Travail non commité** : aucun. Dossier de reproduction (hors dépôt, peut disparaître) :
   `/tmp/claude-1000/-home-wdubilly-projects-drwil/853fbde2-e7f4-4598-86e4-35a450054ace/scratchpad/repro-marinade`,
   branche `reinstall`, installation non commitée.
-- **Prochaine étape** : [humain] `/drwil-start`.
+- **Limite hors cadre relevée au lot 1** : `QUA-244` dit « rien n'y est noté à une première installation » et le
+  commentaire de `recordCompletion` (packages/drwil/src/manifest-completed.ts) aussi ; l'installation commitée note
+  désormais à part les fichiers complétés. Contrat et fichier hors du cadrage : à soumettre au sondage des limites.
+- **Prochaine étape** : lot 2 — b, la fiche présente prime : test en échec d'abord (fiche supprimée puis recréée au
+  même chemin, hook neuf cité) dans `.githooks/check-docs.test.mjs` ou `.githooks/scope.test.mjs`, puis correctif de
+  `outsideBriefs` (`.githooks/scope.mjs`, gabarit d'abord, à nombre de lignes égal) ; `QUA-173` réécrit.
