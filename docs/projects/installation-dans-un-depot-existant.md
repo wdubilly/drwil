@@ -283,6 +283,15 @@ Aucun.
   sous « Unreleased » de `packages/drwil/CHANGELOG.md` ; `docs/architecture.md` déjà à jour (lots 1, 3 et 4). Puce
   `QUA-238` de « Contrats modifiés » mise en cohérence : le report des contrôles à `paths` est porté par `QUA-325`,
   `QUA-238` n'a changé que pour D-a.
+- **Limites traitées** (2026-11-21, « Traiter maintenant » au sondage des limites) : `QUA-244` — `recordCompletion`
+  (packages/drwil/src/manifest-completed.ts) note à part les complétions de toute passe que `init` commite (champ
+  `committed`), `noteInstallCompletions` retiré, contrat réécrit ; `confirmCi`/`confirmCiWith`, `ConfirmCi` et
+  `ciQuestion` retirés avec leur branchement et leur test ; commentaire de `replaceOnConfirm` corrigé. **En attente** :
+  l'aperçu `init --dry-run` qui n'annonce plus le manque « ci » d'un CI qu'`init` réécrit (filtre dans
+  packages/drwil/src/preview.ts et test de packages/drwil/test/montee-de-version.test.mjs, vu échouer puis passer)
+  rend faux une assertion du test figé « projet existant : init complète sans écraser… »
+  (packages/drwil/test/kit-installation.test.mjs, `["ci", "hooksPath"]`) : sa modification attend le oui du
+  demandeur (QUA-315).
 - **Travail non commité** : aucun. Dossier de reproduction (hors dépôt, peut disparaître) :
   `/tmp/claude-1000/-home-wdubilly-projects-drwil/853fbde2-e7f4-4598-86e4-35a450054ace/scratchpad/repro-marinade`,
   branche `reinstall`, installation non commitée.
