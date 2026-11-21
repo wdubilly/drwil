@@ -4725,3 +4725,10 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 ## controles-contrats-groupes
 
 - **Preuve de clôture** : `docs/preuves/controles-contrats-groupes.md`.
+
+## 2026-11-21 — Détour de docs/projects/controles-lents-decoupes-des-le-depart.md : les sondages préparés n'écrivent plus multiSelect:false, retiré par Claude Code avant le hook
+
+- **Défaut** : sous Claude Code, aucune acceptation des critères, attestation, transition réservée, oui au détour ni verdict de recette ne passait par le sondage du chat : le hook refusait (« questions[0].multiSelect — ≠ false »). Constaté les 2026-11-20 et 21 (note des intentions).
+- **Cause** : AskUserQuestion retire `multiSelect` quand il vaut false (valeur par défaut) avant les hooks ; les préparations (`state.mjs poll move` et `poll accept`, `.githooks/detour.mjs`, `.githooks/release-verdict-poll.mjs`, `drwil attest-poll`) l'écrivaient, et la comparaison de `.claude/hooks/prepared-poll.mjs` exigeait le champ.
+- **Correction** : `multiSelect` n'est écrit qu'à true (attestation par lot) ; `.claude/hooks/prepared-poll.mjs` compare préparation et sondage posé avec `multiSelect` absent tenu pour false (Copilot CLI l'écrit toujours, à false : `.claude/hooks/copilot-polls.mjs` inchangé ; `.claude/hooks/portable-polls.mjs` ne lit que le sondage des limites, non préparé). Test de non-régression (`packages/drwil/test/claude-hooks.test.mjs`, « Claude Code retire multiSelect:false avant le hook… »), vu échouer avant la correction.
+- **Clôturé par** : la branche `detour/sondages-sans-multiselect`.
