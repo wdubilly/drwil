@@ -2,11 +2,37 @@
 // GitLab). `init` réécrit tout ce qui est hors zone, reprend les zones telles quelles et y replace ce qui n'est pas du kit
 // (ci-zone-move.ts) ; ici, ce qu'il en dit.
 import { CI_FILES } from "./config.js";
-import { placeProject, zonesOf } from "./ci-zone-move.js";
+import { type Forge, placeProject, zonesOf } from "./ci-zone-move.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 
 export const isCiFile = (rel: string): boolean => Object.values(CI_FILES).some((f) => f.includes(rel));
 const lines = (text: string): string[] => text.split(/\r?\n/);
+
+/**
+ * Prints (`shippedPrints`) of the keys of every shipped CI template without zones — v0.1.0, v0.4.0, v0.6.0 and v0.8.0
+ * (to v0.11.0), the later ones are marked: in an old unmarked file, what is the kit's (D-c extended).
+ */
+export const SHIPPED_CI: Record<Forge, string[]> = {
+  github: [
+    "name f1076d28db32",
+    "on 89183e1e047b",
+    "checks 936a0876d146 6a4e22587a1c 9c5c10f32765 f048ad594b2e",
+    "checks 936a0876d146 6a4e22587a1c 9c5c10f32765 d2dde8912b70 f048ad594b2e",
+    "checks 936a0876d146 6a4e22587a1c 9c5c10f32765 d2dde8912b70 f048ad594b2e 2c12b2efe755",
+    "alerter-si-ci-cassee 6113ef86a4bf b7faceb66831",
+    "alert-if-ci-broken 56db01ed5abe 7931ce399d57",
+  ],
+  gitlab: [
+    "stage test",
+    "stage alerte",
+    "stage alert",
+    "checks 69bb16e21458 b7cfbb7273e9",
+    "checks 69bb16e21458 1f6df855c2f3 1c6160f423ef 0ee1cd49af34 b7cfbb7273e9",
+    "checks 1b5cac5de937 1f6df855c2f3 1c6160f423ef 0ee1cd49af34 b7cfbb7273e9 1867193f04f8",
+    "alerter-si-ci-cassee 2a5f2af734c7 ecdf3c606e60 641835cf3c7d",
+    "alert-if-ci-broken a951286d8659 ecdf3c606e60 e7b3a5356fad",
+  ],
+};
 
 /** Lines of `existing` that `incoming` does not have (a multiset: a line repeated once more counts). */
 export function removedLines(incoming: string, existing: string): string[] {
@@ -68,7 +94,8 @@ export async function ciContent(
 ): Promise<string | null | undefined> {
   if (!isCiFile(rel)) return undefined;
   if (pristine && !zonesOf(existing)) return incoming;
-  const placed = placeProject(rel.endsWith(".gitlab-ci.yml") ? "gitlab" : "github", incoming, existing);
+  const forge = rel.endsWith(".gitlab-ci.yml") ? "gitlab" : "github";
+  const placed = placeProject(forge, incoming, existing, SHIPPED_CI[forge]);
   if (w.simulation) return placed.content;
   const lang = w.ci?.lang ?? projectLang(dir);
   const T = TEXTS[lang];

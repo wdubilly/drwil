@@ -9,7 +9,8 @@ import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { doctor, formatPreview, init, previewInit } from "../dist/index.js";
 import { engineVersion } from "../dist/install-record.js";
-import { placeProject } from "../dist/ci-zone-move.js";
+import { placeProject, shippedPrints } from "../dist/ci-zone-move.js";
+import { SHIPPED_CI } from "../dist/ci-zone.js";
 import { confirmDriftWith } from "../dist/drift.js";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
@@ -716,4 +717,166 @@ test("QUA-237 : un contrôle du projet sans paths en échec refuse le commit de 
   assert.match(r.stderr, /✗ échec : rouge/, "un contrôle sans paths joue, sa sortie est montrée");
   assert.match(r.stderr, /Mise à jour appliquée sur la branche « workstream\/kit-update » mais commit non fait/);
   assert.notEqual(git(dir, "status", "--porcelain").stdout.trim(), "");
+});
+// Workflow réel de drwil_walk (kit 0.10.0, sans balises), branche master le 2026-11-22 : quatre étapes du projet
+// ajoutées dans le job checks du kit (D-c étendue). `\u0024` : le `$` des expressions GitHub, que le lint prendrait pour un
+// gabarit de chaîne mal écrit.
+const WALK = [
+  "name: ia-first",
+  "on: [push, pull_request]",
+  "jobs:",
+  "  checks:",
+  "    runs-on: ubuntu-latest",
+  "    steps:",
+  "      - uses: actions/checkout@v7",
+  "        with:",
+  "          fetch-depth: 0",
+  "      - uses: actions/setup-node@v7",
+  "        with:",
+  "          node-version: 24",
+  '      # Without gitleaks the secrets check is "not run", which fails run-checks in CI (QUA-013).',
+  "      # Pinned version, archive checked against its published sum; installed where the engine looks (~/.local/bin).",
+  "      - name: Install gitleaks 8.21.2",
+  "        run: |",
+  "          curl -sSfL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz",
+  '          echo "5bc41815076e6ed6ef8fbecc9d9b75bcae31f39029ceb55da08086315316e3ba  gitleaks.tar.gz" | sha256sum -c -',
+  "          mkdir -p ~/.local/bin && tar -xzf gitleaks.tar.gz -C ~/.local/bin gitleaks && rm gitleaks.tar.gz",
+  "          ~/.local/bin/gitleaks version",
+  "      # Le contrôle coverage-diff-app (QUA-004) lit le rapport de c8 avec diff-cover, outil Python : sans lui,",
+  "      # le contrôle serait « non exécuté » (QUA-013). Version épinglée ; pipx est fourni par ubuntu-latest.",
+  "      # Il compare à origin/master : l'historique complet vient de fetch-depth: 0 ci-dessus.",
+  "      - name: Install diff-cover 10.6.0",
+  "        run: |",
+  "          pipx install diff-cover==10.6.0",
+  "          diff-cover --version",
+  "      # Les contrôles de la couche app (coverage-app, typecheck-app, lint-app, licenses-app) tournent",
+  "      # depuis app/ : sans ses dépendances, ils seraient « non exécutés », ce qui fait échouer",
+  "      # run-checks en CI (QUA-013). npm ci : versions verrouillées par app/package-lock.json.",
+  "      - name: Install the app layer's dependencies",
+  "        run: npm ci",
+  "        working-directory: app",
+  "      # Le contrôle e2e (QUA-020) lance Playwright : sans navigateur, il serait « non exécuté » (QUA-013).",
+  "      # Chromium seul, à la version épinglée par @playwright/test (app/package-lock.json), avec ses dépendances système.",
+  "      - name: Install the e2e browser (Playwright Chromium)",
+  "        run: npx playwright install --with-deps chromium",
+  "        working-directory: app",
+  "      - run: node .githooks/run-checks.mjs",
+  "      # Les captures de l'accueil prises par l'e2e (QUA-020), à télécharger : le demandeur n'a pas de casque",
+  "      # et juge le rendu dessus. Publiées même si un contrôle échoue, pour voir ce qui a été rendu.",
+  "      - name: Publish the home screen captures",
+  "        if: always()",
+  "        uses: actions/upload-artifact@v4",
+  "        with:",
+  "          name: captures-accueil",
+  "          path: dist/e2e-captures/",
+  "          if-no-files-found: warn",
+  "      # QUA-113: on a pull request, the checks are replayed with the main branch's hooks (its",
+  "      # .githooks/, read through Git) and the PR's list of checks: a PR that weakens a hook or",
+  "      # removes a check does not validate itself. The main branch's copy of base-checks.mjs runs;",
+  "      # the PR's only while the main branch has none yet (kit adoption).",
+  "      - name: Replay the checks with the main branch's hooks",
+  "        if: github.event_name == 'pull_request'",
+  "        env:",
+  "          BASE_REF: \u0024{{ github.base_ref }}",
+  "        run: |",
+  '          base="origin/$BASE_REF"',
+  '          if git cat-file -e "$base:.githooks/base-checks.mjs" 2>/dev/null; then',
+  '            git show "$base:.githooks/base-checks.mjs" > "$RUNNER_TEMP/base-checks.mjs"',
+  '            node "$RUNNER_TEMP/base-checks.mjs" --base "$base"',
+  "          else",
+  '            node .githooks/base-checks.mjs --base "$base"',
+  "          fi",
+  "  # No branch protection is possible on a private repository on the free plan",
+  '  # (GitHub.com\'s "Merge" button stays unconditional): only an after-the-fact',
+  "  # alert is possible. Triggers only on a push to the main branch (not on",
+  "  # pull/merge requests) and only if `checks` failed; opens no duplicate if an",
+  "  # equivalent issue is already open.",
+  "  alert-if-ci-broken:",
+  "    needs: checks",
+  "    if: always() && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && needs.checks.result == 'failure'",
+  "    runs-on: ubuntu-latest",
+  "    permissions:",
+  "      issues: write",
+  "    steps:",
+  "      - name: Open an issue if CI breaks on the main branch",
+  "        env:",
+  "          GH_TOKEN: \u0024{{ github.token }}",
+  "        run: |",
+  '          title="CI broken on the main branch (run \u0024{{ github.run_id }})"',
+  '          open=$(gh issue list --repo "\u0024{{ github.repository }}" --search "CI broken on the main branch in:title" --state open --json number --jq \'length\')',
+  '          if [ "$open" = "0" ]; then',
+  '            gh issue create --repo "\u0024{{ github.repository }}" --title "$title" \\',
+  '              --body "The \\`checks\\` job failed on the main branch (\u0024{{ github.event.repository.default_branch }}). See \u0024{{ github.server_url }}/\u0024{{ github.repository }}/actions/runs/\u0024{{ github.run_id }}. To fix before any new workstream."',
+  "          else",
+  '            echo "A broken-CI issue is already open, no duplicate."',
+  "          fi",
+];
+const ETAPES_WALK = [...WALK.slice(20, 38), ...WALK.slice(39, 48)];
+const avantFinSteps = (texte, lignes) => texte.replace(/(\n\s*# drwil-project-end steps)/, `\n${lignes.join("\n")}$1`);
+
+test("QUA-283 : CI GitHub sans balises du kit 0.10.0 (workflow réel de drwil_walk) : étapes du projet du job checks replacées à l'identique dans la zone steps, jobs du kit remis au gabarit, rejeu sans effet", async () => {
+  const dir = await projetCi("github");
+  const chemin = join(dir, FICHIER_CI.github);
+  const gabarit = readFileSync(chemin, "utf8");
+  writeFileSync(chemin, `${WALK.join("\n")}\n`);
+  const sortie = await sortieDe(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "github", tools: "claude" }));
+  const apres = readFileSync(chemin, "utf8");
+  assert.doesNotMatch(sortie, /Rien n'a été changé/);
+  assert.equal(
+    apres,
+    avantFinSteps(gabarit, ETAPES_WALK),
+    "kit au gabarit (plan, tranches, checks, alerte), étapes du projet dans la zone steps",
+  );
+  assert.match(
+    sortie,
+    /ia-first\.yml : replacé\(s\) dans la zone du projet : step Install diff-cover 10\.6\.0, step Install the app layer's dependencies, step Install the e2e browser \(Playwright Chromium\), step Publish the home screen captures\./,
+  );
+  assert.doesNotMatch(
+    await sortieDe(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "github", tools: "claude" })),
+    /replacé|réécrit hors/,
+  );
+  assert.equal(readFileSync(chemin, "utf8"), apres, "rejouer ne change rien");
+});
+
+test("QUA-283 : une étape d'un job du kit qu'on ne peut établir (ni d'une version livrée ni ajoutée) laisse le fichier tel quel et est nommée", async () => {
+  const change = {
+    "          fetch-depth: 0": "          fetch-depth: 1",
+    "          ~/.local/bin/gitleaks version": "          ~/.local/bin/gitleaks version --verbose",
+    "      - run: node .githooks/run-checks.mjs": "      - run: node .githooks/run-checks.mjs --verbose",
+  };
+  const vus = await conflit("github", () => `${WALK.map((l) => change[l] ?? l).join("\n")}\n`);
+  assert.match(
+    vus,
+    /ia-first\.yml : clé\(s\) checks \(actions\/checkout@v7, Install gitleaks 8\.21\.2, Install diff-cover 10\.6\.0, .*node \.githooks\/run-checks\.mjs --verbose, Publish the home screen captures\) .*Rien n'a été changé/s,
+  );
+});
+
+// Chaque version livrée sans balises (GitHub et GitLab, lues dans les étiquettes git) : ses empreintes sont dans la table,
+// son fichier tel qu'installé est remis au gabarit sans conflit, et une étape ajoutée au job checks va dans la zone steps.
+const RACINE = fileURLToPath(new URL("../../..", import.meta.url));
+const LIVREES = ["v0.1.0", "v0.4.0", "v0.6.0", "v0.8.0"];
+const GABARITS = { github: "common/ci/github/.github/workflows/ia-first.yml", gitlab: "common/ci/gitlab/.gitlab-ci.yml" };
+const AJOUT_CHECKS = {
+  github: ["      - name: Étape du projet", "        run: npm run e2e"],
+  gitlab: ["    - npm run e2e"],
+};
+
+test("QUA-283 : le CI de chaque version livrée sans balises est du kit ; une étape ajoutée au job checks va dans la zone steps", () => {
+  for (const [forge, rel] of Object.entries(GABARITS)) {
+    const gabarit = readFileSync(join(RACINE, "packages/drwil/templates", rel), "utf8");
+    for (const version of LIVREES) {
+      const ancien = git(RACINE, "show", `${version}:packages/drwil/templates/${rel}`);
+      assert.equal(ancien.status, 0, `${version} : étiquette lisible (${ancien.stderr})`);
+      for (const p of shippedPrints(forge, ancien.stdout))
+        assert.ok(SHIPPED_CI[forge].includes(p), `${forge} ${version} : empreinte absente de SHIPPED_CI : ${p}`);
+      const place = (texte) => placeProject(forge, gabarit, texte, SHIPPED_CI[forge]);
+      assert.deepEqual(place(ancien.stdout), { content: gabarit, moved: [], conflicts: [] }, `${forge} ${version}`);
+      const lignes = ancien.stdout.split("\n");
+      const apres = lignes.findIndex((l) => /^\s+- (run: )?node \.githooks\/run-checks\.mjs$/.test(l));
+      lignes.splice(apres + 1, 0, ...AJOUT_CHECKS[forge]);
+      const r = place(lignes.join("\n"));
+      assert.equal(r.content, avantFinSteps(gabarit, AJOUT_CHECKS[forge]), `${forge} ${version} avec une étape`);
+      assert.deepEqual(r.moved, [forge === "github" ? "step Étape du projet" : "step npm run e2e"]);
+    }
+  }
 });

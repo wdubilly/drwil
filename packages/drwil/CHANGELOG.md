@@ -134,7 +134,13 @@ release renames this section to its version.
   second run changes nothing. A global key both define with a different
   content (GitLab `workflow`, `default`, `variables`, `include`; GitHub `on`,
   `env`, `permissions`) leaves the file as it is, the key named with what to
-  do. The message names an update branch only when there is one.
+  do. The message names an update branch only when there is one. In a CI
+  file without markers from an older kit (0.1 to 0.11.0), the steps the
+  project added inside the kit's `checks` job are moved, unchanged and in
+  their order, into the `steps` zone and the kit's jobs are updated: a job or
+  step is the kit's when it is identical to the one of a shipped version. A
+  step that cannot be established either way leaves the file as it is, named
+  with its job.
 - The commit `init` makes (installation or update) no longer has a 60-second
   limit that cut it, and shows the hooks' output while it runs. When the kit
   manifest explains every file of that commit, the project's checks that

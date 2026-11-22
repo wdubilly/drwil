@@ -142,7 +142,9 @@ après clôture, `QUA-116`).
   […] ne le remplace qu'après un oui […] hors terminal ou sans oui, le fichier reste tel quel » — raison : les jobs et
   stages du projet sont replacés automatiquement dans une zone projet balisée, même comportement installation et mise
   à jour, rien n'est perdu ; une clé globale en conflit laisse le fichier tel quel, nommée avec ce qu'il faut faire
-  (validé par le demandeur le 2026-11-21, D-c et D-f)
+  (validé par le demandeur le 2026-11-21, D-c et D-f) ; étendu le 2026-11-22 : dans un fichier sans balises, un job du
+  kit de contenu différent n'est plus un conflit quand il est identique à celui d'une version livrée aux étapes près
+  que le projet a ajoutées, replacées dans la zone `steps` (validé par le demandeur le 2026-11-22, D-c étendue)
 - `QUA-173` — ancien critère : une fiche supprimée par la branche couvre les fichiers qu'elle citait, sans dire ce qui
   prime quand une fiche de même chemin est présente — raison : la version supprimée écrasait la version présente
   (constat b) ; la fiche présente prime (validé par le demandeur le 2026-11-21)

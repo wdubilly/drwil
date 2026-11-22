@@ -115,7 +115,11 @@ part and moves every job (and, on GitLab, every stage) that is not the kit's int
 `# drwil-project-begin` and `# drwil-project-end` markers, naming what it moved: no project line is lost, and running
 `init` again changes nothing. A global key both the project and the kit define with a different content (GitLab
 `workflow`, `default`, `variables`, `include`; GitHub `on`, `env`, `permissions`) leaves the file as it is: `init` names the
-key and says what to do.
+key and says what to do. A CI file without markers from an older kit (0.1 to 0.11.0) is recognized by the shipped versions
+of the kit's jobs: the steps the project added inside the kit's `checks` job are moved, unchanged, into the `steps` zone
+(at the end of `checks`, after the kit's checks have run: a step the checks need, such as installing a browser or a tool,
+may have to move into the project's own job); a step that cannot be established as the kit's or the project's leaves the
+file as it is, named.
 
 ## 4. Build the tarball of a version
 
