@@ -136,6 +136,15 @@ compte rendu de la mise à jour (`npx drwil init`) le lui dit.
   jour depuis une version antérieure le signale dans son compte rendu (« première passe complète, puis reprise des
   verdicts »), et la preuve du contrat ajoute le test de ce message (`packages/drwil/test/kit-mise-a-jour.test.mjs`)
   (validé par le demandeur le 2026-11-22).
+- `.githooks/pre-commit` — lance la vérification du formatage (`format-staged.mjs` (à créer)) quand la clé `format` est déclarée ;
+  inchangé sans clé (validé par le demandeur le 2026-11-22).
+- `.githooks/fingerprints.mjs` — l'empreinte d'un contrôle couvre sa déclaration et la configuration qu'il lit, pas tout
+  `.drwil/ia-first.json` (`QUA-141`) (validé par le demandeur le 2026-11-22).
+- `.githooks/engine.mjs` — branche le nouveau calcul d'empreinte, sans logique neuve au-delà du branchement (plafond de
+  200 lignes) (validé par le demandeur le 2026-11-22).
+- `.githooks/engine.test.mjs` — tests du nouveau calcul d'empreinte au commit (validé par le demandeur le 2026-11-22).
+- `.githooks/run-checks.test.mjs` — test : un contrat ajouté ne rejoue plus les autres contrôles (validé par le
+  demandeur le 2026-11-22).
 
 ## 2. Hors périmètre
 
