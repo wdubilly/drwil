@@ -1,94 +1,101 @@
 # Projet : cadrer en parallèle du chantier, dans un worktree, avec sa propre PR
 
-**Statut** : cadré le 2026-11-22 — points à trancher.
+**Statut** : cadré le 2026-11-22, réduit le 2026-11-22 (P1 à P8 tranchés).
 **Risque** : HIGH
-**Maturité** : à affiner
+**Maturité** : prêt
 **Intention** : `docs/intentions/cadrer-en-parallele-du-chantier.md`
 
 <!-- scope
 files:
-  - packages/drwil/templates/common/base/.githooks/state-context-texts.mjs
-  - packages/drwil/templates/common/base/.githooks/note.mjs
-  - packages/drwil/templates/common/base/.githooks/worktree.mjs
-  - packages/drwil/templates/common/base/.githooks/worktree-texts.mjs
   - packages/drwil/templates/common/base/.githooks/scoping-worktree.mjs
   - packages/drwil/templates/common/base/.githooks/scoping-worktree-texts.mjs
-  - .githooks/state-context-texts.mjs
-  - .githooks/note.mjs
-  - .githooks/worktree.mjs
-  - .githooks/worktree-texts.mjs
+  - packages/drwil/templates/common/base/.githooks/run-checks-kit.mjs
+  - packages/drwil/templates/common/base/.githooks/engine.mjs
+  - packages/drwil/templates/common/base/.githooks/engine-selftest.mjs
+  - packages/drwil/templates/common/base/.githooks/engine-texts.mjs
   - .githooks/scoping-worktree.mjs
   - .githooks/scoping-worktree-texts.mjs
+  - .githooks/run-checks-kit.mjs
+  - .githooks/engine.mjs
+  - .githooks/engine-selftest.mjs
+  - .githooks/engine-texts.mjs
   - .githooks/scoping-worktree.test.mjs
-  - .githooks/worktree.test.mjs
-  - .githooks/note.test.mjs
-  - packages/drwil/test/attest-guidance.test.mjs
-  - packages/drwil/templates/common/tools/claude/.claude/skills/scope-a-workstream/SKILL.md
-  - .claude/skills/scope-a-workstream/SKILL.md
+  - .githooks/run-checks.test.mjs
+  - .githooks/engine.test.mjs
   - docs/recipes/working-with-branches.md
   - packages/drwil/templates/common/base/docs/recipes/working-with-branches.md
-  - docs/ia-first/8-conduct-rules.md
+  - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
+  - docs/projects/kit-mechanics.md
   - docs/contracts.md
   - .drwil/ia-first.json
   - docs/architecture.md
-  - docs/projects/kit-mechanics.md
   - packages/drwil/CHANGELOG.md
 -->
 
-(Scope provisoire : la piste 2 crée `.githooks/scoping-worktree.mjs` (à créer) et ses textes, noms à confirmer ; les chemins exacts du
-gabarit des recettes et des règles de conduite sont à relire au lancement. Si seule la piste 1 est retenue, le scope
-se réduit aux textes du rappel, à leurs tests et au registre.)
-
 ## 1. Besoin
 
-Pendant un chantier (BUILD, VERIFY, CLOSING), le rappel d'état ne propose que `node .githooks/note.mjs`, qui écrit dans
-le dossier du chantier (« elle part avec la branche du chantier »). Rien ne dit qu'on peut cadrer une intention ou une
-fiche en parallèle, dans un worktree créé depuis la branche principale à jour, avec sa propre petite PR de cadrage.
-La pratique a servi trois fois le 2026-11-22 sans gêner le chantier ; l'agent a deux fois dit à tort que c'était
-impossible. Pour tout adoptant (livrable d'abord, QUA-018) et pour ce dépôt.
+Pendant un chantier, cadrer une intention ou une fiche **à côté**, dans un worktree créé depuis la branche
+principale à jour, avec sa propre petite PR, sans toucher au chantier. La pratique a servi trois fois le
+2026-11-22 ; l'agent a deux fois dit à tort que c'était impossible. Livrable d'abord (QUA-018), puis ce dépôt.
 
-Relevé dans le code le 2026-11-22 :
+Tout existe déjà, sauf la commande qui l'assemble :
 
-- `.githooks/state-context-texts.mjs` (gabarit, 117 lignes) : le pied du rappel cite `.githooks/note.mjs` pour toute activité ; aucune
-  règle d'activité ne parle d'un cadrage à côté.
-- `.githooks/worktree.mjs` (gabarit, **200 lignes, au plafond** QUA-001) : `worktreeLines` (QUA-143) nomme les worktrees frères
-  et interdit de les modifier ; `launchInWorktree` (QUA-142, QUA-144 : `worktreeInstall` lancé dans le nouveau
-  dossier) ne sert qu'au lancement d'un chantier. Toute fonction nouvelle va dans un module à part.
-- `.githooks/note.mjs` (QUA-071) : ligne dans `docs/intentions/notes.md` du dossier courant, sans commit.
-- Le chantier « cadrage-en-build » (clos le 2026-11-19) permet de commiter une fiche ou une intention en BUILD sur la
-  branche du chantier (QUA-016) : le cadrage part alors avec la PR du chantier.
-- `.githooks/merge-auto.mjs` (QUA-187) et la compétence `scope-a-workstream` font la fusion automatique d'une PR de cadrage.
+- cadrer en BUILD sur la branche du chantier (chantier `cadrage-en-build`, QUA-016) : inchangé ;
+- créer un worktree depuis la branche principale récupérée (`.githooks/worktree.mjs`, QUA-142, QUA-144) : réutilisé ;
+- regrouper un cadrage sur une branche et une PR, programmer sa fusion (compétence `/drwil-scope`,
+  `.githooks/merge-auto.mjs`, QUA-187) : réutilisé, jamais recopié.
+
+Relevé dans le code le 2026-11-22 (pourquoi un worktree sans dépendances ne peut pas pousser aujourd'hui) :
+
+- `.githooks/pre-push` lance `.githooks/run-checks.mjs` ; seul le pre-commit diffère un contrôle hors de ses `paths`
+  (`.githooks/engine.mjs`, QUA-035 : « le push comme la CI les rejouent toujours »). Au push, tout est joué, sauf un
+  verdict repris (QUA-152, impossible dans un worktree neuf) ou un push du kit (QUA-325).
+- Ce qui exige `npm ci` au push dans ce dépôt : le build `npx tsc --build packages/drwil` (178 contrôles
+  `tests-qua-*` en `needsBuild`), `lint` (`npm run lint`, biome) et `checks-self-test` (tests des hooks :
+  `.githooks/skill-headers.test.mjs` importe `yaml`). Les contrôles de couverture et `tarball` sont réservés à la CI.
+- Pour une branche qui ne touche que `docs/projects/` ou `docs/intentions/`, les contrôles dont les `paths`
+  la concernent sont `miroirs-gabarit` et `codeowners` (plus `tests-contrats` si `docs/contracts.md` change),
+  avec les contrôles de base du moteur sans `paths` (`secrets`, `docs-references`, `contract-tests`,
+  `architecture-map`, `scope-gate`, `main-branch`, `ci-coverage`). Aucun n'importe de dépendance : `node` et
+  `gitleaks` suffisent. `checks-self-test` ne couvre ni `docs/projects/` ni `docs/intentions/`.
 
 ## Critères d'acceptation
 
-(Provisoires : à confirmer selon P1 et P2 ; chaque contrat est créé par le chantier, numéro attribué au lancement.)
+(Chaque contrat est créé par le chantier, numéro attribué au lancement ; tous prouvés par tests sur dépôts jetables.)
 
-- En BUILD, VERIFY et CLOSING, le rappel d'état (`node .githooks/state.mjs` et l'injection de début de session) dit
-  qu'une intention ou une fiche se cadre aussi dans un worktree créé depuis la branche principale à jour, avec sa
-  propre PR, sans toucher au chantier, et donne la commande ; en SCOPING il ne le dit pas ; le texte est le même pour
-  tous les outils (aucun code propre à un outil) — `QUA-nouveau-1`
-- (si piste 2) Une commande crée le worktree de cadrage depuis la branche principale récupérée (`git fetch`), sur une
-  branche `cadrage/<nom>`, y lance `worktreeInstall` s'il est déclaré (comme QUA-144), y laisse l'état neutre
-  (SCOPING) et ne touche ni le dossier ni l'état ni la branche du chantier ; un nom déjà pris est refusé — tests sur
-  dépôts jetables — `QUA-nouveau-2`
-- (si piste 2) Après la fusion de la PR de cadrage, la même commande retire le worktree et sa branche locale ; une PR
-  non fusionnée ou un arbre modifié est refusé, rien n'est supprimé — `QUA-nouveau-2`
-- Le contrat `QUA-143` reste vrai : le worktree de cadrage est listé comme un worktree du même dépôt — `QUA-143`
+- Au pre-push, hors CI, quand chaque fichier de chaque commit poussé est sous `docs/` (commits lus comme
+  QUA-325, depuis `DRWIL_PUSH_COMMITS`), un contrôle déclarant `paths` dont aucun motif ne couvre un fichier
+  poussé (y compris `checks-self-test`) est « non exécuté », nommé avec la raison (« documentation seule hors
+  de ses chemins : rejoué en CI »), jamais compté passé (QUA-013) ; un contrôle concerné, avec ou sans besoin de
+  dépendances, est joué et bloque s'il échoue ; un contrôle sans `paths` est joué. Un seul fichier hors
+  `docs/`, des commits illisibles ou la CI : tout est joué comme avant — `QUA-nouveau-1`
+- `node .githooks/scoping-worktree.mjs <nom>` (à créer) récupère la branche principale (`git fetch`), crée le worktree
+  frère `../<dépôt>-cadrage-<nom>` sur la branche `cadrage/<nom>` (comme `launchInWorktree`, `--no-track`,
+  QUA-056), n'y lance aucune installation, n'y écrit aucun état (SCOPING neutre) et ne touche ni le dossier,
+  ni l'état, ni la branche d'où il est lancé ; un nom, un dossier ou une branche déjà pris est refusé, rien
+  n'est créé ; la sortie donne le chemin du worktree — `QUA-nouveau-2`
+- `node .githooks/scoping-worktree.mjs publish "<message>"`, lancé dans ce worktree, commite (hooks joués,
+  jamais `--no-verify`), pousse, ouvre la PR par l'adaptateur de forge (`.githooks/merge-auto-forge.mjs`) puis
+  lance `node .githooks/merge-auto.mjs <numéro>` et donne la commande `pr-watch` ; hors d'une branche
+  `cadrage/`, sans modification, ou avec un fichier hors `docs/`, il refuse sans rien commiter ; une étape en
+  échec arrête la suite et dit laquelle, rien n'est défait — `QUA-nouveau-2`
+- Le worktree de cadrage est listé par le rappel d'état comme un worktree du même dépôt (QUA-143 reste vrai) ;
+  `node .githooks/note.mjs` reste inchangé (QUA-071 reste vrai) — `QUA-143`, `QUA-071`
 
 ## Contrats modifiés
 
-(À valider par le demandeur au cadrage ; aucun n'est modifié sans son oui.)
-
-- `QUA-071` — ancien critère : « Le rappel d'état la cite » (la note seule) — raison proposée : le rappel cite aussi le
-  cadrage en parallèle, la note restant le geste d'une ligne (selon P3).
+- `QUA-035` (un cadrage complet du premier coup, un élargissement sans friction) — ancien critère : « le push
+  comme la CI les rejouent toujours (QUA-013) » — nouveau : la CI les rejoue toujours ; le push les rejoue,
+  sauf un contrôle à `paths` hors des fichiers d'un push de documentation seule (`QUA-nouveau-1`) — raison :
+  cadrer dans un worktree sans dépendances (P2). Validé par le demandeur le 2026-11-22.
 
 ## 2. Hors périmètre
 
-- Le cadrage dans le dossier du chantier (livré par « cadrage-en-build ») : inchangé.
-- L'index par fiche (`docs/projects/index-par-fiche.md`) : les conflits sur `docs/projects/pending.md` restent son
-  sujet.
-- Le nettoyage des worktrees de chantier (`docs/intentions/nettoyage-des-worktrees.md`).
-- Lancer un chantier depuis le worktree de cadrage.
+- Le rappel d'état (P1) : aucun texte ajouté.
+- Le retrait du worktree après fusion (P5) : `docs/intentions/nettoyage-des-worktrees.md`.
+- Le chevauchement avec le scope du chantier en cours (P4) : rien n'est vérifié.
+- Une compétence ou un prompt par outil (P7) : plus tard, après un relevé.
+- Les conflits sur `docs/projects/pending.md` : `docs/projects/index-par-fiche.md`.
 
 ## 3. Contraintes
 
@@ -97,61 +104,59 @@ Relevé dans le code le 2026-11-22 :
   fiabilité. Chaque lot dit l'axe qu'il sert et ce qui pourrait en dégrader un autre (section 6). La rapidité ne
   s'achète jamais par un contrôle sauté ou désactivé (QUA-019) : « vite, mais prouvé ».
 - QUA-018 : on édite le gabarit puis `npm run installer-depot` ; copies du dépôt dans le même commit.
-- `.githooks/worktree.mjs` est au plafond de 200 lignes (QUA-001) : un module ajouté, pas une fonction de plus.
-- Couverture à 100 % des hooks (QUA-004) ; tests sur dépôts git jetables.
-- Aucun appel à une fonction propre à un outil : la commande est un script Node, comme `.githooks/note.mjs`.
-- Ne jamais écrire `.drwil/state.json` (si présent) d'un autre dossier.
+- `.githooks/worktree.mjs` (200 lignes) et `.githooks/run-checks.mjs` (197) sont au plafond de QUA-001 : la
+  commande est un module à part qui importe `.githooks/worktree.mjs` ; le report de documentation va dans
+  `.githooks/run-checks-kit.mjs` et le moteur, sans ligne de plus dans `.githooks/run-checks.mjs`.
+- Couverture à 100 % des hooks (QUA-004) ; aucun code propre à un outil : un script Node, comme `.githooks/note.mjs`.
+- Jamais `gh` ni `glab` appelés hors de l'adaptateur de forge ; jamais d'écriture de `.drwil/state.json` (si présent).
 
 ## 4. Décisions
 
-Aucune encore (cadrage du 2026-11-22, rien de tranché).
+Toutes du demandeur, le 2026-11-22 ; « réduis si nécessaire, ça doit être fluide ».
+
+- **P1 — Outil seul**, le rappel d'état n'est pas modifié. Écartés : rappel seul, les deux.
+- **P2 — Aucune installation de dépendances** dans le worktree de cadrage ; le pre-push d'une branche qui ne
+  touche que `docs/` ne joue que les contrôles dont les `paths` la concernent, sans jamais désactiver ni sauter
+  un contrôle (QUA-019) : un contrôle concerné qui a besoin des dépendances reste exigé (QUA-013), un contrôle
+  non concerné est « non exécuté » et rejoué en CI. Ce n'est pas le comportement actuel (section 1) : le lot 1
+  le livre. Écartés : `npm ci` complet, lien symbolique vers le `node_modules` du dossier principal.
+- **P3 — `.githooks/note.mjs` garde l'idée d'une ligne** ; le worktree sert à une intention ou une fiche (QUA-071 étendu
+  par l'usage, sa règle inchangée).
+- **P4 — Rien** en cas de chevauchement avec le chantier en cours.
+- **P5 — Retrait du worktree laissé au nettoyage des worktrees** existant.
+- **P6 — L'outil fait tout d'un coup** : le worktree, puis après le cadrage commit, push, PR et fusion
+  programmée en appelant `.githooks/merge-auto.mjs`. Écarté : worktree seul.
+- **P7 — Commande commune** (script Node) pour tous les outils d'abord ; relevé par outil plus tard.
+- **P8 — Dans l'index, avant `priorisateur-urgence-et-valeur`** (ordre : `acceleration-des-controles`,
+  `cadrer-en-parallele-du-chantier`, `priorisateur-urgence-et-valeur`).
 
 ## 5. Points à trancher
 
-- [décision] **P1 — Pistes retenues.** Alternatives : (a) piste 1 seule, le rappel nomme le chemin et les commandes
-  git ; (b) piste 2 seule, un outil ; (c) les deux, le rappel citant l'outil. Recommandation : (c), en deux lots,
-  le rappel d'abord (gain immédiat, coût faible), l'outil ensuite.
-- [décision] **P2 — Dépendances dans le worktree** (le pre-push exige `npm ci` ici). Alternatives : (a) lancer
-  `worktreeInstall` comme au lancement d'un chantier (QUA-144), coût d'un `npm ci` complet ; (b) lien symbolique
-  vers le `node_modules` du dossier principal (rapide, mais versions possiblement différentes de la branche
-  principale) ; (c) aucune installation, et un pre-push qui ne l'exige pas sur une branche de cadrage qui ne touche
-  que `docs/`. Recommandation : (a), seul chemin qui ne relâche aucun contrôle (QUA-019) ; mesurer la durée au lot 2.
-- [décision] **P3 — Rapport avec `.githooks/note.mjs`.** Alternatives : (a) le rappel garde la note pour une idée d'une ligne
-  et propose le worktree pour une intention ou une fiche ; (b) le worktree remplace la note en chantier.
-  Recommandation : (a), QUA-071 étendu, pas remplacé.
-- [décision] **P4 — Chevauchement avec le chantier en cours.** Alternatives : (a) rien de plus qu'un avertissement
-  quand l'intention cadrée cite un chemin du scope de la fiche active ; (b) refus ; (c) rien. Recommandation : (a),
-  le cadrage ne change aucun code.
-- [décision] **P5 — Retrait du worktree.** Alternatives : (a) par l'outil sur une sous-commande explicite après
-  fusion ; (b) par `pr-watch` dès qu'il voit la fusion ; (c) laissé au nettoyage des worktrees. Recommandation : (a),
-  geste explicite, rien de supprimé sans fusion constatée.
-- [décision] **P6 — Fusion automatique de la PR de cadrage par l'outil.** Alternatives : (a) l'outil ne fait que le
-  worktree, la PR et `merge-auto` restent à l'agent (compétence `scope-a-workstream`) ; (b) l'outil commite, pousse,
-  ouvre la PR et la programme. Recommandation : (a), la compétence existe déjà et reste la seule source.
-- [décision] **P7 — Outils autres que Claude Code.** Le rappel est commun à tous ; la commande est un script Node.
-  Question : faut-il une compétence ou un prompt par outil (Copilot CLI, Gemini CLI, Codex, Cursor) ou le rappel
-  suffit-il ? Recommandation : le rappel suffit au premier lot ; un relevé par outil au second.
-- [décision] **P8 — Priorité et version cible.** Aucune donnée par la demande.
+Aucun.
 
 ## 6. Increments
 
-- **Lot 1 — le rappel dit le chemin** [IA] : tests en échec d'abord ; textes FR et EN du rappel en BUILD, VERIFY,
-  CLOSING ; contrat `QUA-nouveau-1` ; `QUA-071` réécrit si P3 (a) ; recette `docs/recipes/working-with-branches.md` ;
-  `npm run installer-depot`. Critère de sortie : `node .githooks/run-checks.mjs` sans échec, `drwil verify --agent`
-  en `GOVERNANCE: PASS`.
-- **Lot 2 — l'outil** [IA] (si P1 b ou c) : `.githooks/scoping-worktree.mjs` (à créer) (créer, retirer), tests sur dépôts jetables,
-  `QUA-nouveau-2`, carte `docs/architecture.md`, `docs/projects/kit-mechanics.md`, ligne « Unreleased » du
-  CHANGELOG. Critère de sortie : idem.
+- **Lot 1 — un push de documentation sans dépendances** [IA] : tests en échec d'abord (dépôts jetables : push
+  `docs/` seul, contrôle hors `paths` différé, contrôle concerné joué, fichier hors `docs/` tout joué) ;
+  `.githooks/run-checks-kit.mjs`, moteur et `.githooks/engine-selftest.mjs` ; `QUA-nouveau-1`, QUA-035 réécrit ;
+  `npm run installer-depot`.
+- **Lot 2 — l'outil** [IA] : `.githooks/scoping-worktree.mjs` (à créer) et ses textes (créer, `publish`), tests sur
+  dépôts jetables avec une forge simulée ; `QUA-nouveau-2` ; recette `docs/recipes/working-with-branches.md`, carte
+  `docs/architecture.md`, scope de `docs/projects/kit-mechanics.md`, ligne « Unreleased » du CHANGELOG.
 
-Grille des six axes par lot :
+Critère de sortie de chaque lot : `node .githooks/run-checks.mjs` sans échec, `drwil verify --agent` en
+`GOVERNANCE: PASS`.
 
-- **Lot 1** sert la rapidité (cadrer sans attendre la fin du chantier) et la fiabilité (l'agent ne dit plus que
-  c'est impossible) ; aucun axe dégradé, texte du rappel seul.
-- **Lot 2** sert la rapidité et la preuve (geste testé sur dépôts jetables) ; peut dégrader la performance (un
-  `npm ci` par worktree, P2) et la fiabilité (worktree retiré à tort, P5) ; jamais un pre-push allégé pour aller
-  plus vite (QUA-019).
+Grille des six axes :
+
+- **Lot 1** sert la rapidité et la performance (un push de cadrage sans `npm ci` ni build) ; risque pour la
+  preuve et la sécurité : un contrôle différé à tort. Garde : seuls les contrôles à `paths` non concernés sont
+  différés, les contrôles de base (dont `secrets`) jouent, la CI rejoue tout avant la fusion (QUA-013).
+- **Lot 2** sert la rapidité et la fiabilité (un geste testé, l'agent ne dit plus que c'est impossible) ;
+  risque pour la fiabilité : une PR ouverte à moitié. Garde : arrêt à la première étape en échec, rien de défait,
+  l'étape nommée.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-22) : cadrage écrit, points P1 à P8 ouverts.
-- **Prochaine étape** : [décision] trancher P1 à P8 avec le demandeur, puis passer la maturité à « prêt ».
+- **Dernier état** (2026-11-22) : réduit à l'assemblage de l'existant, P1 à P8 tranchés, prêt.
+- **Prochaine étape** : lancement par le demandeur (`/drwil-start`), après `acceleration-des-controles`.
