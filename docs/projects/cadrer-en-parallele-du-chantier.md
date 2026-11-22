@@ -92,6 +92,10 @@ Relevé dans le code le 2026-11-22 :
 
 ## 3. Contraintes
 
+- **Principes directeurs** (demandeur, 2026-11-22, en ses mots) : « sécure, optimisé et performance, rapidité, tester
+  et prouver, évolutivité et fiabilité ». Six axes : sécurité, performance, rapidité, preuve, évolutivité,
+  fiabilité. Chaque lot dit l'axe qu'il sert et ce qui pourrait en dégrader un autre (section 6). La rapidité ne
+  s'achète jamais par un contrôle sauté ou désactivé (QUA-019) : « vite, mais prouvé ».
 - QUA-018 : on édite le gabarit puis `npm run installer-depot` ; copies du dépôt dans le même commit.
 - `.githooks/worktree.mjs` est au plafond de 200 lignes (QUA-001) : un module ajouté, pas une fonction de plus.
 - Couverture à 100 % des hooks (QUA-004) ; tests sur dépôts git jetables.
@@ -138,6 +142,14 @@ Aucune encore (cadrage du 2026-11-22, rien de tranché).
 - **Lot 2 — l'outil** [IA] (si P1 b ou c) : `.githooks/scoping-worktree.mjs` (à créer) (créer, retirer), tests sur dépôts jetables,
   `QUA-nouveau-2`, carte `docs/architecture.md`, `docs/projects/kit-mechanics.md`, ligne « Unreleased » du
   CHANGELOG. Critère de sortie : idem.
+
+Grille des six axes par lot :
+
+- **Lot 1** sert la rapidité (cadrer sans attendre la fin du chantier) et la fiabilité (l'agent ne dit plus que
+  c'est impossible) ; aucun axe dégradé, texte du rappel seul.
+- **Lot 2** sert la rapidité et la preuve (geste testé sur dépôts jetables) ; peut dégrader la performance (un
+  `npm ci` par worktree, P2) et la fiabilité (worktree retiré à tort, P5) ; jamais un pre-push allégé pour aller
+  plus vite (QUA-019).
 
 ## 7. Reprise
 

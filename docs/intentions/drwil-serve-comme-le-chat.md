@@ -22,6 +22,11 @@ Parité des outils : « avec Copilot j'ai pas ça ». Remote Control n'existe qu
 de la même façon pour Claude Code et Copilot CLI (puis les autres), sans dépendre d'une fonction propre à un outil. C'est
 `drwil serve` qui porte le chat.
 
+Principes directeurs (demandeur, 2026-11-22) : « sécure, optimisé et performance, rapidité, tester et prouver,
+évolutivité et fiabilité ». Comparaison avec Lovable : l'expérience d'un chat qui pilote tout, mais « vite, mais
+prouvé ». Pistes évoquées : un aperçu en direct de l'application de l'adoptant dans la vue, rechargé à chaque lot ;
+un déploiement en un geste (`docs/recipes/deploy-to-production.md`), jamais sans demande explicite.
+
 ## Existant
 
 Relevé dans le code le 2026-11-22.
@@ -61,3 +66,4 @@ Relevé dans le code le 2026-11-22.
   le dépôt.
 - [décision] Découpage possible : 1. intentions depuis la vue, 2. sondages, 3. lancement de chantiers, 4. conversation
   complète ; ordre et premier lot.
+- [décision] Aperçu en direct de l'application et déploiement en un geste : dans le périmètre ou plus tard.

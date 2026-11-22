@@ -76,7 +76,7 @@ Relevé dans le code le 2026-11-22 :
 
 ## Critères d'acceptation
 
-(Provisoires, à reprendre une fois P1 à P10 tranchés ; un contrat par critère métier, créé par le chantier.)
+(Provisoires, à reprendre une fois P1 à P12 tranchés ; un contrat par critère métier, créé par le chantier.)
 
 - Lot 1 — Depuis la vue, avec un jeton valide, l'humain crée une intention (titre, besoin) : le fichier
   `docs/intentions/<nom>.md` au format QUA-015 est écrit sur une branche de cadrage, jamais sur la branche d'un
@@ -114,6 +114,10 @@ Relevé dans le code le 2026-11-22 :
 
 ## 3. Contraintes
 
+- **Principes directeurs** (demandeur, 2026-11-22, en ses mots) : « sécure, optimisé et performance, rapidité, tester
+  et prouver, évolutivité et fiabilité ». Six axes : sécurité, performance, rapidité, preuve, évolutivité,
+  fiabilité. Chaque lot dit l'axe qu'il sert et ce qui pourrait en dégrader un autre (section 6). La rapidité ne
+  s'achète jamais par un contrôle sauté ou désactivé (QUA-019) : « vite, mais prouvé ».
 - QUA-018 : livrable d'abord (CLI du paquet, gabarit), puis `npm run installer-depot` pour le dépôt.
 - `commander` reste la seule dépendance d'exécution (QUA-280), sauf décision contraire (P2 : SDK d'un outil).
 - `packages/drwil/src/cli-serve.ts` au plafond de 200 lignes, `packages/drwil/src/serve.ts` à 182 (QUA-001) : modules ajoutés.
@@ -166,6 +170,14 @@ Aucune encore (cadrage du 2026-11-22, rien de tranché).
   d'abord dans ce dépôt, puis livré. Recommandation : (a), `drwil serve` est déjà dans le paquet.
 - [décision] **P9 — Outils couverts au premier essai.** Claude Code et Copilot CLI demandés ; Gemini CLI, Codex,
   Cursor ensuite ? Recommandation : les deux demandés, les autres au relevé de P2.
+- [décision] **P11 — Aperçu en direct de l'application de l'adoptant dans la vue**, rechargé à chaque lot.
+  Alternatives : (a) dans le périmètre, nouveau lot (la vue lance la commande « run-locally » déclarée et en montre
+  l'adresse) ; (b) plus tard, fiche à part ; (c) écarté. Recommandation : (b) ; sert la rapidité, peut dégrader la
+  sécurité (application exposée sur le réseau privé) et la performance (serveur de l'adoptant tenu en vie).
+- [décision] **P12 — Déploiement en un geste depuis la vue**, lié à `docs/recipes/deploy-to-production.md`, jamais sans
+  demande explicite. Alternatives : (a) dans le périmètre, geste humain par sondage lu par le hook ; (b) plus tard,
+  fiche à part ; (c) écarté. Recommandation : (b), après les sondages depuis la vue ; sert la rapidité, risque fort
+  sur la sécurité et la fiabilité (production).
 - [décision] **P10 — Priorité et version cible** (intention proposée en P1 ; rien de fixé par la demande).
 
 ## 6. Increments
@@ -183,7 +195,20 @@ Aucune encore (cadrage du 2026-11-22, rien de tranché).
 - **Lot 5 — essai réel** [humain] : téléphone par Tailscale, Claude Code et Copilot CLI ; attestation du contrat
   `Manuel`.
 
+Grille des six axes par lot (à confirmer avec P1) :
+
+- **Lot 1** sert la sécurité et la preuve (écriture sous jeton, testée en dur) ; peut dégrader la sécurité si une
+  route d'écriture échappe au jeton ou à l'anti-CSRF, et la fiabilité si elle écrit sur la branche d'un chantier.
+- **Lot 2** sert la preuve (même socle de sondages que le chat) ; peut dégrader la sécurité si un second chemin de
+  preuve s'ouvre (P3 b), et la rapidité si chaque réponse attend un aller-retour lent avec l'agent.
+- **Lot 3** sert la rapidité (lancer du téléphone) ; peut dégrader la fiabilité si le lancement contourne le sondage
+  de lancement (QUA-142, QUA-160).
+- **Lot 4** sert la rapidité et l'évolutivité (un canal pour tous les outils) ; peut dégrader la performance (un agent
+  qui tourne avec le serveur, P6), la sécurité (l'agent piloté depuis le réseau) et la fiabilité (reprise de
+  session).
+- **Lot 5** sert la preuve (essai réel) ; aucun axe dégradé.
+
 ## 7. Reprise
 
-- **Dernier état** (2026-11-22) : cadrage écrit, points P1 à P10 ouverts.
-- **Prochaine étape** : [décision] trancher P1 à P10 avec le demandeur ; relevé ACP par outil pour P2.
+- **Dernier état** (2026-11-22) : cadrage écrit, points P1 à P12 ouverts.
+- **Prochaine étape** : [décision] trancher P1 à P12 avec le demandeur ; relevé ACP par outil pour P2.
