@@ -215,6 +215,28 @@ test("QUA-173 : un fichier neuf listé par la fiche que la branche a supprimée 
   }
 });
 
+test("QUA-173 : une fiche supprimée par la branche puis recréée au même chemin : la version présente prime, un fichier qu'elle seule cite est couvert", () => {
+  const { racine, ecrire } = depotCloture();
+  try {
+    const cfg = { codePrefixes: ["src"] };
+    const env = { DRWIL_BASE: "main" };
+    // Réinstallation ou réouverture (QUA-116) : la fiche revient, plus large que sa version supprimée.
+    ecrire("src/hook-neuf.js", "h\n");
+    const presente = "<!-- scope\nfiles:\n  - src/neuf.js\n  - src/hook-neuf.js\n-->\n";
+    ecrire("docs/projects/f.md", presente);
+    const hors = outsideBriefs(
+      ["src/neuf.js", "src/hook-neuf.js", "src/jamais.js"],
+      patternsByBrief([["docs/projects/f.md", presente]], cfg),
+      cfg,
+      deliveredFiles(racine, env),
+      closedBriefPatterns(racine, cfg, env),
+    );
+    assert.deepEqual(hors, ["src/jamais.js"]);
+  } finally {
+    rmSync(racine, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+});
+
 /** Fiche qui cite src/neuf.js, supprimée à la clôture ; src/neuf.test.js en dérive, src/jamais.test.js non. */
 function verifierDeriveCloture() {
   const { racine, git, ecrire } = depotLivre();

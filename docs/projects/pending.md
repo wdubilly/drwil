@@ -171,8 +171,6 @@ d'un outil) la dit dans son statut.
 
 ### Fiabilité
 
-- [ ] [IA] [P0] `drwil init` s'installe et se met à jour dans un dépôt existant sans commit refusé ni CI perdue :
-  branche dédiée, jobs du projet replacés en zone, commit du kit sans coupure (cadré le 2026-11-21) — `docs/projects/installation-dans-un-depot-existant.md`.
 - [ ] [IA] [P1] (0.11.3) La clôture rattache sa preuve à l'entrée du journal écrite sur la branche, refusée sans
   entrée reconnue ; plus d'entrée réduite au renvoi (cadré le 2026-11-17) — `docs/projects/journal-sans-entree-vide.md`.
 - [ ] [IA] [P1] (0.11.3) Durcissements de l'audit du 2026-11-12 : préfixes de code, preuve de file protégée,

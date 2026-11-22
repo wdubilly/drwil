@@ -276,14 +276,18 @@ test("projet existant : init complète sans écraser, l'aperçu l'annonce, un se
     "AGENTS.md",
     "CLAUDE.md",
   ]);
-  assert.deepEqual(a.gaps.map((g) => g.kind).sort(), ["ci", "hooksPath"], "CI et hooks : laissés à l'humain");
+  assert.deepEqual(
+    a.gaps.map((g) => g.kind).sort(),
+    ["hooksPath"],
+    "hooks laissés à l'humain ; le CI, init le réécrit (jobs du projet replacés)",
+  );
   assert.equal(read(dir, "AGENTS.md"), fichiers["AGENTS.md"], "l'aperçu n'écrit rien");
 
   const lignes = await capture(() => init({ lang: "fr", targetDir: dir }));
   const sortie = lignes.join("\n");
-  // settings.json est fusionné, .gitleaks.toml complété dans sa table : vérifiés à part.
+  // settings.json fusionné, .gitleaks.toml complété dans sa table, CI réécrit avec le job du projet dans sa zone (QUA-283) : vérifiés à part.
   for (const [f, contenu] of Object.entries(fichiers))
-    if (![".claude/settings.json", ".gitleaks.toml"].includes(f))
+    if (![".claude/settings.json", ".gitleaks.toml", ".gitlab-ci.yml"].includes(f))
       assert.ok(read(dir, f).startsWith(contenu.replace(/\s*$/, "")), `contenu du projet gardé : ${f}`);
   assert.match(read(dir, ".gitignore"), /\/build\r\n\r\n# >>> drwil\r\n\.env\r\n/, "bloc ajouté, fins de ligne du projet respectées");
   for (const l of [".drwil/state.json", ".drwil/reminder.json", ".claude/settings.local.json"])
@@ -298,9 +302,14 @@ test("projet existant : init complète sans écraser, l'aperçu l'annonce, un se
   assert.ok(reglages.permissions.deny.includes("Bash(git *--no-verify*)"));
   assert.ok(reglages.hooks.SessionStart[0].hooks[0].command.includes(".githooks/state.mjs"));
   assert.equal(config(dir).ci, "gitlab", "CI existante détectée");
-  assert.equal(read(dir, ".gitlab-ci.yml"), fichiers[".gitlab-ci.yml"], "fichier CI jamais réécrit");
+  assert.match(
+    read(dir, ".gitlab-ci.yml"),
+    /# drwil-project-begin jobs\n[\s\S]*\ntest:\n {2}script: npm test\n# drwil-project-end jobs/,
+    "job du projet dans sa zone",
+  );
+  assert.match(read(dir, ".gitlab-ci.yml"), /node \.githooks\/run-checks\.mjs/, "job checks du kit écrit");
   assert.equal(git(dir, "config", "core.hooksPath").stdout.trim(), ".husky/_", "gestionnaire de hooks du projet gardé");
-  assert.match(sortie, /\.gitlab-ci\.yml: .*job `checks` absent[\s\S]*node \.githooks\/run-checks\.mjs/);
+  assert.match(sortie, /\.gitlab-ci\.yml : replacé\(s\) dans la zone du projet : test\./);
   assert.match(sortie, /\.husky\/pre-commit: \.githooks\/pre-commit "\$@" \|\| exit \$\?/);
 
   const avant = instantane(dir);
@@ -312,6 +321,8 @@ test("projet existant : init complète sans écraser, l'aperçu l'annonce, un se
 test("projet existant : doctor signale ce qui manque avec le correctif ; hooks chaînés acceptés", async () => {
   const { dir } = projetOutille();
   await quiet(() => init({ lang: "fr", targetDir: dir }));
+  // Un CI ramené à la main sans le job du kit : doctor dit le correctif.
+  writeFileSync(join(dir, ".gitlab-ci.yml"), "test:\n  script: npm test\n");
   let d = await doctor({ targetDir: dir });
   assert.equal(d.code, 1);
   assert.match(

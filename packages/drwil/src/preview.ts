@@ -119,7 +119,10 @@ export async function previewInit(opts: InitOptions): Promise<InitPreview> {
   await scaffold(r, { shouldOverwrite, drifted, simulation });
   const created = [...simulation.created];
   if (!readConfig(opts.targetDir)) created.push(".drwil/ia-first.json");
-  const { added, gaps } = await complete(r, { dryRun: true });
+  const completion = await complete(r, { dryRun: true });
+  const { added } = completion;
+  // A CI file init rewrites gets the kit's job (QUA-283): its gap is only real when a conflicting key keeps the file.
+  const gaps = completion.gaps.filter((g) => g.kind !== "ci" || !simulation.replaced.includes(g.file));
   return {
     lang,
     stack: r.stack,

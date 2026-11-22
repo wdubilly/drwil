@@ -1,0 +1,27 @@
+{
+  "version": 4,
+  "contract": "QUA-218",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-21T21:14:52.571Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Relu par l'agent le 2026-11-21 : INSTALL.md, section « Node.js in the PATH of your assistant » : prérequis node dans le PATH du processus de l'assistant, piège fnm (fnm_multishells, code 127), message exact des hooks, marche à suivre (relancer depuis un shell où which node répond), comportement sans node par outil, limites (Gemini sous Windows).",
+  "fingerprint": "e54acea5a582526b07354ab6f1bdc727c53036871b343decfda575a171fed733",
+  "proof": {},
+  "covers": [
+    "INSTALL.md"
+  ],
+  "coverage": {
+    "INSTALL.md": "cd009e12a206c7fda77742873f13ee7cb1aaa866eca1f0f5eb357c4d4bf8e324"
+  },
+  "commit": "0ed6aad6272f338c689a82065b9388bd3816089c",
+  "automated": [],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "853fbde2-e7f4-4598-86e4-35a450054ace",
+    "toolUseId": "toolu_015Z3rMdRinXBLgkevJSg21L",
+    "askedAt": "2026-11-21T21:14:21.461Z"
+  }
+}

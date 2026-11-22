@@ -1,6 +1,7 @@
 import { after, afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -70,6 +71,8 @@ function passe(racine, { env = {}, args = [] } = {}) {
     DRWIL_PUSH_REFS: "",
     DRWIL_PUSH_TAGS_ONLY: "",
     DRWIL_PUSH_NO_BRANCH: "",
+    DRWIL_PUSH_COMMITS: "",
+    DRWIL_KIT_UPDATE: "",
     TMPDIR: tmp(),
   };
   // DRWIL_ROOT : sans elle, run-checks jugerait le dépôt drwil (parent de son .githooks/).
@@ -1020,4 +1023,141 @@ test("dans ce dépôt, couverture-claude compile le paquet avant ses tests et se
   assert.equal(tests.length, 5);
   for (const f of [...tests, "packages/drwil/src/index.ts", "tsconfig.json", "packages/drwil/tsconfig.json"])
     assert.ok(couvert(f), `${f} rejoue couverture-claude`);
+});
+
+// QUA-325 : commit et push du kit posés par `init` (reconnus par le manifeste, QUA-238) : contrôles du projet à `paths` différés.
+const empreinteKit = (texte) => createHash("sha256").update(texte).digest("hex");
+const ZERO = "0".repeat(40);
+const KIT_CFG = JSON.stringify({
+  checks: [
+    { id: "lent", name: "lent", run: 'node -e "process.exit(1)"', paths: ["**"] },
+    { id: "rapide", name: "rapide", run: "node -e 0" },
+  ],
+});
+const identite = ["-c", "user.name=t", "-c", "user.email=t@t"];
+const tete = (racine) => spawnSync("git", ["rev-parse", "HEAD"], { cwd: racine, encoding: "utf8" }).stdout.trim();
+/** Projet commité (bouchons des contrôles de base, un contrôle « lent » en échec qui déclare `paths: ["**"]`). */
+function projetKit() {
+  const racine = tmp();
+  const fichiers = {
+    ".githooks/check-docs.mjs": "process.exit(0);\n",
+    ".githooks/check-contract-tests.mjs": "process.exit(0);\n",
+    ".githooks/check-architecture.mjs": "process.exit(0);\n",
+    ".drwil/ia-first.json": KIT_CFG,
+    "src/a.js": "x\n",
+  };
+  for (const [chemin, contenu] of Object.entries(fichiers)) {
+    mkdirSync(dirname(join(racine, chemin)), { recursive: true });
+    writeFileSync(join(racine, chemin), contenu);
+  }
+  git(racine, "init", "-q", "-b", "travail");
+  git(racine, "add", "-A");
+  git(racine, ...identite, "commit", "-qm", "projet");
+  return racine;
+}
+/** Un fichier du kit et son manifeste, indexés ; `commit` : commités avec le trailer de `init`. */
+function poserKit(racine, n, { commit = false, manifeste = true } = {}) {
+  const chemin = `.githooks/kit-${n}.mjs`;
+  writeFileSync(join(racine, chemin), `// kit ${n}\n`);
+  const fichier = join(racine, ".drwil/installed-files.json");
+  const avant = existsSync(fichier) ? JSON.parse(readFileSync(fichier, "utf8")) : {};
+  if (manifeste) writeFileSync(fichier, JSON.stringify({ ...avant, [chemin]: empreinteKit(`// kit ${n}\n`) }));
+  git(racine, "add", "-A");
+  if (commit) git(racine, ...identite, "commit", "-qm", `kit ${n}`, "-m", "Drwil-Kit-Update: 9.9.9");
+}
+const auCommit = (racine, env = {}) => passe(racine, { env: { DRWIL_HOOK: "pre-commit", ...env } });
+const auPush = (racine, commits, env = {}) =>
+  passe(racine, { env: { DRWIL_PUSH_REFS: " refs/heads/travail", DRWIL_PUSH_COMMITS: commits, ...env } });
+const DIFFERE = /^\[ia-first\] ⚠ non exécuté : lent \(commit du kit, reconnu par son manifeste/m;
+
+test("QUA-325 : au commit posé par init dont le manifeste explique tout, un contrôle du projet à paths est différé ; les autres jouent", () => {
+  const racine = projetKit();
+  poserKit(racine, 1);
+  const r = auCommit(racine, { DRWIL_KIT_UPDATE: "9.9.9" });
+  assert.equal(r.status, 0, r.stdout + r.detail);
+  assert.match(r.detail, DIFFERE);
+  assert.match(r.detail, /^\[ia-first\] rapide…$/m, "un contrôle sans paths joue");
+  assert.doesNotMatch(r.detail, /^\[ia-first\] lent…$/m);
+});
+
+test("QUA-325 : sans la variable, avec un fichier hors manifeste ou un fichier du kit édité à la main, le contrôle à paths joue et bloque (QUA-019)", () => {
+  const racine = projetKit();
+  poserKit(racine, 1);
+  const sansVariable = auCommit(racine);
+  assert.equal(sansVariable.status, 1, "la variable seule ne diffère rien, son absence non plus");
+  assert.match(sansVariable.stdout, /✗ échec : lent/);
+  writeFileSync(join(racine, "src/a.js"), "y\n");
+  git(racine, "add", "src/a.js");
+  const horsKit = auCommit(racine, { DRWIL_KIT_UPDATE: "9.9.9" });
+  assert.equal(horsKit.status, 1, "un fichier du projet dans le commit : contrôles joués comme avant");
+  assert.doesNotMatch(horsKit.detail, DIFFERE);
+  git(racine, "checkout", "HEAD", "--", "src/a.js");
+  writeFileSync(join(racine, ".githooks/kit-1.mjs"), "// édité à la main\n");
+  git(racine, "add", "-A");
+  const edite = auCommit(racine, { DRWIL_KIT_UPDATE: "9.9.9" });
+  assert.equal(edite.status, 1, "empreinte différente du manifeste : jugé");
+  const sansManifeste = projetKit();
+  poserKit(sansManifeste, 1, { manifeste: false });
+  assert.equal(auCommit(sansManifeste, { DRWIL_KIT_UPDATE: "9.9.9" }).status, 1, "aucun manifeste : rien n'est expliqué");
+});
+
+test("QUA-325 : au pre-push d'une suite de commits du kit, le contrôle à paths est différé ; un commit hors kit, une branche neuve au commit hors kit ou la CI le jouent", () => {
+  const racine = projetKit();
+  const base = tete(racine);
+  poserKit(racine, 1, { commit: true });
+  poserKit(racine, 2, { commit: true });
+  const kit = auPush(racine, `${tete(racine)}:${base}`);
+  assert.equal(kit.status, 0, kit.stdout + kit.detail);
+  assert.match(kit.detail, DIFFERE);
+  assert.match(kit.detail, /rejoué en CI\)/);
+  assert.equal(auPush(racine, "").status, 1, "sans les commits poussés : joué comme avant");
+  assert.equal(auPush(racine, `${tete(racine)}:${ZERO}`).status, 1, "branche neuve : le commit du projet est poussé aussi");
+  assert.equal(auPush(racine, `${tete(racine)}:${base}`, { CI: "true" }).status, 1, "la CI rejoue tout");
+  assert.equal(auPush(racine, `--all:${base}`).status, 1, "commits illisibles : joué");
+  writeFileSync(join(racine, "src/a.js"), "y\n");
+  git(racine, "add", "-A");
+  git(racine, ...identite, "commit", "-qm", "faux kit", "-m", "Drwil-Kit-Update: 9.9.9");
+  const faux = auPush(racine, `${tete(racine)}:${base}`);
+  assert.equal(faux.status, 1, "trailer sur un commit qui touche du code projet : joué (QUA-019)");
+  assert.doesNotMatch(faux.detail, DIFFERE);
+});
+
+test("QUA-325 : le pre-push transmet à run-checks les commits poussés (SHA local et distant de chaque branche, ni tag ni suppression)", () => {
+  const racine = tmp();
+  mkdirSync(join(racine, ".githooks"));
+  writeFileSync(join(racine, ".githooks/pre-push"), readFileSync(join(dirname(SCRIPT), "pre-push")));
+  const sortie = join(racine, "env.json");
+  writeFileSync(
+    join(racine, ".githooks/run-checks.mjs"),
+    `import { writeFileSync } from "node:fs";\nwriteFileSync(${JSON.stringify(sortie)}, JSON.stringify(process.env));\n`,
+  );
+  const lignes = [
+    `refs/heads/a ${"1".repeat(40)} refs/heads/a ${"2".repeat(40)}`,
+    `refs/tags/v1 ${"3".repeat(40)} refs/tags/v1 ${ZERO}`,
+    `(delete) ${ZERO} refs/heads/vieux ${"4".repeat(40)}`,
+    `refs/heads/b ${"5".repeat(40)} refs/heads/b ${ZERO}`,
+  ];
+  const r = spawnSync("sh", [join(racine, ".githooks/pre-push"), "origin", "url"], { input: `${lignes.join("\n")}\n`, encoding: "utf8" });
+  assert.equal(r.status, 0, r.stderr);
+  const vu = JSON.parse(readFileSync(sortie, "utf8"));
+  assert.equal(vu.DRWIL_PUSH_COMMITS.trim(), `${"1".repeat(40)}:${"2".repeat(40)} ${"5".repeat(40)}:${ZERO}`);
+  assert.equal(vu.DRWIL_PUSH_REFS.trim(), "refs/heads/a refs/heads/b");
+});
+
+test("QUA-325 : en anglais, un contrôle sans nom est nommé par sa commande ; commit poussé sans trailer ou SHA inconnu : joué", () => {
+  const racine = projetKit();
+  const cfg = { lang: "en", checks: [{ run: 'node -e "process.exit(1)"', paths: ["**"] }] };
+  writeFileSync(join(racine, ".drwil/ia-first.json"), JSON.stringify(cfg));
+  git(racine, "add", "-A");
+  git(racine, ...identite, "commit", "-qm", "config");
+  const base = tete(racine);
+  poserKit(racine, 1, { commit: true });
+  const kit = auPush(racine, `${tete(racine)}:${base}`);
+  assert.equal(kit.status, 0, kit.stdout + kit.detail);
+  assert.match(kit.detail, /not run: node -e "process\.exit\(1\)" \(kit commit, recognised by its manifest: replayed in CI\)/);
+  assert.equal(auPush(racine, `${"a".repeat(40)}:${base}`).status, 1, "SHA inconnu : joué");
+  writeFileSync(join(racine, ".githooks/kit-1.mjs"), "// kit 1\n// autre\n");
+  git(racine, "add", "-A");
+  git(racine, ...identite, "commit", "-qm", "sans trailer");
+  assert.equal(auPush(racine, `${tete(racine)}:${base}`).status, 1, "commit sans trailer : joué");
 });

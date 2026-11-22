@@ -57,7 +57,8 @@ function unifiedDiff(before: string, after: string): string {
 /**
  * Kit files (mechanics and prose) modified by hand since their installation that the update would replace: each
  * is shown as a diff and replaced only on the human's yes. Project files (QUA-284) and CI files (QUA-283) are
- * never offered. Writes nothing: the update branch keeps the old version, so no `.bak`.
+ * never offered. Writes nothing, and never a `.bak` (QUA-282): when `init` commits on its own branch, the main branch
+ * keeps the old version; otherwise only the yes shown with the diff replaces the file.
  */
 export async function replaceOnConfirm(
   r: Resolved,

@@ -83,9 +83,17 @@ the gitignored local settings file of the same folder.
 
 On an empty folder, `drwil init` creates the git repository on the `workstream/kit-installation` branch and
 commits the kit itself, before enabling the hooks: with `scopeGate` blocking, the files of the kit (outside any
-brief) could not be committed in SCOPING, and the first workstream would start on a refused commit. The first
-installation on a folder that is already a git repository is never committed by `init`; if git has no identity, `init` says so and the
-commit is left to you.
+brief) could not be committed in SCOPING, and the first workstream would start on a refused commit. If git has no
+identity, `init` says so and the commit is left to you.
+
+### First installation in an existing repository
+
+On a git repository that already has commits and no kit, `drwil init` cuts `workstream/kit-installation` from the main
+branch and commits the kit there, with the `Drwil-Kit-Update` trailer: the scope gate recognises it by the kit manifest
+(the configuration it creates is accepted as long as no guard is switched off), so the commit is not refused in SCOPING
+and the tree is left clean. It refuses before writing anything, saying what to do, in the same cases as the update
+below (dirty tree, no git identity, main branch behind the remote, branch already present). Push the branch and merge it
+through a pull request.
 
 ### Updating an equipped project
 
@@ -94,6 +102,29 @@ main branch, with a `Drwil-Kit-Update` trailer: the scope gate accepts it only f
 in SCOPING is not blocked by its own update. It refuses, before writing anything and saying what to do, on a dirty tree,
 without a git identity, or when the main branch is behind the remote (`git fetch`, then fast-forward: `init` does not do it
 itself). Push the branch and open a pull request.
+
+The commit `init` makes (installation or update) has no time limit and shows the hooks' output while it runs. When every
+file of that commit is explained by the kit manifest, the project's checks that declare `paths` are not replayed at
+commit, nor at push when every pushed commit is such a kit commit: they are reported « not run » and the pull request's
+CI replays them. A single project file or project commit, and they run as before.
+
+### The project's CI is kept
+
+On a GitHub or GitLab CI file, with or without the kit's markers, at installation as at update, `init` rewrites the kit's
+part and moves every job (and, on GitLab, every stage) that is not the kit's into a project zone between
+`# drwil-project-begin` and `# drwil-project-end` markers, naming what it moved: no project line is lost, and running
+`init` again changes nothing. A global key both the project and the kit define with a different content (GitLab
+`workflow`, `default`, `variables`, `include`; GitHub `on`, `env`, `permissions`) leaves the file as it is: `init` names the
+key and says what to do. A CI file without markers from an older kit (0.1 to 0.11.0) is recognized by the shipped versions
+of the kit's jobs: the steps the project added inside the kit's `checks` job are moved, unchanged. Those found before the
+kit's checks (installing dependencies, a tool, a browser) go into the preparation zones, `setup` in `checks` and
+`shard-setup` in the slices job (`shards`), both before the checks run; those found after (publishing a report or
+captures) go into the `steps` zone, at the end of `checks`. A step that cannot be established as the kit's or the
+project's leaves the file as it is, named. On GitHub, a step moved into `checks` receives the kit's
+`if: needs.plan.outputs.skip != 'true'`, so that a skipped run skips it too; a step that already has its own condition is
+kept as it is and named. An artifact written by a sharded check
+(e.g. e2e captures) exists only in its slice's job: publish it from the `shard-steps` zone at the end of the slices job,
+under a name per slice; the `steps` zone of `checks` does not see it.
 
 ## 4. Build the tarball of a version
 

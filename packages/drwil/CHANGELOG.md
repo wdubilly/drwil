@@ -119,6 +119,44 @@ release renames this section to its version.
 
 ### Changed
 
+- `drwil init` on an existing git repository (commits present, no kit) now
+  commits the kit itself on a `workstream/kit-installation` branch cut from
+  the main branch, with the `Drwil-Kit-Update` trailer, and says to merge it
+  through a pull request: the scope gate recognises it by the kit manifest
+  (the configuration it creates is accepted as long as no guard is switched
+  off), so it is no longer refused in SCOPING. It refuses before writing in
+  the update's cases (dirty tree, no git identity, main branch behind the
+  remote, branch already present).
+- On a GitHub or GitLab CI file, with or without markers, at installation as
+  at update, `init` rewrites the kit's part and moves every job and GitLab
+  stage that is not the kit's into a project zone (a new `stages` zone in the
+  GitLab template), naming what it moved: no project line is lost, and a
+  second run changes nothing. A global key both define with a different
+  content (GitLab `workflow`, `default`, `variables`, `include`; GitHub `on`,
+  `env`, `permissions`) leaves the file as it is, the key named with what to
+  do. The message names an update branch only when there is one. In a CI
+  file without markers from an older kit (0.1 to 0.11.0), the steps the
+  project added inside the kit's `checks` job are moved, unchanged and in
+  their order, into a project zone and the kit's jobs are updated: a job or
+  step is the kit's when it is identical to the one of a shipped version. A
+  step that cannot be established either way leaves the file as it is, named
+  with its job. The CI templates have two new preparation zones, `setup` in
+  the `checks` job and `shard-setup` in the slices job, before the kit's
+  checks run: the project's steps found before the kit's checks (installing
+  dependencies, a tool, a browser) go there, in both jobs, and those found
+  after stay in the `steps` zone at the end of `checks`; a `shard-steps` zone
+  ends the slices job (to publish what a sharded check wrote). An already
+  marked file keeps its `steps` zone as it is and receives the new zones,
+  empty. On GitHub, a project step moved into `checks` receives the kit's
+  `if: needs.plan.outputs.skip != 'true'`, so a skipped run skips it too; a
+  step with its own condition is kept as it is and named.
+- The commit `init` makes (installation or update) no longer has a 60-second
+  limit that cut it, and shows the hooks' output while it runs. When the kit
+  manifest explains every file of that commit, the project's checks that
+  declare `paths` are « not run » at pre-commit, and at pre-push when every
+  pushed commit is such a kit commit (`.githooks/pre-push` now passes the
+  pushed commits); the CI replays them. A single project file or commit and
+  they run as before.
 - `node .githooks/close.mjs --fix` now only writes the proposed corrections,
   in `CLOSING` as elsewhere (no closing proof, no brief deleted, no index or
   consumption touched), and says to run `node .githooks/close.mjs` next. A
@@ -201,6 +239,10 @@ release renames this section to its version.
   hook also gives it as a top-level `additionalContext`, the only form
   Copilot reads after a tool. A refused « This folder » start used to look
   like nothing at all.
+- A brief present on disk is no longer replaced, in the scope gate's
+  coverage, by its version the branch deleted at the same path: the files it
+  cites are no longer « outside any brief » after a reinstallation or a
+  reopened workstream (QUA-173).
 - A human attestation no longer falls when only the launcher of a cited check
   changes for an equivalent one: `node outils/tests-par-fichier.mjs` and the
   shipped contract-tests launcher under .githooks/ (optionally with

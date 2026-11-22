@@ -187,14 +187,14 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 /**
  * Code files of `paths` that no brief covers, sorted. A delivered file (`deliveredFiles`) or one listed by a brief
- * the branch deleted (`closedBriefPatterns`) stays covered once its brief is closed (QUA-173).
- */
+ * the branch deleted (`closedBriefPatterns`) stays covered; a brief present at the same path wins (QUA-173). */
 export function outsideBriefs(paths, byBrief, cfg, delivered, closed) {
   if (delivered === undefined) {
     delivered = deliveredFiles(ROOT);
     closed ??= closedBriefPatterns(ROOT, cfg);
   }
-  const covering = new Map([...byBrief, ...(closed ?? [])]);
+  // Recreated after its deletion (reinstall, QUA-116 reopening): the present version must not be overwritten.
+  const covering = new Map([...(closed ?? []), ...byBrief]);
   const outside = (p) => isCode(p, cfg) && !delivered.has(p) && briefsCovering(p, covering).length === 0;
   return [...new Set(paths.map(normalize).filter(outside))].sort();
 }

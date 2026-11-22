@@ -1,0 +1,31 @@
+{
+  "version": 4,
+  "contract": "QUA-019",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-21T21:14:09.309Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Constaté par l'agent le 2026-11-21 dans cette session : le garde-fou a refusé trois fois un saut des hooks (git config core.hooksPath, git -c core.hooksPath=) ; le report des contrôles du kit (QUA-325) rejoue tout pour un faux trailer, un fichier projet ou un manifeste absent (tests) ; aucun --no-verify utilisé dans le chantier.",
+  "fingerprint": "9a2e478c815ac88214a5eefb820dba618bf143829fbfdc2e9a972ab91a1fcc54",
+  "proof": {},
+  "covers": [
+    ".githooks/pre-commit",
+    ".githooks/pre-push",
+    ".github/workflows/ia-first.yml"
+  ],
+  "coverage": {
+    ".githooks/pre-commit": "71d53a07cb9526e9b53d4e86413c167acc11cd029dac7706dc6bd5e8a257ea94",
+    ".githooks/pre-push": "4c227d3ddb75822e136e7fdf4d3b4f024957a153051fd59316cea4ca7129c79a",
+    ".github/workflows/ia-first.yml": "b633969c1cb9d5c74b7303e1d57e0f942be94866a9adefbc69cc0316475d062b"
+  },
+  "commit": "0ed6aad6272f338c689a82065b9388bd3816089c",
+  "automated": [],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "853fbde2-e7f4-4598-86e4-35a450054ace",
+    "toolUseId": "toolu_01CePcaByNqmoChPJ6sWBbgd",
+    "askedAt": "2026-11-21T21:12:57.040Z"
+  }
+}

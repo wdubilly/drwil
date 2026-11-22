@@ -67,6 +67,7 @@ files:
   - .githooks/engine-selftest.mjs
   - .githooks/engine-shards.mjs
   - .githooks/engine-texts.mjs
+  - .githooks/run-checks-kit.mjs
   - .githooks/run-checks-pr.mjs
   - .githooks/run-checks-shards.mjs
   - .githooks/run-checks-texts.mjs

@@ -1,6 +1,5 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { execFileSync } from "node:child_process";
 
 export { detectStack, type StackEntry } from "./stack.js";
 export { report } from "./cli-report.js";
@@ -33,29 +32,21 @@ export { skeletonFiles, type CoverageTool, type Exec } from "./guarantees-table.
 export { COVERAGE_TOOLS, toolFor } from "./guarantees-tools.js";
 import { readConfig, type InitOptions, type Resolved } from "./config.js";
 import { writeConfig } from "./config-write.js";
-import { commitKit, installChoices } from "./install.js";
+import { installChoices } from "./install.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { scaffold } from "./render.js";
 import { type ConfirmDrift, isProjectFile, replaceOnConfirm } from "./drift.js";
 import { assertSafeManifest, engineVersion, removeObsolete, writeInstall, writeManifest } from "./manifest.js";
 import { formatMigration, migrate } from "./migration.js";
-import { finishUpdate, prepareUpdate } from "./kit-update.js";
+import { finishUpdate } from "./kit-update.js";
+import { prepareKitCommit, setupGit } from "./kit-install.js";
 import { complete, type Addition } from "./complete.js";
 import { writeCompleted } from "./manifest-completed.js";
-import { formatGaps, hooksPath } from "./essentials.js";
+import { formatGaps } from "./essentials.js";
 import { attachExistingCode, type ProjectConfig } from "./existing-code.js";
-
-// Branch created by `init()` before the very first commit: nobody ever needs to push to
-// master/main again, not even for the bootstrap.
-const INSTALL_BRANCH = "workstream/kit-installation";
 
 const TEXTS = {
   fr: {
-    noGit: "⚠ git introuvable : dépôt et hooks non configurés (lancer `git init` puis `git config core.hooksPath .githooks`).",
-    noRepo: "⚠ pas de dépôt git : hooks non activés (lancer `git config core.hooksPath .githooks` après `git init`).",
-    repoCreated: "Dépôt git initialisé, branche « {0} » créée (jamais de commit direct sur master/main).",
-    hooksEnabled: "Hooks activés (core.hooksPath = .githooks).",
-    hooksKept: "core.hooksPath déjà réglé ({0}) : gardé tel quel, les hooks drwil n'y tournent que s'ils y sont appelés (voir ci-dessous).",
     added: "Ajouté aux fichiers du projet, sans rien y écraser (bloc « drwil », retiré par `drwil uninstall`) :",
     stack: "Stack détectée : {0}",
     noStack: "Stack non détectée : à décider par l'utilisateur (voir docs/architecture.md).",
@@ -67,11 +58,6 @@ const TEXTS = {
       "Garanties obligatoires (couverture 100 %, e2e, forge protégée, présentation) : `npx drwil guarantees` une fois la pile connue (/drwil-adopt).",
   },
   en: {
-    noGit: "⚠ git not found: repository and hooks not configured (run `git init` then `git config core.hooksPath .githooks`).",
-    noRepo: "⚠ no git repository: hooks not enabled (run `git config core.hooksPath .githooks` after `git init`).",
-    repoCreated: 'Git repository initialised, branch "{0}" created (never a direct commit on master/main).',
-    hooksEnabled: "Hooks enabled (core.hooksPath = .githooks).",
-    hooksKept: "core.hooksPath already set ({0}): kept as it is, drwil hooks only run if called from there (see below).",
     added: 'Added to the project\'s files, nothing overwritten ("drwil" block, removed by `drwil uninstall`):',
     stack: "Detected stack: {0}",
     noStack: "Stack not detected: for the user to decide (see docs/architecture.md).",
@@ -83,40 +69,6 @@ const TEXTS = {
       "Mandatory guarantees (100 % coverage, e2e, protected forge, presentation): `npx drwil guarantees` once the stack is known (/drwil-adopt).",
   },
 };
-
-function setupGit(targetDir: string, allowInit: boolean, lang: MessageLang): void {
-  const T = TEXTS[lang];
-  const git = (...args: string[]) => execFileSync("git", args, { cwd: targetDir, stdio: "pipe" }).toString().trim();
-  try {
-    git("--version");
-  } catch {
-    console.warn(T.noGit);
-    return;
-  }
-  if (!existsSync(join(targetDir, ".git"))) {
-    if (!allowInit) {
-      console.warn(T.noRepo);
-      return;
-    }
-    git("init");
-    // Before any commit: never on master/main (see QUA-017, no more bootstrap exception).
-    git("checkout", "-b", INSTALL_BRANCH);
-    console.log(fill(T.repoCreated, INSTALL_BRANCH));
-    commitKit(lang, INSTALL_BRANCH, git);
-  }
-  // A hook manager of the project (husky, lefthook…) is never switched off: findGaps() reports the
-  // drwil hooks to call from it.
-  const current = hooksPath(targetDir);
-  if (current && current !== ".githooks") {
-    console.log(fill(T.hooksKept, current));
-    return;
-  }
-  git("config", "core.hooksPath", ".githooks");
-  // commit-msg is deliberately shipped non-executable: without this setting, git repeats the same
-  // warning at every commit, permanent noise.
-  git("config", "advice.ignoredHook", "false");
-  console.log(T.hooksEnabled);
-}
 
 function reportStack(r: Resolved): void {
   const T = TEXTS[r.lang];
@@ -162,8 +114,8 @@ async function migrateFirst(targetDir: string): Promise<void> {
  * the kit mechanics are refreshed unless modified by hand. `--force` rewrites everything.
  */
 export async function init(opts: InitOptions & { confirmDrift?: ConfirmDrift }): Promise<void> {
-  // Before anything is written: an update of an equipped project refuses, or cuts its own branch (QUA-237).
-  const update = opts.git === false ? null : prepareUpdate(opts.targetDir);
+  // Before anything is written: an update, or an installation in a repository with commits, refuses or cuts its own branch (QUA-237, QUA-206).
+  const update = opts.git === false ? null : prepareKitCommit(opts.targetDir, opts.lang === "fr" ? "fr" : "en");
   // First of all: a project in the old format moves to the English names, the only ones the install reads.
   await migrateFirst(opts.targetDir);
   assertSafeManifest(opts.targetDir);
@@ -175,10 +127,10 @@ export async function init(opts: InitOptions & { confirmDrift?: ConfirmDrift }):
   const flagged: string[] = [];
   const manifest: Record<string, string> = {};
   const expected: string[] = [];
-  await scaffold(r, { shouldOverwrite, drifted: flagged, manifest, expected, confirmCi: opts.confirmCi });
+  await scaffold(r, { shouldOverwrite, drifted: flagged, manifest, expected, ci: { lang: r.lang, commit: update ?? undefined } });
   const drifted = flagged.filter((f) => !isProjectFile(f));
   const completed: Record<string, string> = {};
-  const { added } = await complete(r, { manifest, previous, completed });
+  const { added } = await complete(r, { manifest, previous, completed, committed: update !== null });
   const obsolete = await removeObsolete(opts.targetDir, previous, expected);
   await writeManifest(opts.targetDir, manifest, obsolete);
   await writeCompleted(opts.targetDir, completed);

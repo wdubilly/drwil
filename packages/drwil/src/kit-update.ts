@@ -14,12 +14,17 @@ export const UPDATE_BRANCH = "workstream/kit-update";
 const TRAILER = "Drwil-Kit-Update";
 const ENV = "DRWIL_KIT_UPDATE";
 
+/** Messages of a commit made by `init` on its own branch: an update (here) or an installation (kit-install.ts). */
+export type KitTexts = (typeof TEXTS)["en"];
+
 export interface UpdatePlan {
   branch: string;
   main: string;
   /** Branche sur laquelle l'utilisateur se trouvait, où revenir si rien ne change. */
   from: string;
   previousVersion: string | null;
+  texts: Record<MessageLang, KitTexts>;
+  subject: (lang: MessageLang, version: string) => string;
 }
 
 const TEXTS = {
@@ -36,6 +41,7 @@ const TEXTS = {
     noMain:
       "⚠ branche principale introuvable (origin/HEAD, master, main) : la mise à jour reste dans l'arbre de travail, sans commit ni branche dédiée.",
     upToDate: "Kit déjà à jour : rien à commiter, retour sur la branche « {0} ».",
+    committing: "Commit de la mise à jour en cours : les hooks du projet jouent leurs contrôles, sans délai imposé…",
     committed: "Fait : mise à jour du kit vers {0} commitée sur la branche « {1} » (créée depuis « {2} »), {3} fichier(s).",
     notCommitted:
       "⚠ Mise à jour appliquée sur la branche « {0} » mais commit non fait ({1}) : les fichiers sont dans l'arbre de travail, à commiter une fois la cause levée.",
@@ -59,6 +65,7 @@ const TEXTS = {
     noMain:
       "⚠ main branch not found (origin/HEAD, master, main): the update stays in the working tree, with no commit or dedicated branch.",
     upToDate: 'Kit already up to date: nothing to commit, back on branch "{0}".',
+    committing: "Committing the update: the project's hooks run their checks, with no time limit…",
     committed: 'Done: kit update to {0} committed on branch "{1}" (created from "{2}"), {3} file(s).',
     notCommitted:
       '⚠ Update applied on branch "{0}" but not committed ({1}): the files are in the working tree, to be committed once the cause is fixed.',
@@ -70,10 +77,8 @@ const TEXTS = {
   },
 };
 
-const run = (dir: string, args: string[], env?: NodeJS.ProcessEnv): string =>
-  execFileSync("git", args, { cwd: dir, stdio: "pipe", env: env ?? process.env, timeout: 60_000 })
-    .toString()
-    .trim();
+const run = (dir: string, args: string[]): string =>
+  execFileSync("git", args, { cwd: dir, stdio: "pipe", timeout: 60_000 }).toString().trim();
 const ok = (dir: string, args: string[]): boolean => {
   try {
     run(dir, args);
@@ -98,16 +103,11 @@ function mainBranch(dir: string): string | null {
 }
 
 /**
- * Before anything is written: refuses (an Error that says what to do) when the update could not be committed
- * cleanly, otherwise cuts the dedicated branch from the project's main branch. Null: not an update, or no commit to make
- * (no git, no commit yet, no main branch), the update then stays in the working tree as it always did.
+ * Before anything is written: refuses (an Error that says what to do) when the kit could not be committed cleanly
+ * on `branch`, otherwise cuts it from the project's main branch. Null: no commit to make (no commit yet, no main
+ * branch), the kit then stays in the working tree as it always did. Shared by the update and the installation.
  */
-export function prepareUpdate(dir: string): UpdatePlan | null {
-  // Only an equipped project (a manifest) in a git repository is an update; a first install is never committed here.
-  if (!existsSync(join(dir, ".git")) || !Object.keys(readManifest(dir)).length) return null;
-  const lang = projectLang(dir);
-  const previousVersion = readInstall(dir)?.version ?? null;
-  const T = TEXTS[lang];
+export function cutBranch(dir: string, branch: string, T: KitTexts): Pick<UpdatePlan, "branch" | "main" | "from"> | null {
   if (!ok(dir, ["rev-parse", "--verify", "--quiet", "HEAD"])) return null;
   const main = mainBranch(dir);
   if (!main) {
@@ -124,22 +124,32 @@ export function prepareUpdate(dir: string): UpdatePlan | null {
     !ok(dir, ["merge-base", "--is-ancestor", `origin/${main}`, main])
   )
     throw new Error(fill(T.behind, main));
-  if (ok(dir, ["rev-parse", "--verify", "--quiet", `refs/heads/${UPDATE_BRANCH}`])) throw new Error(fill(T.exists, UPDATE_BRANCH));
+  if (ok(dir, ["rev-parse", "--verify", "--quiet", `refs/heads/${branch}`])) throw new Error(fill(T.exists, branch));
   let from = main;
   try {
     from = run(dir, ["symbolic-ref", "--quiet", "--short", "HEAD"]) || main;
   } catch {} // HEAD détachée : retour sur la branche principale.
   try {
-    run(dir, ["checkout", "--quiet", "-b", UPDATE_BRANCH, main]);
+    run(dir, ["checkout", "--quiet", "-b", branch, main]);
   } catch (e) {
-    throw new Error(fill(T.checkout, UPDATE_BRANCH, firstLines(e)));
+    throw new Error(fill(T.checkout, branch, firstLines(e)));
   }
-  return { branch: UPDATE_BRANCH, main, from, previousVersion };
+  return { branch, main, from };
 }
 
-/** Commits the update on its branch (hooks included, the scope gate recognises it by its manifest), then says what was done. */
+/** An update of an equipped project (a manifest) in a git repository; a first install is prepared by kit-install.ts. */
+export function prepareUpdate(dir: string): UpdatePlan | null {
+  if (!existsSync(join(dir, ".git")) || !Object.keys(readManifest(dir)).length) return null;
+  const cut = cutBranch(dir, UPDATE_BRANCH, TEXTS[projectLang(dir)]);
+  const previousVersion = readInstall(dir)?.version ?? null;
+  const subject = (lang: MessageLang, version: string) =>
+    `${lang === "fr" ? "Mise à jour du kit drwil" : "Update the drwil kit"}: ${previousVersion ?? "?"} → ${version}`;
+  return cut && { ...cut, previousVersion, texts: TEXTS, subject };
+}
+
+/** Commits the kit on its branch (hooks included, the scope gate recognises it by its manifest), then says what was done. */
 export function finishUpdate(dir: string, lang: MessageLang, plan: UpdatePlan, version: string, drifted: number): void {
-  const T = TEXTS[lang];
+  const T = plan.texts[lang];
   const changed = run(dir, ["status", "--porcelain", "-uall"]);
   if (!changed) {
     run(dir, ["checkout", "--quiet", plan.from]);
@@ -149,8 +159,13 @@ export function finishUpdate(dir: string, lang: MessageLang, plan: UpdatePlan, v
   }
   try {
     run(dir, ["add", "-A"]);
-    const subject = `${lang === "fr" ? "Mise à jour du kit drwil" : "Update the drwil kit"}: ${plan.previousVersion ?? "?"} → ${version}`;
-    run(dir, ["commit", "--quiet", "-m", subject, "-m", `${TRAILER}: ${version}`], { ...process.env, [ENV]: version });
+    console.log(T.committing);
+    // No time limit (QUA-237): the project's hooks may take minutes; their output is shown as they run.
+    execFileSync("git", ["commit", "--quiet", "-m", plan.subject(lang, version), "-m", `${TRAILER}: ${version}`], {
+      cwd: dir,
+      stdio: ["ignore", "inherit", "inherit"],
+      env: { ...process.env, [ENV]: version },
+    });
     console.log(fill(T.committed, version, plan.branch, plan.main, changed.split("\n").length));
   } catch (e) {
     console.warn(fill(T.notCommitted, plan.branch, firstLines(e)));

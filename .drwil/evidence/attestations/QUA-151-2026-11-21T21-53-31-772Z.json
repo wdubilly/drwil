@@ -1,0 +1,29 @@
+{
+  "version": 4,
+  "contract": "QUA-151",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-21T21:53:31.772Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Rejoué par l'agent le 2026-11-21 sur la branche du chantier : 5 passes consécutives de .githooks/run-checks.mjs en conditions de pre-push (DRWIL_PUSH_REFS, DRWIL_PUSH_COMMITS et DRWIL_PUSH_REMOTE posés, taskset -c 0,1) : 5 sur 5 « contrôles exécutés : OK », code 0 chacune, de 367 à 422 s ; aucun refus.",
+  "fingerprint": "7fc60e030ed906fee2c83d8a894dd63594e2a7b91fb97f212a860e4d6f3e831d",
+  "proof": {},
+  "covers": [
+    ".githooks/run-checks.mjs",
+    ".githooks/pre-push"
+  ],
+  "coverage": {
+    ".githooks/pre-push": "4c227d3ddb75822e136e7fdf4d3b4f024957a153051fd59316cea4ca7129c79a",
+    ".githooks/run-checks.mjs": "3cddf8086df258d348d13e39fbd8bed025c9bce5ed052a7f3f3315c28e6c94cc"
+  },
+  "commit": "0ed6aad6272f338c689a82065b9388bd3816089c",
+  "automated": [],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "853fbde2-e7f4-4598-86e4-35a450054ace",
+    "toolUseId": "toolu_011LAiqQgHLMDQxHTBum1YP8",
+    "askedAt": "2026-11-21T21:44:18.633Z"
+  }
+}
