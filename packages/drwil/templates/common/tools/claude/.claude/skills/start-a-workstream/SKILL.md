@@ -128,8 +128,11 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
      subagent for the next lot (`node .githooks/state.mjs lot` says which). A [human] lot is skipped, named
      as still to do and recalled at the closing; the chaining goes on with the next [IA] lots. The
      subagent of the last lot runs `lot next` too (it marks it done), verifies and closes the brief: the
-     closing is refused while an [IA] lot is not done. Between two lots, `verify --failed` only after a
-     failure: the full pass is the closing's. A brief with a single lot, or none, runs as before.
+     closing is refused while an [IA] lot is not done. During a lot, no full pass and no `drwil-checks`
+     subagent: the commit is the check (its hook runs the checks its staged files touch); after a
+     failure, the failing check alone or `verify --failed`. Between two lots, `verify --failed` only after a
+     failure: the full pass is the closing's (before VERIFY and at the closing; the CI stays complete).
+     A brief with a single lot, or none, runs as before.
    - Sequential queue or single workstream: the subagent works in the repository folder — never `isolation: "worktree"`:
      `.drwil/state.json` (if present) is ignored by Git, absent from an isolated copy, and the subagent would
      believe it is in SCOPING. It receives no state reminder at start: its instructions start by

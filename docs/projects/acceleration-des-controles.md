@@ -292,7 +292,13 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-22) : lot 1 fait, mesures ci-dessous ; aucun code modifié.
+- **Dernier état** (2026-11-23) : lots 1 et 2 faits. Lot 2 : contrat `QUA-327` créé (passe ciblée pendant un lot,
+  contrôle `tests-qua-327`, test dans `.githooks/run-checks.test.mjs` : un test ajouté à un fichier `kit-*.test.mjs` casse `QUA-315`, l'inventaire figé des tests du kit) ; règle « During a lot, a
+  targeted pass » dans la section 8 livrée (`packages/drwil/templates/common/base/docs/ia-first/8-conduct-rules.md`),
+  reprise en une ligne par `AGENTS.md` (gabarit et dépôt), le skill de lancement, le sous-agent `drwil-checks` et la
+  recette des branches (gabarit et copie du dépôt, déclarée en miroir). Le gabarit de la recette des branches est à
+  249 lignes sur 250 (plafond de `check-kit-size`) : n'y rien ajouter sans en retirer. Le critère de la fiche porte
+  encore « contrat à créer » : `QUA-327` est à y citer au lot 7 (contrats et carte), sans changer son texte.
 - **Mesure de départ (lot 1, 2026-11-22)** — machine locale à 8 processeurs (WSL2), copies des adoptants sur tmpfs ;
   durée murale de la commande, compteurs lus dans `.drwil/evidence/run-checks.log` (si présent) :
   - **Dépôt, passe avec reprise** (`run-checks`, arbre inchangé depuis la dernière passe) : 3,0 s ; 295 repris,
@@ -327,4 +333,12 @@ Aucun.
   Hors cadre, à soumettre à l'humain : les contrôles du projet joués en série chez l'adoptant (marinade 574 s pour
   573 s cumulées) ; un adoptant en 0.10.0 sans reprise du tout.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 2 — Passe ciblée pendant un lot.
+- **Piège pour les lots 3 et 6** : `packages/drwil/test/kit-verify-reprise.test.mjs` et
+  `packages/drwil/test/kit-mise-a-jour.test.mjs` sont des fichiers `kit-*.test.mjs` dont `QUA-315` (la découpe des tests du
+  kit ne perd ni ne change aucun test) fige la liste des tests (`packages/drwil/test/decoupe-kit.inventaire.json`, hors
+  scope) : y ajouter ou renommer un test fait échouer le commit. Modifier le corps d'un test existant reste permis.
+- **Ce que le lot 2 transmet au lot 3** : pendant le lot, pas de passe complète ; le commit fait foi, et après un échec
+  le contrôle en échec seul ou `npx drwil verify --failed` (`QUA-327`). Le commit du lot 2 ne touche aucun module
+  `.githooks/*.mjs` ; le lot 3 touchera `.githooks/fingerprints.mjs`, qui invalide tous les contrôles au commit
+  (mesure du lot 1 : 476 s) : prévoir un appel de fond par `node .githooks/wait-command.mjs git commit …`.
+- **Prochaine étape** : [IA] lot 3 — Empreinte par contrôle.

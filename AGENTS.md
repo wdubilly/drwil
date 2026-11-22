@@ -64,7 +64,7 @@ détail d'un contrat si besoin. Rien d'autre sans raison.
 
 - Tout vérifier : `node .githooks/run-checks.mjs` (échecs et résumé ; détail dans `.drwil/evidence/run-checks.log` (si présent)).
 - Savoir si le travail est vérifié : `node packages/drwil/bin/drwil.js verify --agent` (seul `GOVERNANCE: PASS` vaut validation).
-- Contrôles longs : sous-agent `drwil-checks` (Claude Code) ; n'annoncer « vérifié » que sur la ligne `GOVERNANCE: …` recopiée.
+- Contrôles longs : sous-agent `drwil-checks` (Claude Code) ; n'annoncer « vérifié » que sur la ligne `GOVERNANCE: …` recopiée. Pendant un lot, pas de passe complète : le commit fait foi (son hook joue les contrôles touchés par l'index) ; après un échec, le contrôle en échec seul ou `npx drwil verify --failed` ; la passe complète, avant VERIFY et à la clôture.
 - `drwil attest` et le verdict de recette d'une candidate (`node .githooks/release-verdict.mjs`) sont des gestes **humains** : un agent ne les exécute jamais ; une attestation attendue se propose d'abord par le sondage dans le chat, le terminal en repli. Tout geste humain (attestation, acceptation des critères, verdict de recette, transition réservée, oui au détour) a son sondage du chat, lu par le hook (section 8).
 - Activer les hooks git une fois par clone : voir `INSTALL.md`.
 - Installer le dépôt depuis son gabarit : `npm run installer-depot` (`-- --dry-run` pour lister). On n'édite que le gabarit

@@ -47,7 +47,8 @@ request, instead of direct commits on the main branch.
   it. Their output shows only the failed checks and a summary line (warnings
   counted, full detail in `.drwil/evidence/run-checks.log` (if present)); with Claude
   Code, the `drwil-checks` subagent can run them and return only the verdict
-  and the failures, copied word for word.
+  and the failures, copied word for word. During a lot, no full pass: the commit
+  is the check; after a failure, the failing check alone or `npx drwil verify --failed`.
 - Before merging: check that the pull/merge request CI status checks
   are green (`gh pr checks <n> --watch` on GitHub).
 

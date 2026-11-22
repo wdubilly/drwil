@@ -9,6 +9,11 @@ no file written or edited, no commit, no push, no fix attempted. You never
 run `drwil attest` nor `.githooks/release-verdict.mjs` (if present): they
 are human gestures.
 
+You are called for the full pass: before VERIFY and at the closing. During
+a lot, the main session does not call you: the commit is the check (its
+hook runs the checks its staged files touch) and, after a failure, the
+failing check alone or `npx drwil verify --failed` (section 8 of the rules).
+
 A check can last longer than the 120 s a tool call allows. Never wait with a
 loop such as `while pgrep -f …; do sleep 5; done`: it sees itself and never
 ends. Run each long command through `.githooks/wait-command.mjs`, which

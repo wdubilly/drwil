@@ -4664,6 +4664,25 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-327",
+      "name": "tests de QUA-327, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-327 .githooks/run-checks.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        ".githooks/run-checks.test.mjs",
+        "AGENTS.md",
+        "docs/ia-first/8-conduct-rules.md",
+        "docs/recipes/working-with-branches.md",
+        ".claude/skills/start-a-workstream/SKILL.md",
+        ".claude/agents/drwil-checks.md",
+        "packages/drwil/templates/common/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
       "id": "couverture-diff",
       "runAt": [
         "ci"
