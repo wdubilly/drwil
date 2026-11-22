@@ -633,6 +633,9 @@ test("QUA-283 : mise à jour dans un dépôt git : le message nomme la branche p
   const dir = tmp();
   git(dir, "init", "-q", "-b", "master");
   git(dir, "config", "core.autocrlf", "false");
+  // `init` commite lui-même : sans identité locale, il refuse là où la machine n'en a pas de globale (runner de CI).
+  git(dir, "config", "user.email", "t@t");
+  git(dir, "config", "user.name", "t");
   await silence(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "gitlab", tools: "claude" }));
   enregistrer(dir, "0.0.1");
   const chemin = join(dir, FICHIER_CI.gitlab);
@@ -847,9 +850,11 @@ test("QUA-283 : CI GitHub sans balises du kit 0.10.0 (workflow réel de drwil_wa
   const [shards, checks] = ["  shards:", "  checks:"].map((j) => l.indexOf(j));
   const pas = (de, motif) => l.findIndex((x, i) => i > de && motif.test(x));
   for (const etape of ["Install diff-cover", "Install the app layer's dependencies", "Install the e2e browser"]) {
-    const i = pas(checks, new RegExp(etape.replace(/[()]/g, "\\$&")));
+    // Le nom d'étape est cherché en texte brut : une expression régulière bâtie dessus devrait tout échapper.
+    const nomme = { test: (x) => x.includes(etape) };
+    const i = pas(checks, nomme);
     assert.ok(i > checks && i < pas(checks, /run-checks\.mjs --aggregate-shards/), `${etape} avant les contrôles de checks`);
-    const j = pas(shards, new RegExp(etape));
+    const j = pas(shards, nomme);
     assert.ok(j > shards && j < pas(shards, /- name: Play the slice/) && j < checks, `${etape} avant la tranche de shards`);
   }
   const publier = pas(checks, /Publish the home screen captures/);
@@ -882,6 +887,8 @@ test("QUA-283 : une étape d'un job du kit qu'on ne peut établir (ni d'une vers
 // son fichier tel qu'installé est remis au gabarit sans conflit, et une étape ajoutée au job checks va dans la zone steps.
 const RACINE = fileURLToPath(new URL("../../..", import.meta.url));
 const LIVREES = ["v0.1.0", "v0.4.0", "v0.6.0", "v0.8.0"];
+// Copies figées des gabarits livrés : la CI clone sans les étiquettes, `git show <version>:…` y échouerait.
+const livre = (version, forge) => readFileSync(join(RACINE, "packages/drwil/test/ci-livres", `${version}.${forge}.yml`), "utf8");
 const GABARITS = { github: "common/ci/github/.github/workflows/ia-first.yml", gitlab: "common/ci/gitlab/.gitlab-ci.yml" };
 const AJOUT_CHECKS = {
   github: ["      - name: Étape du projet", "        run: npm run e2e"],
@@ -892,13 +899,12 @@ test("QUA-283 : le CI de chaque version livrée sans balises est du kit ; une é
   for (const [forge, rel] of Object.entries(GABARITS)) {
     const gabarit = readFileSync(join(RACINE, "packages/drwil/templates", rel), "utf8");
     for (const version of LIVREES) {
-      const ancien = git(RACINE, "show", `${version}:packages/drwil/templates/${rel}`);
-      assert.equal(ancien.status, 0, `${version} : étiquette lisible (${ancien.stderr})`);
-      for (const p of shippedPrints(forge, ancien.stdout))
+      const ancien = livre(version, forge);
+      for (const p of shippedPrints(forge, ancien))
         assert.ok(SHIPPED_CI[forge].includes(p), `${forge} ${version} : empreinte absente de SHIPPED_CI : ${p}`);
       const place = (texte) => placeProject(forge, gabarit, texte, SHIPPED_CI[forge]);
-      assert.deepEqual(place(ancien.stdout), { content: gabarit, moved: [], conflicts: [] }, `${forge} ${version}`);
-      const lignes = ancien.stdout.split("\n");
+      assert.deepEqual(place(ancien), { content: gabarit, moved: [], conflicts: [] }, `${forge} ${version}`);
+      const lignes = ancien.split("\n");
       const apres = lignes.findIndex((l) => /^\s+- (run: )?node \.githooks\/run-checks\.mjs$/.test(l));
       lignes.splice(apres + 1, 0, ...AJOUT_CHECKS[forge]);
       const r = place(lignes.join("\n"));
@@ -929,7 +935,7 @@ test("QUA-283 : un CI balisé sans zone de préparation (zone steps de fin seule
 test("QUA-283 : sans balises, une étape ajoutée avant le pas du kit qui lance les contrôles va dans la préparation de checks et de shards", () => {
   for (const [forge, rel] of Object.entries(GABARITS)) {
     const gabarit = readFileSync(join(RACINE, "packages/drwil/templates", rel), "utf8");
-    const lignes = git(RACINE, "show", `v0.8.0:packages/drwil/templates/${rel}`).stdout.split("\n");
+    const lignes = livre("v0.8.0", forge).split("\n");
     const avant = lignes.findIndex((l) => /^\s+- (run: )?node \.githooks\/run-checks\.mjs$/.test(l));
     const prepa = forge === "github" ? ["      - name: Préparer", "        run: npm ci"] : ["    - npm ci"];
     lignes.splice(avant + 1, 0, ...AJOUT_CHECKS[forge]);
