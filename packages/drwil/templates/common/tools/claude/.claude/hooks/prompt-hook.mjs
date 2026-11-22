@@ -56,19 +56,25 @@ const TEXTS = {
 
 /**
  * What the agent reads after the poll: never silent on a drwil start poll. A refusal (✗) is also shown to the
- * human (`systemMessage`): the agent's context alone may never reach them (QUA-179).
+ * human (`systemMessage`): the agent's context alone may never reach them (QUA-179). Copilot CLI, which runs this hook
+ * from .claude/settings.json, reads only a top-level `additionalContext` after a tool (its native format, QUA-065):
+ * without it, its agent saw no `[drwil]` line, a refused « This folder » start looked like nothing (2026-11-22).
  */
-function tell(text) {
+function say(text, copilot) {
   console.log(
     JSON.stringify({
       hookSpecificOutput: {
         hookEventName: "PostToolUse",
         additionalContext: `[drwil] ${text}`,
       },
+      ...(copilot ? { additionalContext: `[drwil] ${text}` } : {}),
       ...(text.startsWith("✗") ? { systemMessage: `[drwil] ${text}` } : {}),
     }),
   );
 }
+
+/** A poll in Copilot CLI's `ask_user` form (`message`), the only one whose answer comes as `tool_result`. */
+const fromCopilot = (input) => typeof input?.tool_input?.message === "string";
 
 function language() {
   try {
@@ -85,6 +91,8 @@ async function main() {
   } catch {
     return 0;
   }
+  const copilot = fromCopilot(input);
+  const tell = (text) => say(text, copilot);
   // Sondages préparés (QUA-235) : attestation, acceptation des critères (QUA-175), verdict de recette (QUA-053),
   // transition réservée à l'humain et oui au détour (QUA-117).
   for (const hook of [attestationHook, acceptanceHook, verdictHook, moveHook, detourHook]) {

@@ -4748,3 +4748,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 ## controles-lents-decoupes-des-le-depart
 
 - **Preuve de clôture** : `docs/preuves/controles-lents-decoupes-des-le-depart.md`.
+
+## 2026-11-22 — Détour de docs/projects/installation-dans-un-depot-existant.md : sous Copilot CLI, l'issue du sondage de lancement atteint l'agent
+
+- **Défaut** : sous Copilot CLI interactif (1.0.112), `/drwil-start` répondu « This folder » ne lançait rien et aucun message `[drwil]` n'arrivait, ni refus ni confirmation (« New worktree » créait son worktree, en silence lui aussi). Constaté le 2026-11-22 dans un dépôt d'essai équipé du kit.
+- **Cause** : Copilot lance le hook de lancement depuis `.claude/settings.json` (charge snake_case), qui lit bien la réponse `fiche=…, drwil-worktree=This folder` ; dans le dépôt d'essai, resté sur une branche `cadrage/…` dont la fusion n'est pas établie, le lancement était refusé à bon droit (QUA-179), mais le refus n'était rendu que dans la forme de Claude Code (`hookSpecificOutput.additionalContext`, `systemMessage`). Copilot ne lit après un outil que `additionalContext` au premier niveau (son format natif, déjà celui de `copilot-start`, QUA-065) : son journal de session montre l'agent sans aucune ligne `[drwil]`. Reproduit hors Copilot en rejouant la charge sur une copie du dépôt d'essai.
+- **Correction** : `.claude/hooks/prompt-hook.mjs` rend aussi le message en `additionalContext` de premier niveau quand le sondage est à la forme Copilot (`message`) ; la sortie sous Claude Code est inchangée. Test de non-régression (`packages/drwil/test/claude-hooks.test.mjs`, « prompt-hook : sous Copilot CLI, l'issue du sondage de lancement se dit aussi en additionalContext de premier niveau… »), vu échouer avant la correction. Ligne « Fixed » du changelog du paquet.
+- **Limite** : la lecture de `additionalContext` par Copilot après un outil n'est établie que par son journal des modifications et son code, pas encore par un essai interactif réel. Le message du refus de fusion non établie cite « glab unreachable » puis « make gh reachable » : écart de libellé relevé, non traité ici.
+- **Clôturé par** : la branche `detour/copilot-lancement-ce-dossier`.

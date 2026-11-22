@@ -1774,6 +1774,36 @@ test("QUA-205 : prompt-hook : refuse un sondage prérempli, annonce un échec sa
   assert.equal(run("prompt-hook.mjs", "pas du json").status, 0);
 });
 
+test("prompt-hook : sous Copilot CLI, l'issue du sondage de lancement se dit aussi en additionalContext de premier niveau, seul lu par Copilot", () => {
+  // Charge PostToolUse que Copilot CLI passe au hook de .claude/settings.json (forme relevée dans son journal de session
+  // du 2026-11-22, valeurs fictives) : réponse « This folder », le gabarit sans état ne lance rien et doit le dire.
+  const copilot = {
+    hook_event_name: "PostToolUse",
+    tool_name: "AskUserQuestion",
+    tool_input: {
+      message: "drwil-start : choisir la fiche",
+      requestedSchema: {
+        properties: {
+          fiche: { type: "string", enum: ["fiche-a", "Not now"] },
+          "drwil-worktree": { type: "string", enum: ["New worktree", "This folder"] },
+        },
+      },
+    },
+    tool_result: { result_type: "success", text_result_for_llm: "User responded: fiche=fiche-a, drwil-worktree=This folder" },
+  };
+  const sortie = JSON.parse(run("prompt-hook.mjs", copilot).stdout);
+  assert.match(sortie.additionalContext ?? "", /^\[drwil\] ✗ erreur au lancement/);
+  assert.equal(sortie.hookSpecificOutput.additionalContext, sortie.additionalContext);
+  assert.equal(sortie.systemMessage, sortie.additionalContext);
+  // Sous Claude Code, la sortie reste à son seul format.
+  const claude = {
+    hook_event_name: "PostToolUse",
+    tool_input: { questions: [{ header: "drwil-start", question: "Q", options: [{ label: "fiche-a" }] }] },
+    tool_response: { answers: { Q: "fiche-a" } },
+  };
+  assert.equal("additionalContext" in JSON.parse(run("prompt-hook.mjs", claude).stdout), false);
+});
+
 test("queue-poll : sondage de file à choix unique, lu sous les deux formes ; refusé s'il est rempli, multiple ou sans « Terminer la file »", async () => {
   const q = await load("queue-poll.mjs");
   const claude = (extra = {}, answers) => ({
