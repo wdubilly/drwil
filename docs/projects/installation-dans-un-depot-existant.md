@@ -44,6 +44,7 @@ files:
   - packages/drwil/test/kit-mise-a-jour.test.mjs
   - packages/drwil/test/montee-de-version.test.mjs
   - packages/drwil/test/kit-ci.test.mjs
+  - packages/drwil/test/ci-livres/*
   - docs/projects/kit-mechanics.md
   - docs/architecture.md
   - docs/contracts.md
