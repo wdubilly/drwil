@@ -196,6 +196,11 @@ release renames this section to its version.
 
 ### Fixed
 
+- Under Copilot CLI, the outcome of the `/drwil-start` poll (started,
+  worktree created, or refused with its cause) now reaches the agent: the
+  hook also gives it as a top-level `additionalContext`, the only form
+  Copilot reads after a tool. A refused « This folder » start used to look
+  like nothing at all.
 - A human attestation no longer falls when only the launcher of a cited check
   changes for an equivalent one: `node outils/tests-par-fichier.mjs` and the
   shipped contract-tests launcher under .githooks/ (optionally with
