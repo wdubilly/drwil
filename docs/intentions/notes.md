@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — notes rangées le 2026-11-20 (rangement du backlog).
+**Statut** : ouverte en permanence — notes rangées le 2026-11-22 (rangement du backlog).
 
 ## Besoin
 
@@ -42,3 +42,6 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 - 2026-11-18 — Le sondage d'attestation a échoué deux fois sur deux le 2026-11-18 : préparation expirée pendant que la question restait affichée, puis réponse libre refusée ; le demandeur est passé par le terminal. Piste retenue par le demandeur, à traiter avec la note « Gestes humains depuis le chat » du 2026-11-07 : un geste humain du chat se confirme en tapant l'identifiant (l'ID du contrat pour une attestation), comme drwil attest au terminal, et non par un bouton Attester ou Refuser ; l'expiration se juge sur des preuves inchangées, pas sur l'heure de préparation.
 - 2026-11-18 — Renommer un fichier de test sans changer aucun test (chantier tests-du-kit-decoupes-par-theme, 2026-11-18) a fait tomber cinq attestations (QUA-184, effet du contrôle changé) et exigé de déclarer 69 contrats modifiés (champs Tests, Source de vérité, Périmètre), alors que QUA-315 prouvait les tests identiques : le kit ne distingue pas un renommage de chemin d'un changement de règle ; à porter à l'audit de cohérence des garanties existantes (docs/intentions/audit-coherence-des-garanties-existantes.md).
 - 2026-11-20 — Sondage drwil-detour refusé deux fois sous Claude Code : AskUserQuestion retire multiSelect:false (valeur par défaut) avant le hook, qui compare à la préparation de `state.mjs poll detour` et refuse (« questions[0].multiSelect ≠ false ») ; repli terminal `detour.mjs allow` utilisé le 2026-11-20. Le hook devrait traiter multiSelect absent comme false.
+- 2026-11-22 — Accélérer les lots, dépôt ET livrable (paquet) : pendant un lot, ne jouer que les tests ciblés et le formatage ; une seule passe complète de run-checks à la clôture (constat 2026-11-22 : 2 à 3 passes complètes d'environ 7 min par sous-agent, relancées pour un formatage ou un chemin cité)
+- 2026-11-22 — Formatage automatique avant commit, dépôt ET livrable (paquet) : biome format --write (ou le formateur déclaré du projet) sur les fichiers indexés, pour éviter les relances de run-checks dues au seul formatage (constat 2026-11-22)
+- 2026-11-22 — Recettes réelles dès le cadrage, dépôt ET livrable (paquet) : un chantier qui touche l'installation ou la mise à jour du kit rejoue marinade-poulet et drwil_walk (copies, tarball de la branche) dès le lot 1, pas seulement à la fin (constat 2026-11-22 : défauts Copilot et étapes CI de drwil_walk vus seulement en recette)
