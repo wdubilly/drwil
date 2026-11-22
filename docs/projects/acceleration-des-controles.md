@@ -22,6 +22,8 @@ files:
   - .githooks/run-checks.test.mjs
   - packages/drwil/src/evidence.ts
   - packages/drwil/test/kit-verify-reprise.test.mjs
+  - packages/drwil/src/kit-update.ts
+  - packages/drwil/test/kit-mise-a-jour.test.mjs
   - packages/drwil/templates/common/base/AGENTS.md
   - AGENTS.md
   - packages/drwil/templates/common/base/docs/ia-first/8-conduct-rules.md
@@ -49,7 +51,8 @@ files:
 -->
 
 (Le bloc `scope` couvre les trois volets tels que tranchés : le hook de commit et son module de formatage, livrés
-(gabarit et copie du dépôt) ; l'empreinte par contrôle (moteur, preuve du paquet et leurs tests, D3) ; la consigne de
+(gabarit et copie du dépôt) ; l'empreinte par contrôle (moteur, preuve du paquet et leurs tests, D3) et la ligne du compte rendu de mise à jour qui
+annonce la première passe complète (`packages/drwil/src/kit-update.ts` et son test) ; la consigne de
 passe ciblée pendant un lot (consignes, skill de lancement, sous-agent des contrôles, recette des branches, D1) ; le
 modèle de fiche pour la recette réelle (D7, D8) ; l'outil de recette et l'avertissement propres au dépôt (`outils/`) ;
 les `paths` des contrôles du dépôt dans `.drwil/ia-first.json`. `.githooks/engine.mjs` fait 189 lignes : toute logique
@@ -94,6 +97,11 @@ Le projet : qu'un chantier, chez l'adoptant comme ici, ne paie qu'une passe comp
 commit quelle commande de formatage lancer, et voie les défauts d'installation dès son premier lot — sans rien retirer à
 l'exigence (QUA-019, QUA-013) ni ralentir ou casser l'adoptant.
 
+Première mise à jour après le nouveau calcul de l'empreinte (D3, ajout validé par le demandeur le 2026-11-22) : les
+verdicts déjà enregistrés chez l'adoptant portent l'ancienne empreinte ; ils sont invalidés une fois et la première passe
+après la mise à jour rejoue tout. C'est attendu, mais l'adoptant doit le savoir pour ne pas y lire une régression : le
+compte rendu de la mise à jour (`npx drwil init`) le lui dit.
+
 ## Critères d'acceptation
 
 - Pendant un lot, la conduite livrée (consignes, skill de lancement, sous-agent des contrôles) ne lance que le commit et,
@@ -101,6 +109,9 @@ l'exigence (QUA-019, QUA-013) ni ralentir ou casser l'adoptant.
   complète reste exigée avant VERIFY et la clôture, et la CI reste complète — contrat à créer
 - L'empreinte d'un contrôle couvre sa déclaration et la configuration qu'il lit, pas tout `.drwil/ia-first.json` : un
   contrat ajouté ne rejoue plus les autres contrôles ; la preuve de clôture garde l'empreinte de l'arbre entier — `QUA-141`
+- Une mise à jour (`npx drwil init`) depuis une version antérieure au nouveau calcul de l'empreinte le signale en une
+  ligne de son compte rendu, dans la langue du projet : « première passe complète, puis reprise des verdicts » ; une
+  mise à jour depuis une version qui le connaît déjà ne l'écrit pas — `QUA-141`
 - Avec un formateur déclaré, un commit dont un fichier indexé n'est pas formaté est refusé, sans qu'aucun fichier soit
   modifié, avec la commande exacte qui le formate et les fichiers en cause — contrat à créer
 - Sans clé `format`, le commit est inchangé ; l'adoption la propose, une mise à jour ne l'active jamais — contrat à créer
@@ -111,14 +122,20 @@ l'exigence (QUA-019, QUA-013) ni ralentir ou casser l'adoptant.
   la mise à jour et que le lot 1 ne cite pas de recette réelle ; jamais de refus — contrat à créer
 - Dans le dépôt, un outil construit le tarball de la branche et l'installe sur des copies de marinade-poulet et
   `drwil_walk` — contrat à créer
+- Recette du chantier par une mise à jour réelle : des copies de marinade-poulet (GitLab) et `drwil_walk` (GitHub) mises
+  à jour avec un tarball du chantier ; le commit de mise à jour passe sans nouveau blocage et sans clé `format` ajoutée,
+  le compte rendu signale la première passe complète ; puis un second commit qui touche un fichier du projet reprend les
+  verdicts des contrôles non concernés (« repris ») [humain] — contrat `Manuel` à créer
 
 ## Contrats modifiés
 
 - `QUA-141` — ancien critère : l'empreinte d'un contrôle couvre « sa déclaration (commande, `needsBuild`) et le contenu
   des fichiers suivis ou non suivis, non ignorés, qui correspondent à ses `paths` », d'où `.drwil/ia-first.json` entier
   dans les `paths` de 293 contrôles sur 305 — raison : un contrat ajouté invalide presque tous les verdicts ; l'empreinte
-  couvre désormais la déclaration du contrôle et la configuration qu'il lit, livré à tout projet (validé par le demandeur
-  le 2026-11-22).
+  couvre désormais la déclaration du contrôle et la configuration qu'il lit, livré à tout projet ; la première mise à
+  jour depuis une version antérieure le signale dans son compte rendu (« première passe complète, puis reprise des
+  verdicts »), et la preuve du contrat ajoute le test de ce message (`packages/drwil/test/kit-mise-a-jour.test.mjs`)
+  (validé par le demandeur le 2026-11-22).
 
 ## 2. Hors périmètre
 
@@ -148,7 +165,10 @@ l'exigence (QUA-019, QUA-013) ni ralentir ou casser l'adoptant.
 - **Ne jamais ralentir ni casser l'adoptant** : la vérification du formatage ne lit que l'index, ne modifie rien, se
   mesure, et reste inactive sans clé `format`.
 - **Mise à jour** : une nouvelle exigence ne bloque pas un projet existant (réglage `newRequirements` de
-  `.drwil/ia-first.json`) ; la clé `format` n'est jamais ajoutée par une mise à jour.
+  `.drwil/ia-first.json`) ; la clé `format` n'est jamais ajoutée par une mise à jour. La première mise à jour après D3
+  invalide une fois les verdicts enregistrés (ancienne empreinte) : la première passe rejoue tout, ce que le compte
+  rendu de la mise à jour dit ; elle ne bloque rien. Le compte rendu reste celui de `QUA-239` (`finishUpdate`) : une
+  ligne de plus, sans changer les trois messages qu'il exige.
 - Plafond de 200 lignes : `.githooks/run-checks.mjs` est à 200, `.githooks/engine.mjs` à 189, `.githooks/fingerprints.mjs`
   à 93 ; toute logique neuve va dans un module découpé.
 - Ordre : après la fusion de `installation-dans-un-depot-existant` (en cours, touche l'installation et la CI de
@@ -192,16 +212,18 @@ Aucun.
 
 ## 6. Increments
 
-- **Lot 1 — Mesure de départ** [IA] : sur un lot réel du dépôt et sur une copie de marinade-poulet, relever le nombre de
-  passes, leur durée, les contrôles repris et rejoués, les plus lents (`.drwil/evidence/run-checks.log` (si présent)),
-  et le temps d'un commit ; consigné dans la section « Reprise ». Critère de sortie : chiffres écrits, commités.
+- **Lot 1 — Mesure de départ** [IA] : sur un lot réel du dépôt et sur des copies de marinade-poulet et de `drwil_walk`,
+  relever le nombre de passes, leur durée, les contrôles repris et rejoués, les plus lents
+  (`.drwil/evidence/run-checks.log` (si présent)), et le temps d'un commit ; consigné dans la section « Reprise ». Critère de sortie : chiffres écrits, commités.
 - **Lot 2 — Passe ciblée pendant un lot** [IA] : D1 et D2 ; consignes (`AGENTS.md`, section 8, skill de lancement,
   sous-agent des contrôles, recette des branches) ; contrat de la conduite pendant un lot. Critère de sortie : contrôle du
   contrat vert, `npm run installer-depot` sans écart.
 - **Lot 3 — Empreinte par contrôle** [IA] : D3 ; tests d'abord (un contrat ajouté ne change pas l'empreinte des autres
   contrôles ; la configuration lue par un contrôle la change ; la preuve de clôture garde l'arbre entier) ; empreinte dans
-  le moteur et la preuve du paquet ; `QUA-141` mis à jour ; puis `paths` du dépôt resserrés et mesure avant et après sur
-  le même lot. Critère de sortie : tests de `QUA-141` verts, gain chiffré.
+  le moteur et la preuve du paquet ; ligne du compte rendu de mise à jour « première passe complète, puis reprise des
+  verdicts » (test d'abord : écrite depuis une version antérieure, absente sinon, en français et en anglais) ; `QUA-141`
+  mis à jour ; puis `paths` du dépôt resserrés et mesure avant et après sur le même lot. Critère de sortie : tests de
+  `QUA-141` verts, gain chiffré.
 - **Lot 4 — Formatage vérifié avant commit** [IA] : D4 à D6 ; tests d'abord (fichier indexé non formaté : commit refusé,
   commande et fichiers nommés, aucun fichier modifié ; fichier formaté : commit accepté ; sans clé `format` : rien ne
   change ; formateur absent : refus qui le dit ; mise à jour : clé jamais ajoutée), module découpé, hook de commit,
@@ -211,9 +233,15 @@ Aucun.
   sortie : une recette rejouée par l'outil, résultat au journal.
 - **Lot 6 — Contrats et carte** [IA] : contrats créés, carte du moteur, carte d'architecture, ligne du `CHANGELOG`.
   Critère de sortie : `run-checks` sans échec, `drwil verify --agent` en `GOVERNANCE: PASS`.
+- **Lot 7 — Recette par une mise à jour réelle** [humain] : tarball du chantier installé en mise à jour sur des copies de
+  marinade-poulet (GitLab) et `drwil_walk` (GitHub) ; commit de mise à jour sans nouveau blocage ni clé `format` ajoutée,
+  compte rendu qui signale la première passe complète, puis second commit (fichier du projet touché) dont les contrôles
+  non concernés sont « repris ». Critère de sortie : attestation du contrat `Manuel` de la recette.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-22) : cadrage écrit, D1 à D9 tranchés ; rien de commencé.
+- **Dernier état** (2026-11-22) : cadrage écrit, D1 à D9 tranchés ; ajouts validés par le demandeur le 2026-11-22 :
+  message de première passe complète à la mise à jour (lot 3) et recette par une mise à jour réelle (lot 7) ; rien de
+  commencé.
 - **Travail non commité** : aucun.
 - **Prochaine étape** : [IA] lot 1, après la fusion de `installation-dans-un-depot-existant`.
