@@ -9,8 +9,8 @@ import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { doctor, formatPreview, init, previewInit } from "../dist/index.js";
 import { engineVersion } from "../dist/install-record.js";
-import { placeProject, shippedPrints } from "../dist/ci-zone-move.js";
-import { SHIPPED_CI } from "../dist/ci-zone.js";
+import { placeProject } from "../dist/ci-zone-move.js";
+import { SHIPPED_CI, shippedPrints } from "../dist/ci-zone.js";
 import { confirmDriftWith } from "../dist/drift.js";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
@@ -667,6 +667,9 @@ test("QUA-283 : stages en liste en ligne, guillemets, doublons et fins de ligne 
   const r = placeProject("gitlab", gabarit, projet);
   assert.deepEqual(r.moved, ["build", "stage build", "stage deploy"]);
   assert.match(r.content, /# drwil-project-begin stages\r\n {2}- build\r\n {2}- deploy\r\n {2}# drwil-project-end stages/);
+  // Un gabarit dont une zone n'a pas ses zones exigées : la zone reste vide, sans erreur.
+  const sansExigees = "jobs:\n  # drwil-project-begin setup\n  # drwil-project-end setup\n";
+  assert.equal(placeProject("github", sansExigees, "jobs:\n").content, sansExigees);
   assert.deepEqual(placeProject("github", "name: x\non: push\n", "name: x\non: push\n"), {
     content: "name: x\non: push\n",
     moved: [],
@@ -816,6 +819,10 @@ const PREPA_WALK = WALK.slice(20, 38);
 const FIN_WALK = WALK.slice(39, 48);
 const avantFin = (texte, zone, lignes) => texte.replace(new RegExp(`(\\n\\s*# drwil-project-end ${zone}\\n)`), `\n${lignes.join("\n")}$1`);
 const avantFinSteps = (texte, lignes) => avantFin(texte, "steps", lignes);
+// GitHub : une étape du projet replacée dans le job checks suit le saut du plan, comme celles du kit (le job des tranches
+// est déjà sauté au niveau du job).
+const garde = (lignes) =>
+  lignes.flatMap((x) => (/^ {6}- /.test(x) ? ["      - if: needs.plan.outputs.skip != 'true'", x.replace(/^ {6}- /, "        ")] : [x]));
 
 test("QUA-283 : CI GitHub sans balises du kit 0.10.0 (workflow réel de drwil_walk) : étapes du projet du job checks replacées à l'identique, installations dans les zones de préparation de checks et de shards avant les contrôles, publication dans la zone steps, jobs du kit remis au gabarit, rejeu sans effet", async () => {
   const dir = await projetCi("github");
@@ -827,8 +834,13 @@ test("QUA-283 : CI GitHub sans balises du kit 0.10.0 (workflow réel de drwil_wa
   assert.doesNotMatch(sortie, /Rien n'a été changé/);
   assert.equal(
     apres,
-    avantFin(avantFin(avantFin(gabarit, "setup", PREPA_WALK), "shard-setup", PREPA_WALK), "steps", FIN_WALK),
-    "kit au gabarit (plan, tranches, checks, alerte), installations du projet dans les zones de préparation, publication dans la zone steps",
+    avantFin(avantFin(avantFin(gabarit, "setup", garde(PREPA_WALK)), "shard-setup", PREPA_WALK), "steps", FIN_WALK),
+    "kit au gabarit (plan, tranches, checks, alerte), installations du projet dans les zones de préparation (saut du plan dans checks), publication dans la zone steps",
+  );
+  // La publication a sa propre condition (`if: always()`) : gardée telle quelle et nommée.
+  assert.match(
+    sortie,
+    /ia-first\.yml : étape\(s\) du projet gardée\(s\) avec leur propre condition, sans le saut du plan : Publish the home screen captures/,
   );
   // Dans checks comme dans shards, les installations du projet passent avant le pas du kit qui lance les contrôles.
   const l = apres.split("\n");
@@ -890,7 +902,8 @@ test("QUA-283 : le CI de chaque version livrée sans balises est du kit ; une é
       const apres = lignes.findIndex((l) => /^\s+- (run: )?node \.githooks\/run-checks\.mjs$/.test(l));
       lignes.splice(apres + 1, 0, ...AJOUT_CHECKS[forge]);
       const r = place(lignes.join("\n"));
-      assert.equal(r.content, avantFinSteps(gabarit, AJOUT_CHECKS[forge]), `${forge} ${version} avec une étape`);
+      const ajout = forge === "github" ? garde(AJOUT_CHECKS.github) : AJOUT_CHECKS.gitlab;
+      assert.equal(r.content, avantFinSteps(gabarit, ajout), `${forge} ${version} avec une étape`);
       assert.deepEqual(r.moved, [forge === "github" ? "step Étape du projet" : "step npm run e2e"]);
     }
   }
@@ -922,7 +935,12 @@ test("QUA-283 : sans balises, une étape ajoutée avant le pas du kit qui lance 
     lignes.splice(avant + 1, 0, ...AJOUT_CHECKS[forge]);
     lignes.splice(avant, 0, ...prepa);
     const r = placeProject(forge, gabarit, lignes.join("\n"), SHIPPED_CI[forge]);
-    assert.equal(r.content, avantFin(avantFin(avantFinSteps(gabarit, AJOUT_CHECKS[forge]), "setup", prepa), "shard-setup", prepa), forge);
+    const g = forge === "github" ? garde : (x) => x;
+    assert.equal(
+      r.content,
+      avantFin(avantFin(avantFinSteps(gabarit, g(AJOUT_CHECKS[forge])), "setup", g(prepa)), "shard-setup", prepa),
+      forge,
+    );
     assert.equal(r.moved.length, 2, forge);
   }
 });

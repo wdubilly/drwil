@@ -147,7 +147,9 @@ release renames this section to its version.
   after stay in the `steps` zone at the end of `checks`; a `shard-steps` zone
   ends the slices job (to publish what a sharded check wrote). An already
   marked file keeps its `steps` zone as it is and receives the new zones,
-  empty.
+  empty. On GitHub, a project step moved into `checks` receives the kit's
+  `if: needs.plan.outputs.skip != 'true'`, so a skipped run skips it too; a
+  step with its own condition is kept as it is and named.
 - The commit `init` makes (installation or update) no longer has a 60-second
   limit that cut it, and shows the hooks' output while it runs. When the kit
   manifest explains every file of that commit, the project's checks that

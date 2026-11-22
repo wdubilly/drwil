@@ -2,7 +2,7 @@
 // GitLab). `init` réécrit tout ce qui est hors zone, reprend les zones telles quelles et y replace ce qui n'est pas du kit
 // (ci-zone-move.ts) ; ici, ce qu'il en dit.
 import { CI_FILES } from "./config.js";
-import { type Forge, placeProject, zonesOf } from "./ci-zone-move.js";
+import { type Forge, itemsOf, placeProject, print, stagesOf, unitsOf, zonesOf } from "./ci-zone-move.js";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 
 export const isCiFile = (rel: string): boolean => Object.values(CI_FILES).some((f) => f.includes(rel));
@@ -34,6 +34,14 @@ export const SHIPPED_CI: Record<Forge, string[]> = {
   ],
 };
 
+/** Prints (`key own step step…`: 12 hex digits of SHA-256 over the meaningful lines) of every key of a shipped CI file. */
+export const shippedPrints = (forge: Forge, text: string): string[] =>
+  [...unitsOf(forge, lines(text)).movable, ...unitsOf(forge, lines(text)).fixed].flatMap((b) =>
+    b.key === "stages"
+      ? stagesOf(b).map((s) => `stage ${s}`)
+      : [b.key, print(itemsOf(forge, b).rest), ...itemsOf(forge, b).items.map(print)].join(" "),
+  );
+
 /** Lines of `existing` that `incoming` does not have (a multiset: a line repeated once more counts). */
 export function removedLines(incoming: string, existing: string): string[] {
   const left = new Map<string, number>();
@@ -62,6 +70,8 @@ const TEXTS = {
     conflict:
       "⚠ {0} : clé(s) {1} définie(s) par le projet et par le kit avec un contenu différent, ou sans place dans une zone du projet. Rien n'a été changé : ramener ces clés à la version du kit (gabarit) et porter le réglage du projet dans ses propres jobs ou dans la zone du projet, puis relancer `npx drwil init`.",
     others: "{0} autre(s) ligne(s)",
+    unguarded:
+      "⚠ {0} : étape(s) du projet gardée(s) avec leur propre condition, sans le saut du plan : {1} — y ajouter `needs.plan.outputs.skip != 'true'` si elle(s) a(ont) besoin du dépôt.",
   },
   en: {
     outside: "⚠ {0}: rewritten outside the project zone from the kit's template, {1} line(s) that differed from it replaced ({2}){3}.",
@@ -70,6 +80,8 @@ const TEXTS = {
     conflict:
       "⚠ {0}: key(s) {1} defined by the project and by the kit with different content, or with no place in a project zone. Nothing was changed: bring these keys back to the kit's version (template) and carry the project's setting into its own jobs or into the project zone, then run `npx drwil init` again.",
     others: "{0} other line(s)",
+    unguarded:
+      "⚠ {0}: project step(s) kept with their own condition, without the plan's skip: {1} — add `needs.plan.outputs.skip != 'true'` to it if it needs the repository.",
   },
 };
 
@@ -104,6 +116,7 @@ export async function ciContent(
     return null;
   }
   if (placed.moved.length) console.log(fill(T.moved, rel, placed.moved.join(", ")));
+  if (placed.unguarded) console.warn(fill(T.unguarded, rel, placed.unguarded.join(", ")));
   const removed = removedLines(placed.content, existing);
   const kept = w.ci?.commit ? fill(T.kept, w.ci.commit.main) : "";
   if (removed.length) console.warn(fill(T.outside, rel, removed.length, describe(namesOf(removed), lang), kept));

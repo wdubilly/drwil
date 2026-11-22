@@ -120,8 +120,9 @@ of the kit's jobs: the steps the project added inside the kit's `checks` job are
 kit's checks (installing dependencies, a tool, a browser) go into the preparation zones, `setup` in `checks` and
 `shard-setup` in the slices job (`shards`), both before the checks run; those found after (publishing a report or
 captures) go into the `steps` zone, at the end of `checks`. A step that cannot be established as the kit's or the
-project's leaves the file as it is, named. On GitHub, give a preparation step of `checks` the kit's
-`if: needs.plan.outputs.skip != 'true'`, so that a skipped run skips it too. An artifact written by a sharded check
+project's leaves the file as it is, named. On GitHub, a step moved into `checks` receives the kit's
+`if: needs.plan.outputs.skip != 'true'`, so that a skipped run skips it too; a step that already has its own condition is
+kept as it is and named. An artifact written by a sharded check
 (e.g. e2e captures) exists only in its slice's job: publish it from the `shard-steps` zone at the end of the slices job,
 under a name per slice; the `steps` zone of `checks` does not see it.
 

@@ -48,12 +48,9 @@ function blocksAt(all: string[], indent: number): Block[] {
   const head: string[] = [];
   const out: Block[] = [];
   for (const l of all) {
-    const key = keyAt(indent).exec(l)?.[1];
+    const key = keyAt(indent).exec(l)?.[1] ?? "";
     const prev = out.at(-1)?.lines ?? head;
-    if (key === undefined) {
-      prev.push(l);
-      continue;
-    }
+    if (!key && prev.push(l)) continue;
     let n = prev.length;
     while (n > 0 && isComment(prev[n - 1])) n--;
     out.push({ key: key.trim(), lines: [...prev.splice(n), l] });
@@ -62,7 +59,7 @@ function blocksAt(all: string[], indent: number): Block[] {
 }
 
 /** GitLab: every top-level key is movable (jobs, hidden jobs, global keys the kit has not). GitHub: the jobs; its other keys are not. */
-function unitsOf(forge: Forge, all: string[]): { movable: Block[]; fixed: Block[] } {
+export function unitsOf(forge: Forge, all: string[]): { movable: Block[]; fixed: Block[] } {
   const top = blocksAt(all, 0);
   if (forge === "gitlab") return { movable: top, fixed: [] };
   const jobs = top.find((b) => b.key === "jobs");
@@ -81,7 +78,7 @@ const trimBlank = (ls: string[]) => {
   while (b > a && !ls[b - 1].trim()) b--;
   return ls.slice(a, b);
 };
-const stagesOf = (b: Block | undefined): string[] => {
+export const stagesOf = (b: Block | undefined): string[] => {
   const text = (b?.lines ?? []).filter((l) => !isComment(l)).join("\n");
   const flow = /^stages:\s*\[([^\]]*)\]/m.exec(text)?.[1];
   const items = flow !== undefined ? flow.split(",") : [...text.matchAll(/^\s+-\s*(.+?)\s*$/gm)].map((m) => m[1]);
@@ -89,7 +86,7 @@ const stagesOf = (b: Block | undefined): string[] => {
 };
 
 /** A job's own lines and the items of its `steps` (GitHub) or `script` (GitLab) list, each with the comments just above it. */
-function itemsOf(forge: Forge, b: Block): { rest: string[]; items: string[][] } {
+export function itemsOf(forge: Forge, b: Block): { rest: string[]; items: string[][] } {
   const at = forge === "github" ? 6 : 4;
   const head = new RegExp(`^ {${at - 2}}${forge === "github" ? "steps" : "script"}:\\s*$`);
   const [rest, items, pending] = [[] as string[], [] as string[][], [] as string[]];
@@ -105,7 +102,7 @@ function itemsOf(forge: Forge, b: Block): { rest: string[]; items: string[][] } 
   return { rest: [...rest, ...pending], items };
 }
 const sha = (text: string) => createHash("sha256").update(text).digest("hex").slice(0, 12);
-const print = (ls: string[]) => sha(meaning({ key: "", lines: ls }));
+export const print = (ls: string[]) => sha(meaning({ key: "", lines: ls }));
 const label = (item: string[]) => {
   const text = item.filter((l) => !isComment(l)).join("\n");
   return (/\bname:\s*(.+)/.exec(text) ?? /\buses:\s*(.+)/.exec(text) ?? /^\s*-\s*(?:run:\s*)?(.+)/.exec(text))?.[1].trim();
@@ -132,19 +129,21 @@ function kitSteps(forge: Forge, shipped: string[], b: Block, current?: Block): E
   return { extra: null, before: 0, unsure: items.filter((it) => !known.has(print(it))).map((it) => `${label(it)}`) };
 }
 
-/** Prints (`key own step step…`: 12 hex digits of SHA-256 over the meaningful lines) of every key of a shipped CI file. */
-export const shippedPrints = (forge: Forge, text: string): string[] =>
-  [...unitsOf(forge, lines(text)).movable, ...unitsOf(forge, lines(text)).fixed].flatMap((b) =>
-    b.key === "stages"
-      ? stagesOf(b).map((s) => `stage ${s}`)
-      : [b.key, print(itemsOf(forge, b).rest), ...itemsOf(forge, b).items.map(print)].join(" "),
-  );
-
 export interface Placed {
   /** The template, its zones filled with the project's; null when a conflict leaves the file as it is. */
   content: string | null;
   moved: string[];
   conflicts: string[];
+  unguarded?: string[];
+}
+const SKIP = "      - if: needs.plan.outputs.skip != 'true'";
+/** GitHub: a project step moved into `checks` follows the plan's skip like the kit's; one with a condition of its own (`unguarded`) is kept. */
+function skipOf(forge: Forge, items: string[][], unguarded: string[]): string[][] {
+  return items.map((it) => {
+    const at = it.findIndex((l) => !isComment(l));
+    if (forge === "gitlab" || (it.some((l) => /^ {6}- (if:|\{)|^ {8}if:/.test(l)) && unguarded.push(`${label(it)}`))) return it;
+    return [...it.slice(0, at), SKIP, it[at].replace(/^ {6}- /, " ".repeat(8)), ...it.slice(at + 1)];
+  });
 }
 
 /** What `init` writes over an existing CI file: the kit's part from the template, the project's in its zones; `shipped`: prints of the kit's old files. */
@@ -154,8 +153,7 @@ export function placeProject(forge: Forge, template: string, existing: string, s
   const mine = unitsOf(forge, outsideOf(existing));
   const kitBlock = (key: string) => [...kit.movable, ...kit.fixed].find((b) => b.key === key);
   const conflicts = new Set<string>();
-  const moved: Block[] = [];
-  const stages: string[] = [];
+  const [moved, stages] = [[] as Block[], [] as string[]];
   const [setup, steps] = [[] as string[][], [] as string[][]];
   // Unmarked, a key of the template that differs from it is the kit's when a shipped version of it matches, the steps
   // the project added to `checks` aside; anything else stays the project's, named (D-f).
@@ -180,20 +178,23 @@ export function placeProject(forge: Forge, template: string, existing: string, s
   }
   const names = [...moved.map((b) => b.key), ...stages.map((s) => `stage ${s}`), ...[...setup, ...steps].map((s) => `step ${label(s)}`)];
   if (conflicts.size) return { content: null, moved: [], conflicts: [...conflicts] };
-  const tplZones = zonesOf(template) ?? {};
+  const unguarded: string[] = [];
+  const [pre, post] = [skipOf(forge, setup, unguarded), skipOf(forge, steps, unguarded)];
   const added: Record<string, string[]> = {
     jobs: moved.flatMap((b) => ["", ...trimBlank(b.lines)]),
     stages: stages.map((s) => `  - ${s}`),
-    ...Object.fromEntries(["setup", "shard-setup"].map((z) => [z, setup.flatMap(trimBlank)])),
-    steps: steps.flatMap(trimBlank),
+    setup: pre.flatMap(trimBlank),
+    "shard-setup": setup.flatMap(trimBlank),
+    steps: post.flatMap(trimBlank),
   };
   let result = lines(template);
   for (const zone of ZONES) {
     const from = result.findIndex((l) => marker("begin", zone).test(l));
     const to = result.findIndex((l) => marker("end", zone).test(l));
     if (from < 0 || to < from) continue;
-    const content = [...(zones?.[zone] ?? tplZones[zone] ?? []), ...(added[zone] ?? [])];
+    const content = [...(zones?.[zone] ?? zonesOf(template)?.[zone] ?? []), ...(added[zone] ?? [])];
     result = [...result.slice(0, from + 1), ...content, ...result.slice(to)];
   }
-  return { content: result.join(/\r\n/.test(existing) ? "\r\n" : "\n"), moved: names, conflicts: [] };
+  const eol = /\r\n/.test(existing) ? "\r\n" : "\n";
+  return { content: result.join(eol), moved: names, conflicts: [], ...(unguarded.length ? { unguarded } : {}) };
 }
