@@ -117,6 +117,11 @@ après clôture, `QUA-116`).
   `variables`, `include` ; GitHub : `on`, `env`, `permissions`) avec un contenu différent : `init` laisse le fichier
   tel quel, nomme la clé en conflit et dit quoi faire ; rien n'est perdu, en installation comme en mise à jour —
   `QUA-283`
+- Sur un fichier de CI sans balises issu d'une version livrée du kit (cas de drwil_walk, kit 0.10.0, GitHub), les
+  étapes que le projet a ajoutées dans un job du kit sont replacées à l'identique dans la zone `steps` et le job du kit
+  est remis au gabarit ; une étape est du kit quand elle est identique à une étape du même job d'une version livrée
+  (empreintes des gabarits livrés) ; une étape qu'on ne peut établir laisse le fichier tel quel et est nommée ; prouvé
+  sur le workflow réel de drwil_walk — `QUA-283`
 - Recette : la réinstallation à neuf et la mise à jour rejouées sur une copie de marinade-poulet avec un tarball du
   chantier, commit fait sans erreur, CI du projet conservée [humain] — `QUA-326`
 
@@ -216,6 +221,14 @@ après clôture, `QUA-116`).
   `env`, `permissions`), ne rien réécrire. `init` laisse le fichier tel quel et nomme la clé en conflit avec ce qu'il
   faut faire ; rien n'est perdu. Écartée : fusionner la clé du projet avec celle du gabarit (fusion YAML
   sémantique, risque de garde du kit affaiblie sans que rien ne le dise).
+- D-c étendue (2026-11-22, validée par le demandeur le 2026-11-22) : étapes du projet dans un job du kit. Dans un
+  fichier de CI sans balises issu d'une ancienne version du kit, les étapes ajoutées par le projet à l'intérieur d'un
+  job du kit sont replacées dans la zone `steps` du gabarit, le job du kit est mis à jour, rien n'est perdu ; une étape
+  dont on ne peut établir si elle vient du kit ou du projet laisse le fichier intact et la nomme (comme D-f). Une étape
+  ou un job est du kit s'il est identique à celui d'une version livrée du gabarit (un `alert-if-ci-broken` identique à
+  une ancienne version est du kit). Constat du 2026-11-22 : sur une copie de drwil_walk (kit 0.10.0) mise à jour avec
+  le tarball du chantier, `init` refusait (« clé(s) checks, alert-if-ci-broken… Rien n'a été changé ») et le CI ne
+  recevait ni le plan des tranches ni le découpage.
 
 ## 5. Points à trancher
 
@@ -244,6 +257,12 @@ Aucun.
   existant, branche, PR, CI conservée), ligne « Unreleased » de `packages/drwil/CHANGELOG.md`, en anglais. Critère de
   sortie : `node .githooks/run-checks.mjs` sans échec, `drwil verify --agent` en `GOVERNANCE: PASS`, puis recette
   humaine sur une copie de marinade-poulet.
+- **Lot 6 — étapes du projet dans un job du kit** [IA] (D-c étendue, 2026-11-22) : test d'abord avec le workflow réel
+  de drwil_walk (kit 0.10.0) vu échouer sur le refus actuel ; empreintes des jobs du kit des versions livrées sans
+  balises et replacement des étapes du projet dans packages/drwil/src/ci-zone-move.ts ; `QUA-283` mis à jour ; ligne
+  « Unreleased » de `packages/drwil/CHANGELOG.md` et `INSTALL.md` si concernés. Critère de sortie :
+  `packages/drwil/test/montee-de-version.test.mjs` vert, `node .githooks/run-checks.mjs` sans échec, rejeu sur une
+  copie jetable de drwil_walk.
 
 ## 7. Reprise
 
