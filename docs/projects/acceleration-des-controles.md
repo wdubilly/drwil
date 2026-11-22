@@ -48,6 +48,13 @@ files:
   - docs/projects/kit-mechanics.md
   - docs/architecture.md
   - packages/drwil/CHANGELOG.md
+  - packages/drwil/src/guarantees-layers.ts
+  - packages/drwil/src/guarantees-e2e-tools.ts
+  - packages/drwil/src/doctor-fix.ts
+  - packages/drwil/src/doctor-checks.ts
+  - packages/drwil/test/guarantees.test.mjs
+  - packages/drwil/test/doctor-fix.test.mjs
+  - packages/drwil/test/doctor-checks.test.mjs
 -->
 
 (Le bloc `scope` couvre les trois volets tels que tranchés : le hook de commit et son module de formatage, livrés
@@ -56,7 +63,11 @@ annonce la première passe complète (`packages/drwil/src/kit-update.ts` et son 
 passe ciblée pendant un lot (consignes, skill de lancement, sous-agent des contrôles, recette des branches, D1) ; le
 modèle de fiche pour la recette réelle (D7, D8) ; l'outil de recette et l'avertissement propres au dépôt (`outils/`) ;
 les `paths` des contrôles du dépôt dans `.drwil/ia-first.json`. `.githooks/engine.mjs` fait 189 lignes : toute logique
-neuve va dans `.githooks/fingerprints.mjs` ou un module découpé, à lister par commit séparé.)
+neuve va dans `.githooks/fingerprints.mjs` ou un module découpé, à lister par commit séparé. Élargi le 2026-11-22 sur
+demande du demandeur (« oui on traite tout ») : les contrôles que le kit génère ne reçoivent plus `paths: ["**"]`
+(`packages/drwil/src/guarantees-layers.ts`, `packages/drwil/src/guarantees-e2e-tools.ts`), `drwil doctor` et `--fix` le signalent et le
+corrigent (`packages/drwil/src/doctor-checks.ts`, `packages/drwil/src/doctor-fix.ts`), et la mise à jour réécrit les déclarations intactes du kit
+(`packages/drwil/src/kit-update.ts`, déjà listé) ; avec leurs tests.)
 
 ## 1. Besoin
 
@@ -126,6 +137,13 @@ compte rendu de la mise à jour (`npx drwil init`) le lui dit.
   à jour avec un tarball du chantier ; le commit de mise à jour passe sans nouveau blocage et sans clé `format` ajoutée,
   le compte rendu signale la première passe complète ; puis un second commit qui touche un fichier du projet reprend les
   verdicts des contrôles non concernés (« repris ») [humain] — contrat `Manuel` à créer
+- Un projet neuf dont la couche est à la racine n'a aucun contrôle généré par le kit en `paths: ["**"]` : couverture,
+  couverture du diff et e2e reçoivent les chemins du code et de sa configuration (sources, tests, configuration de
+  l'outil, `package*.json`) — `QUA-087`, `QUA-089`
+- Une mise à jour (`npx drwil init`) réécrit les `paths: ["**"]` des contrôles restés tels que le kit les a posés et le
+  dit dans son compte rendu ; un contrôle retouché par l'adoptant n'est jamais réécrit, seulement signalé — `QUA-141`
+- `drwil doctor` signale un contrôle généré par le kit encore en `paths: ["**"]` ; `--fix` le réécrit s'il est intact —
+  `QUA-303`
 
 ## Contrats modifiés
 
@@ -145,6 +163,26 @@ compte rendu de la mise à jour (`npx drwil init`) le lui dit.
 - `.githooks/engine.test.mjs` — tests du nouveau calcul d'empreinte au commit (validé par le demandeur le 2026-11-22).
 - `.githooks/run-checks.test.mjs` — test : un contrat ajouté ne rejoue plus les autres contrôles (validé par le
   demandeur le 2026-11-22).
+- `QUA-087` — ancien critère : les contrôles de couverture d'une couche à la racine sont déclarés sur `paths: ["**"]`
+  (`packages/drwil/src/guarantees-layers.ts`) — raison : tout fichier modifié les rejoue et ils ne reprennent jamais leur
+  verdict (marinade-poulet : 62 s et 66 s par passe) ; ils reçoivent les chemins du code et de sa configuration (validé
+  par le demandeur le 2026-11-22).
+- `QUA-089` — ancien critère : le contrôle e2e proposé par le kit est déclaré sur `paths: ["**"]`
+  (`packages/drwil/src/guarantees-e2e-tools.ts`) — même raison ; il reçoit les chemins du code et de sa configuration
+  (validé par le demandeur le 2026-11-22).
+- `QUA-303` — ancien critère : `drwil doctor` signale la couverture jouée deux fois et `--fix` la fusionne ; `--fix` pose
+  `paths: ["**"]` sur un contrôle réservé à la CI sans `paths` — raison : `["**"]` empêche toute reprise ; `doctor`
+  signale aussi un contrôle généré par le kit encore en `["**"]` et `--fix` le réécrit s'il est intact (validé par le
+  demandeur le 2026-11-22).
+- `QUA-141` (suite) — la mise à jour réécrit les `paths: ["**"]` des contrôles restés tels que le kit les a posés et le
+  dit dans son compte rendu ; un contrôle retouché par l'adoptant n'est que signalé (validé par le demandeur le
+  2026-11-22, réécriture à la mise à jour choisie plutôt que par `doctor --fix` seul).
+- `packages/drwil/src/guarantees-layers.ts`, `packages/drwil/src/guarantees-e2e-tools.ts` — chemins du code et de sa configuration au lieu
+  de `**` (validé par le demandeur le 2026-11-22).
+- `packages/drwil/src/doctor-fix.ts`, `packages/drwil/src/doctor-checks.ts` — signalement et réécriture d'un `["**"]` intact du kit
+  (validé par le demandeur le 2026-11-22).
+- `packages/drwil/test/guarantees.test.mjs`, `packages/drwil/test/doctor-fix.test.mjs`, `packages/drwil/test/doctor-checks.test.mjs` — tests des chemins
+  générés, du signalement et de la réécriture (validé par le demandeur le 2026-11-22).
 
 ## 2. Hors périmètre
 
@@ -240,12 +278,17 @@ Aucun.
 - **Lot 5 — Recette réelle dès le premier lot** [IA] : D7 et D8 ; modèle de fiche et skill de lancement (livrés) ;
   outil de recette et avertissement non bloquant (dépôt), rejoués sur marinade-poulet et `drwil_walk`. Critère de
   sortie : une recette rejouée par l'outil, résultat au journal.
-- **Lot 6 — Contrats et carte** [IA] : contrats créés, carte du moteur, carte d'architecture, ligne du `CHANGELOG`.
+- **Lot 6 — Chemins des contrôles générés** [IA] : tests d'abord (couche à la racine : couverture, couverture du diff
+  et e2e sans `["**"]` ; mise à jour : `["**"]` intact du kit réécrit et dit, contrôle retouché seulement signalé ;
+  `doctor` signale, `--fix` réécrit s'il est intact) ; `packages/drwil/src/guarantees-layers.ts`, `packages/drwil/src/guarantees-e2e-tools.ts`,
+  `packages/drwil/src/kit-update.ts`, `packages/drwil/src/doctor-checks.ts`, `packages/drwil/src/doctor-fix.ts` ; `QUA-087`, `QUA-089`, `QUA-303`, `QUA-141` mis à jour.
+  Critère de sortie : tests verts.
+- **Lot 7 — Contrats et carte** [IA] : contrats créés, carte du moteur, carte d'architecture, ligne du `CHANGELOG`.
   Critère de sortie : `run-checks` sans échec, `drwil verify --agent` en `GOVERNANCE: PASS`.
-- **Lot 7 — Recette par une mise à jour réelle** [humain] : tarball du chantier installé en mise à jour sur des copies de
+- **Lot 8 — Recette par une mise à jour réelle** [humain] : tarball du chantier installé en mise à jour sur des copies de
   marinade-poulet (GitLab) et `drwil_walk` (GitHub) ; commit de mise à jour sans nouveau blocage ni clé `format` ajoutée,
-  compte rendu qui signale la première passe complète, puis second commit (fichier du projet touché) dont les contrôles
-  non concernés sont « repris ». Critère de sortie : attestation du contrat `Manuel` de la recette.
+  compte rendu qui signale la première passe complète et la réécriture des `paths: ["**"]` du kit, puis second commit
+  (fichier du projet touché) dont les contrôles non concernés, couverture comprise, sont « repris ». Critère de sortie : attestation du contrat `Manuel` de la recette.
 
 ## 7. Reprise
 
