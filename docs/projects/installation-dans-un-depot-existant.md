@@ -313,6 +313,23 @@ Aucun.
   garde (filtre dans packages/drwil/src/preview.ts, test de packages/drwil/test/montee-de-version.test.mjs vu échouer
   puis passer) ; l'assertion du test figé « projet existant : init complète sans écraser… » alignée (`["hooksPath"]`,
   oui du demandeur le 2026-11-21, QUA-315).
+- **Lot 6** (2026-11-22, D-c étendue) : cause — dans un fichier sans balises, `placeProject` jugeait en conflit (D-f)
+  tout job du gabarit de contenu différent ; drwil_walk (kit 0.10.0) a quatre étapes du projet dans `checks`, d'où le
+  refus « clé(s) checks, alert-if-ci-broken ». Test d'abord, sur le workflow réel de drwil_walk inscrit dans
+  packages/drwil/test/montee-de-version.test.mjs, vu échouer sur ce refus puis passer. `itemsOf` (packages/drwil/src/ci-zone-move.ts)
+  découpe un job en lignes propres et étapes (`steps` GitHub, `script` GitLab) ; `kitSteps` cherche la version livrée
+  (ou le gabarit) qui explique le plus d'étapes, le reste va dans la zone `steps` du job `checks` ; sinon les étapes
+  non établies sont nommées et le fichier reste tel quel. Empreintes des versions livrées sans balises (v0.1.0, v0.4.0,
+  v0.6.0, v0.8.0, GitHub et GitLab ; stages compris) dans `SHIPPED_CI` (packages/drwil/src/ci-zone.ts), vérifiées par un
+  test qui relit les étiquettes git. Un job d'une version livrée que le gabarit n'a plus (`alerter-si-ci-cassee`) est
+  remplacé, le stage `alerte` aussi. `QUA-283` mis à jour (ligne « Modifié »), `INSTALL.md` et « Unreleased » du
+  CHANGELOG. Recette sur une copie jetable de drwil_walk (~/drwil-recette/walk2, tarball
+  /home/wdubilly/drwil-tarballs/drwil-0.11.1-local-3f4aa259.tgz) : commit fait sur `workstream/kit-update` (trailer
+  `Drwil-Kit-Update`), workflow identique au gabarit (plan, tranches, checks, alerte) plus les quatre étapes dans la zone
+  `steps`, à l'identique ; `doctor --fix` découpe le contrôle `e2e` en tranches. Limite constatée : la zone `steps` est
+  après l'agrégation des contrôles, et l'e2e découpé tourne dans le job des tranches — les étapes d'installation du
+  projet y arrivent trop tard ou ailleurs (le contrôle découpé installe lui-même ses dépendances et Playwright), et
+  l'étape qui publie les captures ne les trouve plus dans `checks`.
 - **Travail non commité** : aucun. Dossier de reproduction (hors dépôt, peut disparaître) :
   `/tmp/claude-1000/-home-wdubilly-projects-drwil/853fbde2-e7f4-4598-86e4-35a450054ace/scratchpad/repro-marinade`,
   branche `reinstall`, installation non commitée.
