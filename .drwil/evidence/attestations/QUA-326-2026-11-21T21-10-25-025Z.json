@@ -1,0 +1,33 @@
+{
+  "version": 4,
+  "contract": "QUA-326",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-21T21:10:25.025Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Essai réel de l'agent (2026-11-21, tarball de la branche 0ed6aad6, copies de marinade-poulet). Mise à jour depuis main (kit 0.11.1) : init 2 s, commit fait sur workstream/kit-update (145 fichiers), arbre propre ; build et stages build/deploy replacés en zone, job build identique. À neuf (main sans kit) : init 2 s, commit fait sur workstream/kit-installation (211 fichiers), arbre propre, même CI conservée.",
+  "fingerprint": "04f32a9630436c33e0c10218918cf2b3053638f3bf4d0eaf36846eb327d6a960",
+  "proof": {},
+  "covers": [
+    "packages/drwil/src/kit-install.ts",
+    "packages/drwil/src/kit-update.ts",
+    "packages/drwil/src/ci-zone-move.ts",
+    ".githooks/run-checks-kit.mjs"
+  ],
+  "coverage": {
+    ".githooks/run-checks-kit.mjs": "64d1c43e364ce8d9efd921aa528da9c9f36e755b65c5c68878d5246a9d40f7ae",
+    "packages/drwil/src/ci-zone-move.ts": "61b4dc436c98f4076e6b5f7bf5c179fbe1bcaf6dc9da245492e68491223f7901",
+    "packages/drwil/src/kit-install.ts": "c2b24a3ed456ae2db1241f283d2d9235b2f55c06b0d7a67af8c1aa211e56162f",
+    "packages/drwil/src/kit-update.ts": "4948f97b33dd41434def9356c88752e5a55da602fbc0456164a1ca642905a235"
+  },
+  "commit": "0ed6aad6272f338c689a82065b9388bd3816089c",
+  "automated": [],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "853fbde2-e7f4-4598-86e4-35a450054ace",
+    "toolUseId": "toolu_01RBaVV7wev3WQAPauibga2g",
+    "askedAt": "2026-11-21T21:10:16.015Z"
+  }
+}
