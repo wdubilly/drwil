@@ -29,6 +29,7 @@ files:
   - packages/drwil/templates/common/base/.githooks/pre-push
   - packages/drwil/templates/common/base/docs/projects/kit-mechanics.md
   - packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml
+  - packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml
   - .githooks/scope-gate-kit.mjs
   - .githooks/scope.mjs
   - .githooks/check-docs-workstreams.mjs
@@ -122,6 +123,11 @@ après clôture, `QUA-116`).
   est remis au gabarit ; une étape est du kit quand elle est identique à une étape du même job d'une version livrée
   (empreintes des gabarits livrés) ; une étape qu'on ne peut établir laisse le fichier tel quel et est nommée ; prouvé
   sur le workflow réel de drwil_walk — `QUA-283`
+- Le fichier de CI du kit (GitHub et GitLab) a une zone projet de préparation avant les contrôles, dans le job `checks`
+  et dans le job des tranches (`shards`) ; dans un fichier sans balises, les étapes que le projet a ajoutées avant le
+  pas du kit qui lance les contrôles y sont replacées à l'identique (dans les deux jobs), celles d'après restent dans la
+  zone de fin `steps` ; une zone `steps` existante d'un fichier déjà balisé est gardée telle quelle ; prouvé sur le
+  workflow réel de drwil_walk — `QUA-283`
 - Recette : la réinstallation à neuf et la mise à jour rejouées sur une copie de marinade-poulet avec un tarball du
   chantier, commit fait sans erreur, CI du projet conservée [humain] — `QUA-326`
 
@@ -145,6 +151,8 @@ après clôture, `QUA-116`).
   (validé par le demandeur le 2026-11-21, D-c et D-f) ; étendu le 2026-11-22 : dans un fichier sans balises, un job du
   kit de contenu différent n'est plus un conflit quand il est identique à celui d'une version livrée aux étapes près
   que le projet a ajoutées, replacées dans la zone `steps` (validé par le demandeur le 2026-11-22, D-c étendue)
+- `QUA-283` — la zone projet de préparation est placée avant les contrôles (checks et shards) ; les étapes
+  d'installation du projet y sont replacées (validé par le demandeur le 2026-11-22, sondage des limites)
 - `QUA-173` — ancien critère : une fiche supprimée par la branche couvre les fichiers qu'elle citait, sans dire ce qui
   prime quand une fiche de même chemin est présente — raison : la version supprimée écrasait la version présente
   (constat b) ; la fiche présente prime (validé par le demandeur le 2026-11-21)
