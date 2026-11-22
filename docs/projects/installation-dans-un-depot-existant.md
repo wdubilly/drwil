@@ -359,6 +359,15 @@ Aucun.
   installations dans `setup` et `shard-setup`, publication dans `steps`, `doctor --fix` découpe `e2e` ; copie jetable
   ~/drwil-recette/maj2 (marinade `main`) : commit fait, job `build` et stages `build`/`deploy` dans leurs zones, seules
   des lignes de commentaire du kit remplacées.
+- **Limite traitée** (2026-11-22, « Traiter maintenant » au sondage des limites) : sur GitHub, une étape du projet
+  replacée dans le job `checks` (zones `setup` et `steps`) reçoit en tête `if: needs.plan.outputs.skip != 'true'`
+  (`skipOf`, packages/drwil/src/ci-zone-move.ts) ; choix le plus sûr pour une étape à condition propre (ou écrite en
+  ligne) : gardée telle quelle et nommée (avertissement de `ciContent`), jamais combinée ; `shard-setup` n'en reçoit
+  pas (le job des tranches est sauté au niveau du job). `shippedPrints` a déménagé dans packages/drwil/src/ci-zone.ts
+  (plafond de 200 lignes). Test d'abord sur le workflow de drwil_walk, vu échouer puis passer. Recette sur la copie
+  jetable ~/drwil-recette/walk4 (tarball /home/wdubilly/drwil-tarballs/drwil-0.11.1-local-9839b49a.tgz) : commit sur
+  `workstream/kit-update`, les trois installations de `setup` portent le `if`, la publication (`if: always()`) est
+  gardée et nommée.
 - **Travail non commité** : aucun. Dossier de reproduction (hors dépôt, peut disparaître) :
   `/tmp/claude-1000/-home-wdubilly-projects-drwil/853fbde2-e7f4-4598-86e4-35a450054ace/scratchpad/repro-marinade`,
   branche `reinstall`, installation non commitée.
