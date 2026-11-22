@@ -141,6 +141,9 @@ d'un outil) la dit dans son statut.
 - [ ] [IA] [P0] Des chantiers plus rapides chez l'adoptant : contrôles ciblés pendant un lot et une seule passe complète
   à la clôture, formatage avant commit, recette réelle dès le premier lot ; prêt, D1 à D9 tranchés (cadré le
   2026-11-22) — `docs/projects/acceleration-des-controles.md`.
+- [ ] [décision] Un priorisateur par urgence et valeur propose l'ordre de l'index avec la raison de chaque rang,
+  validé par un sondage, sans jamais lancer ; à affiner, P1 à P12 ouverts (cadré le 2026-11-22) —
+  `docs/projects/priorisateur-urgence-et-valeur.md`.
 
 ### Expérience au quotidien
 
@@ -198,6 +201,12 @@ d'un outil) la dit dans son statut.
 
 En attente d'une décision (à affiner) ou d'un geste humain :
 
+- [ ] [décision] Tout faire depuis `drwil serve` comme dans le chat (converser, cadrer, lancer, répondre aux
+  sondages, suivre les PR), de la même façon sous Claude Code et Copilot CLI ; à affiner, P1 à P13 ouverts, priorité
+  P1 proposée (cadré le 2026-11-22) — `docs/projects/drwil-serve-comme-le-chat.md`.
+- [ ] [décision] Cadrer en parallèle du chantier dans un worktree depuis la branche principale, avec sa propre PR :
+  le rappel d'état le propose, un outil fait le geste d'un coup ; à affiner, P1 à P8 ouverts (cadré le 2026-11-22) —
+  `docs/projects/cadrer-en-parallele-du-chantier.md`.
 - [ ] [IA] [P3] Release : feu vert de publication enregistré par l'outil, recette
   qui signale un squash (cadré le 2026-10-26 ; à lancer après
   `docs/projects/journal.md`) —
