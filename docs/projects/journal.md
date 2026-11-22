@@ -4768,3 +4768,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Intention couverte** : les notes du demandeur du 2026-11-21 (constats a à d reproduits sur `marinade-poulet` et un dépôt minimal), sans fiche d'intention, sont couvertes. Le constat e (tests du projet `marinade-poulet` en échec sur un clone frais) reste hors périmètre, propre au projet.
 - **Critères et preuves** : `packages/drwil/test/kit-installation.test.mjs`, `packages/drwil/test/kit-mise-a-jour.test.mjs`, `packages/drwil/test/montee-de-version.test.mjs`, `packages/drwil/test/kit-ci.test.mjs`, `.githooks/scope-gate.test.mjs`, `.githooks/scope.test.mjs`, `.githooks/check-docs.test.mjs`, `.githooks/run-checks.test.mjs` ; `drwil verify --evidence` : `GOVERNANCE: PASS (CI pending)` (310 contrats : 288 PASS, 22 ATTESTED, 0 FAIL, 0 MANUAL, 0 ERROR).
 - **Limites connues** : la lecture de `additionalContext` par Copilot après un outil n'est pas encore établie par un essai interactif réel (détour #467) ; une étape à condition propre n'est pas combinée avec la condition de saut, seulement nommée ; la fusion sémantique d'une clé globale en conflit reste à la main de l'adoptant (D-f).
+
+## installation-dans-un-depot-existant
+
+- **Preuve de clôture** : `docs/preuves/installation-dans-un-depot-existant.md`.
