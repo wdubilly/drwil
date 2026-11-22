@@ -1,0 +1,42 @@
+{
+  "version": 4,
+  "contract": "QUA-064",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-22T17:01:43.509Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Essai réel le 2026-11-22 par l'humain dans Copilot CLI interactif (copie de marinade-poulet, kit du chantier avec le correctif Copilot #467) : /drwil-start a posé le sondage (fiche + Où travailler), fiche essai-qua-064 et « This folder » choisies ; état passé en BUILD sur docs/projects/essai-qua-064.md, branche workstream/essai-qua-064 (vérifié par state.mjs), Copilot a lancé un sous-agent pour le chantier.",
+  "fingerprint": "b5e8aa38e29e56b329096698a786bf172c9b23910e292e4b52b11fe54ea1a153",
+  "proof": {
+    "tests-qua-064": "9f2985437ca82676e400fbd6ed19ee004bf4e4f40a48e4ce9862716cf385b026"
+  },
+  "covers": [
+    "packages/drwil/src/config-tools.ts",
+    "packages/drwil/src/render.ts",
+    "packages/drwil/src/drift.ts",
+    "packages/drwil/src/essentials.ts",
+    "packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json"
+  ],
+  "coverage": {
+    "packages/drwil/src/config-tools.ts": "dd5c439c2b08f6c5eb101dccd1b43ca538805987cd308a61a702489dc7d9ae15",
+    "packages/drwil/src/drift.ts": "3e9ac1fc2935725fd956f0c41dd2cb49a08d152facb088ef2a4232daaa18e09b",
+    "packages/drwil/src/essentials.ts": "2150f4437779ba38d114d600eecc19f47ad9931d0f5134de9d5118ebb1d5cebf",
+    "packages/drwil/src/render.ts": "c810f83f73e8c4ec8afe8433332dadaa8e63c981fbe8f1a9992e93de975e3a9d",
+    "packages/drwil/templates/common/tools/copilot/.github/hooks/drwil.json": "c412e1a5262686f5b30e2006b998e1c05abf53a6a0d4fa54ec28c9a5610c9c2a"
+  },
+  "commit": "0eb5b2d2b58cc3740dee7e969cb914e4272501db",
+  "automated": [
+    {
+      "id": "tests-qua-064",
+      "status": "ok"
+    }
+  ],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "853fbde2-e7f4-4598-86e4-35a450054ace",
+    "toolUseId": "toolu_01Qb84nTtYR7MQM3VXYXfzBj",
+    "askedAt": "2026-11-22T17:01:40.912Z"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "version": 4,
+  "contract": "QUA-218",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-22T16:55:30.616Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Relu par l'agent le 2026-11-22 : la section « Node.js in the PATH of your assistant » d'INSTALL.md n'a pas changé dans ce chantier (le diff ne touche que les sections installation, mise à jour et CI) ; elle donne toujours le prérequis node dans le PATH de l'assistant, le piège fnm (fnm_multishells, code 127), le message exact des hooks, la marche à suivre et les limites (Gemini sous Windows, PowerShell).",
+  "fingerprint": "e54acea5a582526b07354ab6f1bdc727c53036871b343decfda575a171fed733",
+  "proof": {},
+  "covers": [
+    "INSTALL.md"
+  ],
+  "coverage": {
+    "INSTALL.md": "ab827c9251f2b61bf8c3fc91c4930023f377c5c394cf395e4141940848c5dbe8"
+  },
+  "commit": "0eb5b2d2b58cc3740dee7e969cb914e4272501db",
+  "automated": [],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "853fbde2-e7f4-4598-86e4-35a450054ace",
+    "toolUseId": "toolu_0131fVP3FanDBBhcdHPkWe7A",
+    "askedAt": "2026-11-22T16:55:15.081Z"
+  }
+}
