@@ -249,8 +249,39 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-22) : cadrage écrit, D1 à D9 tranchés ; ajouts validés par le demandeur le 2026-11-22 :
-  message de première passe complète à la mise à jour (lot 3) et recette par une mise à jour réelle (lot 7) ; rien de
-  commencé.
+- **Dernier état** (2026-11-22) : lot 1 fait, mesures ci-dessous ; aucun code modifié.
+- **Mesure de départ (lot 1, 2026-11-22)** — machine locale à 8 processeurs (WSL2), copies des adoptants sur tmpfs ;
+  durée murale de la commande, compteurs lus dans `.drwil/evidence/run-checks.log` (si présent) :
+  - **Dépôt, passe avec reprise** (`run-checks`, arbre inchangé depuis la dernière passe) : 3,0 s ; 295 repris,
+    14 rejoués, 5 confiés à la CI. **Passe sans reprise** (`--tout-rejouer`) : 315,7 s ; 309 joués, 0 repris ;
+    1 254 s cumulées (passe parallèle). Plus lents : « tests des contrôles eux-mêmes » 238,6 s, tests de `QUA-013`
+    97,3 s, de `QUA-021` 45,6 s, de `QUA-029` 41,8 s, de `QUA-035` 41,1 s ; puis une dizaine de 25 à 36 s.
+  - **Dépôt, commit** : fiche seule, 0,85 s (contrôles du projet reportés « non exécutés », 314 avertissements) ; une
+    ligne ajoutée à `.githooks/fingerprints.mjs` (hook lancé seul, puis retirée) : 476,3 s, 200 contrôles joués,
+    115 reportés — plus lent qu'une passe complète (« tests des contrôles eux-mêmes » 417,3 s au commit contre 238,6 s).
+  - **Dépôt, contrôles invalidés par un seul fichier touché** (comptés sur les `paths` des 306 contrôles déclarés) :
+    `.drwil/ia-first.json` 295 ; `.githooks/contract-tests.mjs` 287 ; `.githooks/state.mjs` 194 ;
+    `packages/drwil/templates/common/base/AGENTS.md` 197 ; `packages/drwil/src/evidence.ts` 186 ; `AGENTS.md` 7 ;
+    `docs/contracts.md` 4. Tout module `engine*.mjs` ou `.githooks/fingerprints.mjs` entre dans l'empreinte de chaque contrôle :
+    le toucher les invalide tous.
+  - **Dépôt, chantier précédent** (`installation-dans-un-depot-existant`) : traces de `wait-command` du 21 au
+    22 novembre, 5 passes complètes au moins (2 avec reprise : 294 et 295 repris ; 2 avec 196 et 197 rejoués), une
+    dizaine de commits à contrôles reportés, 8 passes de couverture à part ; CI de la PR 10 min (verte) et 19 min (en
+    échec), branche principale 13 min puis 3 min ; 480 min et 27,4 M jetons (`.drwil/usage.jsonl` (si présent)).
+  - **marinade-poulet** (kit 0.11.1, 32 contrôles) : passe avec reprise 3,5 s (29 repris, 10 rejoués) ; sans reprise
+    574,2 s, 41 joués, 573,3 s cumulées : **les contrôles du projet y tournent l'un après l'autre**. Plus lents :
+    couverture différentielle 65,6 s, cliquet de couverture 61,9 s, `APP-001` 30,9 s, `APP-004` 29,1 s, `UI-018`
+    27,7 s. Commit de doc 1,0 s (refusé en SCOPING, attendu) ; commit d'un fichier source du projet 207,5 s, 18 contrôles
+    joués (refusé : cadrage SCOPING, et un test du service worker de marinade en échec au commit, vert dans la passe complète).
+  - **drwil_walk** (kit 0.10.0, 19 contrôles, **sans reprise** : la version installée ne la connaît pas) : passe
+    1 874 s, puis 1 397 s, 26 joués chaque fois, à la suite ; plus lents : e2e Playwright 1 258,6 s puis 710,7 s,
+    couverture 173 à 193 s, couverture différentielle 185 à 189 s. Commit de doc 0,7 s ; commit d'un fichier source de l'application
+    1 138,1 s, 25 contrôles joués. Échecs propres à la copie : branche principale (`master`), cadrage SCOPING,
+    délais de tests dépassés (5 s) sous charge, e2e une fois sur deux.
+- **Ce que la mesure transmet** : au lot 2, un commit de code coûte déjà autant qu'une passe (dépôt 476 s, walk
+  1 138 s) : la passe ciblée ne doit pas en ajouter une. Au lot 3, la reprise prend sur un arbre inchangé (3 s) mais un
+  seul fichier très cité invalide de 186 à 295 contrôles : refaire les comptes ci-dessus après l'empreinte par contrôle.
+  Hors cadre, à soumettre à l'humain : les contrôles du projet joués en série chez l'adoptant (marinade 574 s pour
+  573 s cumulées) ; un adoptant en 0.10.0 sans reprise du tout.
 - **Travail non commité** : aucun.
-- **Prochaine étape** : [IA] lot 1, après la fusion de `installation-dans-un-depot-existant`.
+- **Prochaine étape** : [IA] lot 2 — Passe ciblée pendant un lot.
