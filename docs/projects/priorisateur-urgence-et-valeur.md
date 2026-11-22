@@ -41,7 +41,8 @@ Demande du 2026-11-22 : « faut prioriser aussi… un orchestrateur ou un priori
 fait par ordre d'urgence », précisé « priorisateur par urgence ET valeur ». Il lit tout ce qui est en attente (fiches
 et intentions de l'index, défauts ouverts et leur gravité — ce qui casse un adoptant d'abord —, dépendances « après
 la fusion de… » et fichiers communs entre fiches, coût mesuré en temps et tokens dans `.drwil/usage.jsonl`, gain
-attendu pour l'adoptant), propose un ordre de l'index avec la raison de chaque rang ; l'humain le valide par un
+attendu pour l'adoptant, y compris sur les dimensions de son produit : UX, applicatif, données… — précision
+du même jour), propose un ordre de l'index avec la raison de chaque rang ; l'humain le valide par un
 sondage ; l'index est alors mis à jour et `/drwil-start` le suit. Il conseille, il ne lance jamais. Livrable d'abord
 (QUA-018).
 
@@ -139,6 +140,16 @@ Aucune encore (cadrage du 2026-11-22, rien de tranché).
   rapidité, preuve, évolutivité, fiabilité) servent-ils de grille de valeur au priorisateur (chaque fiche dit l'axe
   servi et l'axe exposé) ? Alternatives : (a) oui, champ lu dans chaque fiche ; (b) oui, jugé par l'agent ; (c) non.
   Recommandation : (b) d'abord, (a) si P2 retient des champs.
+- [décision] **P12 — Dimensions du produit de l'adoptant** (précision du demandeur, 2026-11-22 : « pour l'adoptant et
+  [le] chat les dimensions type UX au top de ce qu'il est en train de produire, et les thèmes applicatif, data, … »).
+  La valeur s'évalue aussi sur ce que l'adoptant produit (UX, applicatif et métier, données, sécurité,
+  performance…), pour proposer ce qui améliore le plus son application, pas seulement le kit. Comment ces dimensions
+  sont-elles déclarées ? Alternatives : (a) à l'adoption (skill `drwil-adopt`), liste écrite dans
+  `.drwil/ia-first.json` ; (b) déduites des préfixes de contrats par thème (le catalogue livre `APP-` et `SEC-` ;
+  un projet adoptant utilise aussi `UI-`, `DAT-`, `SRC-`), des couches (`layers`) et des fiches ; (c) les deux,
+  déduites puis confirmées par l'humain. Lien avec le skill `drwil-value` : (a) il fournit la valeur par dimension
+  (`docs/value-discovery.md` (si présent)) ; (b) le priorisateur le remplace pour l'ordre. Recommandation : (c) et
+  `drwil-value` comme source, une seule analyse de valeur.
 - [décision] **P10 — Priorité et version cible.**
 
 ## 6. Increments
@@ -160,5 +171,5 @@ Grille des six axes par lot :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-22) : cadrage écrit, points P1 à P11 ouverts.
-- **Prochaine étape** : [décision] trancher P1 à P11 avec le demandeur.
+- **Dernier état** (2026-11-22) : cadrage écrit, points P1 à P12 ouverts.
+- **Prochaine étape** : [décision] trancher P1 à P12 avec le demandeur.

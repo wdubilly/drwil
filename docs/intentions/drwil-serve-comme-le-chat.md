@@ -67,3 +67,4 @@ Relevé dans le code le 2026-11-22.
 - [décision] Découpage possible : 1. intentions depuis la vue, 2. sondages, 3. lancement de chantiers, 4. conversation
   complète ; ordre et premier lot.
 - [décision] Aperçu en direct de l'application et déploiement en un geste : dans le périmètre ou plus tard.
+- [décision] La vue montre aussi où en est l'application de l'adoptant sur ses dimensions (UX, applicatif, données…).

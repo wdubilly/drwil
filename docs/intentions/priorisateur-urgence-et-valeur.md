@@ -35,3 +35,5 @@ Relevé dans le code le 2026-11-22.
 - [décision] Forme : commande, skill, sondage ; fréquence (à chaque clôture, à la demande).
 - [décision] Sort de `docs/projects/analyse-d-urgence-des-fiches.md` et rapport avec `drwil-value`.
 - [décision] Orchestrateur qui lancerait de lui-même : hors périmètre ou non.
+- [décision] Dimensions du produit de l'adoptant (UX, applicatif, données…) comme critères de valeur : comment elles se
+  déclarent (adoption, contrats par thème, couches), lien avec `drwil-value`.

@@ -76,7 +76,7 @@ Relevé dans le code le 2026-11-22 :
 
 ## Critères d'acceptation
 
-(Provisoires, à reprendre une fois P1 à P12 tranchés ; un contrat par critère métier, créé par le chantier.)
+(Provisoires, à reprendre une fois P1 à P13 tranchés ; un contrat par critère métier, créé par le chantier.)
 
 - Lot 1 — Depuis la vue, avec un jeton valide, l'humain crée une intention (titre, besoin) : le fichier
   `docs/intentions/<nom>.md` au format QUA-015 est écrit sur une branche de cadrage, jamais sur la branche d'un
@@ -178,6 +178,13 @@ Aucune encore (cadrage du 2026-11-22, rien de tranché).
   demande explicite. Alternatives : (a) dans le périmètre, geste humain par sondage lu par le hook ; (b) plus tard,
   fiche à part ; (c) écarté. Recommandation : (b), après les sondages depuis la vue ; sert la rapidité, risque fort
   sur la sécurité et la fiabilité (production).
+- [décision] **P13 — Où en est l'application de l'adoptant** (précision du demandeur, 2026-11-22). En plus de l'état de
+  gouvernance, la vue montre où en est le produit de l'adoptant sur ses dimensions (UX, applicatif et métier,
+  données, sécurité, performance…) ; l'aperçu en direct (P11) sert la dimension UX. Alternatives : (a) dans le
+  périmètre, une vue par dimension lue des contrats par thème (préfixes `APP-`, `SEC-` du catalogue, `UI-`, `DAT-`,
+  `SRC-` vus chez un projet adoptant) et de leur verdict ; (b) plus tard, après le priorisateur
+  (`docs/projects/priorisateur-urgence-et-valeur.md`, P12), qui tranche comment les dimensions se déclarent ;
+  (c) écarté. Recommandation : (b), une seule déclaration des dimensions pour les deux fiches.
 - [décision] **P10 — Priorité et version cible** (intention proposée en P1 ; rien de fixé par la demande).
 
 ## 6. Increments
@@ -210,5 +217,5 @@ Grille des six axes par lot (à confirmer avec P1) :
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-22) : cadrage écrit, points P1 à P12 ouverts.
-- **Prochaine étape** : [décision] trancher P1 à P12 avec le demandeur ; relevé ACP par outil pour P2.
+- **Dernier état** (2026-11-22) : cadrage écrit, points P1 à P13 ouverts.
+- **Prochaine étape** : [décision] trancher P1 à P13 avec le demandeur ; relevé ACP par outil pour P2.
