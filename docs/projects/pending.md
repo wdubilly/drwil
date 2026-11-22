@@ -136,6 +136,12 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
+### Vitesse chez l'adoptant (en tête, demande du 2026-11-22)
+
+- [ ] [IA] [P0] Des chantiers plus rapides chez l'adoptant : contrôles ciblés pendant un lot et une seule passe complète
+  à la clôture, formatage avant commit, recette réelle dès le premier lot ; à affiner, D1 à D9 ouverts (cadré le
+  2026-11-22) — `docs/projects/acceleration-des-controles.md`.
+
 ### Expérience au quotidien
 
 - [ ] [IA] [P0] (0.11.3) Une limite hors cadre dit son lien avec le problème (bloquant, lié, périphérique) et
