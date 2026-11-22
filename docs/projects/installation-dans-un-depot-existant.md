@@ -336,8 +336,24 @@ Aucun.
   `Drwil-Kit-Update`), workflow identique au gabarit (plan, tranches, checks, alerte) plus les quatre étapes dans la zone
   `steps`, à l'identique ; `doctor --fix` découpe le contrôle `e2e` en tranches. Limite constatée : la zone `steps` est
   après l'agrégation des contrôles, et l'e2e découpé tourne dans le job des tranches — les étapes d'installation du
-  projet y arrivent trop tard ou ailleurs (le contrôle découpé installe lui-même ses dépendances et Playwright), et
-  l'étape qui publie les captures ne les trouve plus dans `checks`.
+  projet y arrivent trop tard ou ailleurs, et l'étape qui publie les captures ne les trouve plus dans `checks`.
+- **Limite traitée** (2026-11-22, « Traiter maintenant » au sondage des limites, intention prévue
+  docs/intentions/ci-zone-steps-avant-controles.md non créée) : gabarits GitHub et GitLab dotés de zones `setup` (job
+  `checks`, après gitleaks, avant tout pas qui lance run-checks) et `shard-setup` (job `shards`, avant « Play the
+  slice »), plus `shard-steps` en fin du job des tranches (publier ce qu'écrit un contrôle découpé). Choix : dans un
+  fichier sans balises, une étape du projet est « de préparation » si elle précède, dans le job `checks`, le pas du kit
+  qui lance run-checks (`kitSteps` renvoie `before`) ; elle va à l'identique dans `setup` ET `shard-setup` (une
+  installation est sans effet de bord, et un contrôle découpé en a besoin) ; une étape d'après reste dans `steps`
+  (publication d'artefacts). Un fichier déjà balisé (zone `steps` seule) garde sa zone telle quelle et reçoit les zones
+  neuves vides : rien n'est jamais déplacé d'une zone existante. Gabarits ramenés à 200 lignes (QUA-157) : lignes de
+  description des zones retirées (le détail est dans `INSTALL.md`), commentaires fusionnés. Tests d'abord dans
+  packages/drwil/test/montee-de-version.test.mjs (workflow de drwil_walk : installations avant les contrôles dans
+  `checks` et `shards`, vu échouer puis passer ; fichier balisé sans zone de préparation ; étape avant et après le pas
+  qui lance les contrôles, deux forges). Recettes : copie jetable ~/drwil-recette/walk3 (tarball
+  /home/wdubilly/drwil-tarballs/drwil-0.11.1-local-c582da2e.tgz) : commit sur `workstream/kit-update`, trois
+  installations dans `setup` et `shard-setup`, publication dans `steps`, `doctor --fix` découpe `e2e` ; copie jetable
+  ~/drwil-recette/maj2 (marinade `main`) : commit fait, job `build` et stages `build`/`deploy` dans leurs zones, seules
+  des lignes de commentaire du kit remplacées.
 - **Travail non commité** : aucun. Dossier de reproduction (hors dépôt, peut disparaître) :
   `/tmp/claude-1000/-home-wdubilly-projects-drwil/853fbde2-e7f4-4598-86e4-35a450054ace/scratchpad/repro-marinade`,
   branche `reinstall`, installation non commitée.
@@ -351,5 +367,5 @@ Aucun.
   `apercu-ci-replace` — l'aperçu (`packages/drwil/src/preview.ts`) annonce encore le manque « ci » qu'`init` traite
   désormais (intention à créer : apercu-ci-replace, sous docs/intentions/). Le commentaire de `packages/drwil/src/drift.ts` dit
   encore « the update branch keeps the old version ».
-- **Prochaine étape** : sondage des limites hors cadre (`drwil-limite`, session principale), puis EVIDENCE/VERIFY :
+- **Prochaine étape** : lot 6 marqué fait (`lot next`) ; puis EVIDENCE/VERIFY :
   `drwil verify --agent` en `GOVERNANCE: PASS`, recette humaine sur une copie de marinade-poulet, clôture.
