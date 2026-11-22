@@ -116,10 +116,14 @@ part and moves every job (and, on GitLab, every stage) that is not the kit's int
 `init` again changes nothing. A global key both the project and the kit define with a different content (GitLab
 `workflow`, `default`, `variables`, `include`; GitHub `on`, `env`, `permissions`) leaves the file as it is: `init` names the
 key and says what to do. A CI file without markers from an older kit (0.1 to 0.11.0) is recognized by the shipped versions
-of the kit's jobs: the steps the project added inside the kit's `checks` job are moved, unchanged, into the `steps` zone
-(at the end of `checks`, after the kit's checks have run: a step the checks need, such as installing a browser or a tool,
-may have to move into the project's own job); a step that cannot be established as the kit's or the project's leaves the
-file as it is, named.
+of the kit's jobs: the steps the project added inside the kit's `checks` job are moved, unchanged. Those found before the
+kit's checks (installing dependencies, a tool, a browser) go into the preparation zones, `setup` in `checks` and
+`shard-setup` in the slices job (`shards`), both before the checks run; those found after (publishing a report or
+captures) go into the `steps` zone, at the end of `checks`. A step that cannot be established as the kit's or the
+project's leaves the file as it is, named. On GitHub, give a preparation step of `checks` the kit's
+`if: needs.plan.outputs.skip != 'true'`, so that a skipped run skips it too. An artifact written by a sharded check
+(e.g. e2e captures) exists only in its slice's job: publish it from the `shard-steps` zone at the end of the slices job,
+under a name per slice; the `steps` zone of `checks` does not see it.
 
 ## 4. Build the tarball of a version
 

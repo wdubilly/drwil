@@ -811,10 +811,13 @@ const WALK = [
   '            echo "A broken-CI issue is already open, no duplicate."',
   "          fi",
 ];
-const ETAPES_WALK = [...WALK.slice(20, 38), ...WALK.slice(39, 48)];
-const avantFinSteps = (texte, lignes) => texte.replace(/(\n\s*# drwil-project-end steps)/, `\n${lignes.join("\n")}$1`);
+// Étapes du projet avant le pas du kit qui lance les contrôles (installations) et après (publication des captures).
+const PREPA_WALK = WALK.slice(20, 38);
+const FIN_WALK = WALK.slice(39, 48);
+const avantFin = (texte, zone, lignes) => texte.replace(new RegExp(`(\\n\\s*# drwil-project-end ${zone}\\n)`), `\n${lignes.join("\n")}$1`);
+const avantFinSteps = (texte, lignes) => avantFin(texte, "steps", lignes);
 
-test("QUA-283 : CI GitHub sans balises du kit 0.10.0 (workflow réel de drwil_walk) : étapes du projet du job checks replacées à l'identique dans la zone steps, jobs du kit remis au gabarit, rejeu sans effet", async () => {
+test("QUA-283 : CI GitHub sans balises du kit 0.10.0 (workflow réel de drwil_walk) : étapes du projet du job checks replacées à l'identique, installations dans les zones de préparation de checks et de shards avant les contrôles, publication dans la zone steps, jobs du kit remis au gabarit, rejeu sans effet", async () => {
   const dir = await projetCi("github");
   const chemin = join(dir, FICHIER_CI.github);
   const gabarit = readFileSync(chemin, "utf8");
@@ -824,9 +827,21 @@ test("QUA-283 : CI GitHub sans balises du kit 0.10.0 (workflow réel de drwil_wa
   assert.doesNotMatch(sortie, /Rien n'a été changé/);
   assert.equal(
     apres,
-    avantFinSteps(gabarit, ETAPES_WALK),
-    "kit au gabarit (plan, tranches, checks, alerte), étapes du projet dans la zone steps",
+    avantFin(avantFin(avantFin(gabarit, "setup", PREPA_WALK), "shard-setup", PREPA_WALK), "steps", FIN_WALK),
+    "kit au gabarit (plan, tranches, checks, alerte), installations du projet dans les zones de préparation, publication dans la zone steps",
   );
+  // Dans checks comme dans shards, les installations du projet passent avant le pas du kit qui lance les contrôles.
+  const l = apres.split("\n");
+  const [shards, checks] = ["  shards:", "  checks:"].map((j) => l.indexOf(j));
+  const pas = (de, motif) => l.findIndex((x, i) => i > de && motif.test(x));
+  for (const etape of ["Install diff-cover", "Install the app layer's dependencies", "Install the e2e browser"]) {
+    const i = pas(checks, new RegExp(etape.replace(/[()]/g, "\\$&")));
+    assert.ok(i > checks && i < pas(checks, /run-checks\.mjs --aggregate-shards/), `${etape} avant les contrôles de checks`);
+    const j = pas(shards, new RegExp(etape));
+    assert.ok(j > shards && j < pas(shards, /- name: Play the slice/) && j < checks, `${etape} avant la tranche de shards`);
+  }
+  const publier = pas(checks, /Publish the home screen captures/);
+  assert.ok(publier > pas(checks, /run-checks\.mjs --aggregate-shards/), "la publication des captures reste après les contrôles");
   assert.match(
     sortie,
     /ia-first\.yml : replacé\(s\) dans la zone du projet : step Install diff-cover 10\.6\.0, step Install the app layer's dependencies, step Install the e2e browser \(Playwright Chromium\), step Publish the home screen captures\./,
@@ -878,5 +893,36 @@ test("QUA-283 : le CI de chaque version livrée sans balises est du kit ; une é
       assert.equal(r.content, avantFinSteps(gabarit, AJOUT_CHECKS[forge]), `${forge} ${version} avec une étape`);
       assert.deepEqual(r.moved, [forge === "github" ? "step Étape du projet" : "step npm run e2e"]);
     }
+  }
+});
+
+// Zone de préparation (QUA-283) : un fichier balisé avant elle (zone `steps` de fin seule) garde sa zone `steps` telle
+// quelle, jamais perdue ; dans un fichier sans balises, une étape ajoutée avant le pas du kit qui lance les contrôles va
+// dans la préparation de checks et de shards, une étape d'après dans la zone de fin.
+const sansZone = (texte, zone) =>
+  texte.replace(new RegExp(`\\n\\s*# drwil-project-begin ${zone}\\n[\\s\\S]*?# drwil-project-end ${zone}`), "");
+
+test("QUA-283 : un CI balisé sans zone de préparation (zone steps de fin seule) garde sa zone steps telle quelle et reçoit les zones de préparation", () => {
+  for (const [forge, rel] of Object.entries(GABARITS)) {
+    const gabarit = readFileSync(join(RACINE, "packages/drwil/templates", rel), "utf8");
+    const ancien = avantFinSteps(["setup", "shard-setup", "shard-steps"].reduce(sansZone, gabarit), AJOUT_CHECKS[forge]);
+    assert.doesNotMatch(ancien, /drwil-project-begin (setup|shard-)/);
+    const r = placeProject(forge, gabarit, ancien, SHIPPED_CI[forge]);
+    assert.deepEqual(r, { content: avantFinSteps(gabarit, AJOUT_CHECKS[forge]), moved: [], conflicts: [] }, forge);
+    assert.deepEqual(placeProject(forge, gabarit, r.content, SHIPPED_CI[forge]).content, r.content, `${forge} : rejeu sans effet`);
+  }
+});
+
+test("QUA-283 : sans balises, une étape ajoutée avant le pas du kit qui lance les contrôles va dans la préparation de checks et de shards", () => {
+  for (const [forge, rel] of Object.entries(GABARITS)) {
+    const gabarit = readFileSync(join(RACINE, "packages/drwil/templates", rel), "utf8");
+    const lignes = git(RACINE, "show", `v0.8.0:packages/drwil/templates/${rel}`).stdout.split("\n");
+    const avant = lignes.findIndex((l) => /^\s+- (run: )?node \.githooks\/run-checks\.mjs$/.test(l));
+    const prepa = forge === "github" ? ["      - name: Préparer", "        run: npm ci"] : ["    - npm ci"];
+    lignes.splice(avant + 1, 0, ...AJOUT_CHECKS[forge]);
+    lignes.splice(avant, 0, ...prepa);
+    const r = placeProject(forge, gabarit, lignes.join("\n"), SHIPPED_CI[forge]);
+    assert.equal(r.content, avantFin(avantFin(avantFinSteps(gabarit, AJOUT_CHECKS[forge]), "setup", prepa), "shard-setup", prepa), forge);
+    assert.equal(r.moved.length, 2, forge);
   }
 });

@@ -1,19 +1,18 @@
-// Zones du projet du fichier de CI et placement de ce qui n'est pas du kit (QUA-283). `init` réécrit la partie du kit,
-// balisée ou non, et replace dans la zone `jobs` (et `stages` sur GitLab, clé unique) chaque job et stage qui n'est pas
-// du gabarit : rien du projet n'est perdu. Une clé que le projet et le gabarit définissent tous deux avec un contenu
-// différent, ou une clé du projet sans place dans une zone, laisse le fichier tel quel (D-f) : fusionner deux YAML
-// pourrait affaiblir une garde du kit sans que rien ne le dise. Sans balises, un job du kit qui diffère du gabarit est du
-// kit s'il est identique à celui d'une version livrée (empreintes ci-dessous) aux étapes près que le projet y a ajoutées,
-// replacées dans la zone `steps` ; une étape qu'on ne peut établir laisse le fichier tel quel, nommée (D-c étendue).
+// Zones du projet du fichier de CI et placement de ce qui n'est pas du kit (QUA-283) : `init` réécrit la partie du kit et
+// replace dans les zones chaque job et stage qui n'est pas du gabarit, rien du projet n'est perdu. Une clé définie des deux
+// côtés avec un contenu différent, ou sans place dans une zone, laisse le fichier tel quel (D-f) : fusionner deux YAML
+// pourrait affaiblir une garde du kit sans que rien ne le dise. Sans balises, un job qui ne diffère d'une version livrée que
+// par des étapes du projet est du kit : celles d'avant le pas qui lance les contrôles vont dans les zones de préparation
+// (`checks` et tranches), les autres dans `steps` ; une étape qu'on ne peut établir laisse le fichier tel quel (D-c étendue).
 import { createHash } from "node:crypto";
 
 export type Forge = "github" | "gitlab";
 
-/** Zones: `steps` (end of the kit's `checks` job), `jobs` (among the jobs), `stages` (GitLab only, optional: older kits had none). */
-const ZONES = ["steps", "jobs", "stages"] as const;
+/** Zones: preparation of `checks` and of a slice, end of each, jobs, GitLab stages; only `steps` and `jobs` required (older kits). */
+const ZONES = ["setup", "shard-setup", "shard-steps", "steps", "jobs", "stages"] as const;
 const REQUIRED = ["steps", "jobs"];
 const marker = (kind: "begin" | "end", zone: string) => new RegExp(`^\\s*# drwil-project-${kind} ${zone}\\s*$`);
-const ANY_MARKER = /^\s*# drwil-project-(begin|end) \w+\s*$/;
+const ANY_MARKER = /^\s*# drwil-project-(begin|end) [\w-]+\s*$/;
 const lines = (text: string): string[] => text.split(/\r?\n/);
 
 /** Lines inside each zone, or null when a required zone is missing or its markers are not in order. */
@@ -40,10 +39,7 @@ function outsideOf(text: string): string[] {
   return out;
 }
 
-interface Block {
-  key: string;
-  lines: string[];
-}
+type Block = { key: string; lines: string[] };
 const isComment = (l: string) => /^\s*#/.test(l);
 const keyAt = (indent: number) => new RegExp(`^ {${indent}}([^\\s#-][^:]*?):(?:\\s|$)`);
 
@@ -115,21 +111,25 @@ const label = (item: string[]) => {
   return (/\bname:\s*(.+)/.exec(text) ?? /\buses:\s*(.+)/.exec(text) ?? /^\s*-\s*(?:run:\s*)?(.+)/.exec(text))?.[1].trim();
 };
 
-/** The steps `b` adds to a shipped version of its kit job (or to the template's `current`), or the steps that cannot be established. */
-function kitSteps(forge: Forge, shipped: string[], b: Block, current?: Block): { extra: string[][] | null; unsure: string[] } {
+type Extra = { extra: string[][] | null; before: number; unsure: string[] };
+/** Steps `b` adds to a shipped version of its kit job (or the template's `current`), the first `before` ahead of the checks; or those unsure. */
+function kitSteps(forge: Forge, shipped: string[], b: Block, current?: Block): Extra {
   const { rest, items } = itemsOf(forge, b);
   const versions = shipped.map((e) => e.split(" ")).filter(([k]) => k === b.key);
   if (current) versions.push([b.key, print(itemsOf(forge, current).rest), ...itemsOf(forge, current).items.map(print)]);
   // The version that explains the most steps: an older one, with fewer steps, would take the newer kit steps for the project's.
-  let best: string[][] | null = null;
+  let best: Extra | null = null;
   for (const [, own, ...steps] of versions) {
-    let i = 0;
-    const extra = items.filter((it) => (steps[i] === print(it) ? !++i : true));
-    if (own === print(rest) && i === steps.length && extra.length < (best?.length ?? Number.POSITIVE_INFINITY)) best = extra;
+    let [i, before, extra] = [0, -1, [] as string[][]];
+    for (const it of items)
+      if (steps[i] !== print(it)) extra.push(it);
+      else if (++i && before < 0 && /run-checks\.mjs/.test(it.filter((l) => !isComment(l)).join("\n"))) before = extra.length;
+    const fewer = extra.length < (best?.extra?.length ?? Number.POSITIVE_INFINITY);
+    if (own === print(rest) && i === steps.length && fewer) best = { extra, before: before < 0 ? 0 : before, unsure: [] };
   }
-  if (best) return { extra: best, unsure: [] };
+  if (best) return best;
   const known = new Set(versions.flat());
-  return { extra: null, unsure: items.filter((it) => !known.has(print(it))).map((it) => `${label(it)}`) };
+  return { extra: null, before: 0, unsure: items.filter((it) => !known.has(print(it))).map((it) => `${label(it)}`) };
 }
 
 /** Prints (`key own step step…`: 12 hex digits of SHA-256 over the meaningful lines) of every key of a shipped CI file. */
@@ -156,14 +156,14 @@ export function placeProject(forge: Forge, template: string, existing: string, s
   const conflicts = new Set<string>();
   const moved: Block[] = [];
   const stages: string[] = [];
-  const steps: string[][] = [];
+  const [setup, steps] = [[] as string[][], [] as string[][]];
   // Unmarked, a key of the template that differs from it is the kit's when a shipped version of it matches, the steps
   // the project added to `checks` aside; anything else stays the project's, named (D-f).
   const judge = (b: Block) => {
     if (zones || meaning(kitBlock(b.key)) === meaning(b)) return;
-    const { extra, unsure } = kitSteps(forge, shipped, b, kitBlock(b.key));
+    const { extra, before, unsure } = kitSteps(forge, shipped, b, kitBlock(b.key));
     if (!extra || (extra.length && b.key !== "checks")) conflicts.add(unsure.length ? `${b.key} (${unsure.join(", ")})` : b.key);
-    else steps.push(...extra);
+    else [setup.push(...extra.slice(0, before)), steps.push(...extra.slice(before))];
   };
   // In the zone, a key the template has too would be defined twice.
   for (const b of zones ? blocksAt(zones.jobs, forge === "gitlab" ? 0 : 2) : []) if (kitBlock(b.key)) conflicts.add(b.key);
@@ -178,12 +178,13 @@ export function placeProject(forge: Forge, template: string, existing: string, s
     // A job a shipped version had and the template no longer has (renamed) is the kit's, dropped.
     else if (kitSteps(forge, shipped, b).extra?.length !== 0) moved.push(b);
   }
-  const names = [...moved.map((b) => b.key), ...stages.map((s) => `stage ${s}`), ...steps.map((s) => `step ${label(s)}`)];
+  const names = [...moved.map((b) => b.key), ...stages.map((s) => `stage ${s}`), ...[...setup, ...steps].map((s) => `step ${label(s)}`)];
   if (conflicts.size) return { content: null, moved: [], conflicts: [...conflicts] };
   const tplZones = zonesOf(template) ?? {};
   const added: Record<string, string[]> = {
     jobs: moved.flatMap((b) => ["", ...trimBlank(b.lines)]),
     stages: stages.map((s) => `  - ${s}`),
+    ...Object.fromEntries(["setup", "shard-setup"].map((z) => [z, setup.flatMap(trimBlank)])),
     steps: steps.flatMap(trimBlank),
   };
   let result = lines(template);

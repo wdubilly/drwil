@@ -137,10 +137,17 @@ release renames this section to its version.
   do. The message names an update branch only when there is one. In a CI
   file without markers from an older kit (0.1 to 0.11.0), the steps the
   project added inside the kit's `checks` job are moved, unchanged and in
-  their order, into the `steps` zone and the kit's jobs are updated: a job or
+  their order, into a project zone and the kit's jobs are updated: a job or
   step is the kit's when it is identical to the one of a shipped version. A
   step that cannot be established either way leaves the file as it is, named
-  with its job.
+  with its job. The CI templates have two new preparation zones, `setup` in
+  the `checks` job and `shard-setup` in the slices job, before the kit's
+  checks run: the project's steps found before the kit's checks (installing
+  dependencies, a tool, a browser) go there, in both jobs, and those found
+  after stay in the `steps` zone at the end of `checks`; a `shard-steps` zone
+  ends the slices job (to publish what a sharded check wrote). An already
+  marked file keeps its `steps` zone as it is and receives the new zones,
+  empty.
 - The commit `init` makes (installation or update) no longer has a 60-second
   limit that cut it, and shows the hooks' output while it runs. When the kit
   manifest explains every file of that commit, the project's checks that
