@@ -128,6 +128,9 @@ après clôture, `QUA-116`).
   pas du kit qui lance les contrôles y sont replacées à l'identique (dans les deux jobs), celles d'après restent dans la
   zone de fin `steps` ; une zone `steps` existante d'un fichier déjà balisé est gardée telle quelle ; prouvé sur le
   workflow réel de drwil_walk — `QUA-283`
+- Sur GitHub, une étape du projet qu'`init` replace dans le job `checks` (zones `setup` et `steps`) reçoit la condition
+  de saut du plan des étapes du kit (`if: needs.plan.outputs.skip != 'true'`) ; une étape qui a déjà sa propre
+  condition n'est pas modifiée et est nommée ; prouvé sur le workflow réel de drwil_walk — `QUA-283`
 - Recette : la réinstallation à neuf et la mise à jour rejouées sur une copie de marinade-poulet avec un tarball du
   chantier, commit fait sans erreur, CI du projet conservée [humain] — `QUA-326`
 
@@ -153,6 +156,8 @@ après clôture, `QUA-116`).
   que le projet a ajoutées, replacées dans la zone `steps` (validé par le demandeur le 2026-11-22, D-c étendue)
 - `QUA-283` — la zone projet de préparation est placée avant les contrôles (checks et shards) ; les étapes
   d'installation du projet y sont replacées (validé par le demandeur le 2026-11-22, sondage des limites)
+- `QUA-283` — une étape du projet replacée suit le saut du plan (validé par le demandeur le 2026-11-22, sondage des
+  limites)
 - `QUA-173` — ancien critère : une fiche supprimée par la branche couvre les fichiers qu'elle citait, sans dire ce qui
   prime quand une fiche de même chemin est présente — raison : la version supprimée écrasait la version présente
   (constat b) ; la fiche présente prime (validé par le demandeur le 2026-11-21)
