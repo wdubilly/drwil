@@ -153,7 +153,7 @@ compte rendu de la mise à jour (`npx drwil init`) le lui dit.
   dans les `paths` de 293 contrôles sur 305 — raison : un contrat ajouté invalide presque tous les verdicts ; l'empreinte
   couvre désormais la déclaration du contrôle et la configuration qu'il lit, livré à tout projet ; la première mise à
   jour depuis une version antérieure le signale dans son compte rendu (« première passe complète, puis reprise des
-  verdicts »), et la preuve du contrat ajoute le test de ce message (`packages/drwil/test/kit-mise-a-jour.test.mjs`)
+  verdicts »), et la preuve du contrat ajoute le test de ce message (`packages/drwil/test/mise-a-jour-empreinte.test.mjs`, choix du demandeur le 2026-11-23 : `QUA-315` fige les tests `kit-*`)
   (validé par le demandeur le 2026-11-22).
 - `.githooks/pre-commit` — lance la vérification du formatage (`format-staged.mjs` (à créer)) quand la clé `format` est déclarée ;
   inchangé sans clé (validé par le demandeur le 2026-11-22).
