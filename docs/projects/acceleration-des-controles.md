@@ -369,6 +369,24 @@ Aucun.
 
 ## 7. Reprise
 
+- **Lot 11 fait (2026-11-23)** : motif `!` dans les `paths` : `matchPaths` de `.githooks/glob.mjs` (gabarit et copie), à la
+  manière de `.gitignore` : le dernier motif qui correspond décide, `!motif` retire, un motif plus loin reprend ; sans
+  motif positif, rien. Lu par le moteur (report au commit), l'empreinte par contrôle et le formateur ; le contrôle de
+  couverture CI (`.githooks/check-control-coverage.mjs`, gabarit et copie) saute les `!` (le job du CI dépasse le contrôle) ;
+  l'empreinte de preuve du paquet (`packages/drwil/src/fingerprint.ts`) garde l'ordre des `paths` dès qu'un `!` s'y
+  trouve. `QUA-141` : ligne « Modifié ». **Audit** : trace des lectures de fichiers (préchargement de `fs`, un `node --test`
+  par fichier de test, 92 fichiers) ; 107 des 263 contrôles de tests citant `.githooks/**` ou `packages/drwil/**` reçoivent
+  `!.githooks/*.test.mjs` et `!packages/drwil/test/*.test.mjs` (moins les tests lus ou cités), `!packages/drwil/templates/**`,
+  le `CHANGELOG`, le `README` et `serve` du paquet quand la trace ne les lit pas. 156 laissés intacts : test en échec
+  sous la trace (`state`, `close`, `cycle`, `kit-mise-a-jour`, `kit-hooks`, `worktree`…), mention générique d'un fichier de test
+  dans le test, balayage d'un dossier de tests (`run-checks`, `check-kit-size`). **Mesure** (contrôles invalidés par un
+  fichier touché, 314 contrôles) avant → après : `.githooks/engine.test.mjs` 195 → 140 ; `.githooks/state.test.mjs` 195 → 140 ;
+  `packages/drwil/test/serve.test.mjs` 191 → 128 ; `packages/drwil/test/kit.test.mjs` 191 → 115 ;
+  `packages/drwil/CHANGELOG.md` 184 → 108 ; `packages/drwil/templates/common/base/AGENTS.md` 202 → 199 ; moyenne par fichier
+  suivi : `.githooks/` 195,6 → 180,5, `packages/drwil/` 197,6 → 188,2, dépôt 99,3 → 93,9. **Inchangés** : `.drwil/ia-first.json` 302,
+  `.githooks/contract-tests.mjs` 294, `.githooks/state.mjs` et `.githooks/engine.mjs` 194, `packages/drwil/src/evidence.ts` 190 :
+  les modules importés ne se voient pas dans la trace (le chargeur ESM ne passe pas par `fs`), leur resserrement demande une
+  analyse des imports, hors de ce lot.
 - **Lot 10 fait (2026-11-23)** : sous-clé `check` de `format` (un appel pour les fichiers indexés dont la copie égale
   l'index, repli par `stdin`), `QUA-334` (skill d'adoption, point `doctor` `parallel`, mise à jour sans `parallel`).
   **Mesure sur une copie de marinade-poulet** (passe sans reprise, 8 processeurs, référence en série 574,2 s) :
