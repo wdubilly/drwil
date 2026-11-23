@@ -369,6 +369,14 @@ Aucun.
 
 ## 7. Reprise
 
+- **Lot 12 fait (2026-11-23)** : le garde des commandes (`.claude/hooks/bash-guard.mjs`, gabarit et copie) refuse (`deny`) une boucle
+  `while` ou `until` dont la condition lance `pgrep` (forme simple, `until !`, `$(…)`, accent grave, `bash -c`) et renvoie à
+  `node .githooks/wait-command.mjs` en appel de fond ; une boucle citée dans un texte (`while` seul entre accents graves),
+  un message de commit ou un `pgrep` hors boucle passent. Contrat `QUA-337` (contrôle `tests-qua-337`, test dans
+  `packages/drwil/test/claude-hooks.test.mjs`) ; carte `docs/architecture.md` ; lignes sous « Unreleased » du `CHANGELOG`
+  pour les lots 9 à 12. Limite connue, dite au contrat : un texte entre guillemets qui commence par une telle boucle
+  (heredoc) est refusé aussi, comme pour `QUA-114`.
+
 - **Lot 11 fait (2026-11-23)** : motif `!` dans les `paths` : `matchPaths` de `.githooks/glob.mjs` (gabarit et copie), à la
   manière de `.gitignore` : le dernier motif qui correspond décide, `!motif` retire, un motif plus loin reprend ; sans
   motif positif, rien. Lu par le moteur (report au commit), l'empreinte par contrôle et le formateur ; le contrôle de
