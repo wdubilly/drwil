@@ -218,6 +218,20 @@ le chemin du projet n'est pas analysé). Les clés d'appel sont préfixées par 
 additionne ses parts sans rien compter deux fois. Formats relevés : la recette de consommation ; règles : QUA-042 et
 QUA-304, non recopiées ici.
 
+## 6. Empreinte par contrôle, chemins générés et formatage
+
+`.githooks/fingerprints.mjs` ne prend de `.drwil/ia-first.json`, pour l'empreinte d'un contrôle, que sa propre
+déclaration et les réglages hors `checks` : un contrat ajouté ne rejoue plus les autres contrôles. Un contrôle qui lit
+les déclarations des autres porte `readsChecks: true` et garde le fichier entier ; la preuve de clôture garde
+l'empreinte de l'arbre entier. Son marqueur `FINGERPRINT_SCHEME`, comparé par la mise à jour, fait annoncer la
+première passe complète. `kitPaths` (`.githooks/scope-gate-kit.mjs`) calcule les chemins des contrôles que le kit
+génère (paire de couverture, `e2e`) au lieu de `["**"]` ; la CLI l'importe, si bien que la mise à jour, `doctor --fix`
+et la barrière de périmètre calculent les mêmes chemins. `.githooks/format-staged.mjs`, lancé par
+`.githooks/pre-commit` avant les contrôles, juge le formatage des fichiers indexés quand la clé `format` est déclarée,
+sans rien réécrire. Propres au dépôt : `outils/recette-adoptant.mjs` rejoue une mise à jour réelle sur des copies
+d'adoptants, `outils/verifier-recette-reelle.mjs` rappelle, sans bloquer, une fiche d'installation sans recette réelle
+au lot 1. Règles : QUA-141, QUA-087, QUA-238, QUA-303, QUA-328 à QUA-331, non recopiées ici.
+
 ## Reprise
 
 - Sondage d'attestation Claude Code : `drwil attest-poll` prépare le jugement ;

@@ -121,26 +121,26 @@ compte rendu de la mise à jour (`npx drwil init`) le lui dit.
 
 - Pendant un lot, la conduite livrée (consignes, skill de lancement, sous-agent des contrôles) ne lance que le commit et,
   après un échec, les contrôles touchés et les tests cités par les contrats de la fiche, choisis par l'outil ; la passe
-  complète reste exigée avant VERIFY et la clôture, et la CI reste complète — contrat à créer
+  complète reste exigée avant VERIFY et la clôture, et la CI reste complète — `QUA-327`
 - L'empreinte d'un contrôle couvre sa déclaration et la configuration qu'il lit, pas tout `.drwil/ia-first.json` : un
   contrat ajouté ne rejoue plus les autres contrôles ; la preuve de clôture garde l'empreinte de l'arbre entier — `QUA-141`
 - Une mise à jour (`npx drwil init`) depuis une version antérieure au nouveau calcul de l'empreinte le signale en une
   ligne de son compte rendu, dans la langue du projet : « première passe complète, puis reprise des verdicts » ; une
   mise à jour depuis une version qui le connaît déjà ne l'écrit pas — `QUA-141`
 - Avec un formateur déclaré, un commit dont un fichier indexé n'est pas formaté est refusé, sans qu'aucun fichier soit
-  modifié, avec la commande exacte qui le formate et les fichiers en cause — contrat à créer
-- Sans clé `format`, le commit est inchangé ; l'adoption la propose, une mise à jour ne l'active jamais — contrat à créer
+  modifié, avec la commande exacte qui le formate et les fichiers en cause — `QUA-328`
+- Sans clé `format`, le commit est inchangé ; l'adoption la propose, une mise à jour ne l'active jamais — `QUA-329`
 - Le temps ajouté au commit par la vérification du formatage est mesuré sur un projet temporaire et rapporté au journal de
   clôture, sans seuil — [humain] `QUA-013`
 - Le modèle de fiche livré recommande une recette réelle dès le premier lot d'un chantier qui touche ce que l'utilisateur
   installe ; dans le dépôt seul, un avertissement non bloquant le rappelle quand le bloc `scope` touche l'installation ou
-  la mise à jour et que le lot 1 ne cite pas de recette réelle ; jamais de refus — contrat à créer
+  la mise à jour et que le lot 1 ne cite pas de recette réelle ; jamais de refus — `QUA-330`
 - Dans le dépôt, un outil construit le tarball de la branche et l'installe sur des copies de marinade-poulet et
-  `drwil_walk` — contrat à créer
+  `drwil_walk` — `QUA-331`
 - Recette du chantier par une mise à jour réelle : des copies de marinade-poulet (GitLab) et `drwil_walk` (GitHub) mises
   à jour avec un tarball du chantier ; le commit de mise à jour passe sans nouveau blocage et sans clé `format` ajoutée,
   le compte rendu signale la première passe complète ; puis un second commit qui touche un fichier du projet reprend les
-  verdicts des contrôles non concernés (« repris ») [humain] — contrat `Manuel` à créer
+  verdicts des contrôles non concernés (« repris ») [humain] — `QUA-332`
 - Un projet neuf dont la couche est à la racine n'a aucun contrôle généré par le kit en `paths: ["**"]` : couverture,
   couverture du diff et e2e reçoivent les chemins du code et de sa configuration (sources, tests, configuration de
   l'outil, `package*.json`) — `QUA-087`, `QUA-089`
@@ -148,8 +148,9 @@ compte rendu de la mise à jour (`npx drwil init`) le lui dit.
   ceux de la paire de couverture d'une couche (`coverage-<couche>`, `coverage-diff-<couche>`) même retouchée par
   l'adoptant, avec les chemins calculés par le kit ; son compte rendu nomme chaque contrôle réécrit ; tout autre contrôle
   retouché n'est que signalé ; la barrière de périmètre admet ce commit chez l'adoptant — `QUA-141`, `QUA-238`
-- `drwil doctor` signale un contrôle généré par le kit encore en `paths: ["**"]` ; `--fix` le réécrit s'il est intact —
-  `QUA-303`
+- `drwil doctor` signale un contrôle généré par le kit encore en `paths: ["**"]` ; `--fix` applique la même règle que
+  la mise à jour : la paire de couverture d'une couche réécrite même retouchée, tout autre contrôle retouché seulement
+  signalé (choix du demandeur le 2026-11-23) — `QUA-303`
 
 ## Contrats modifiés
 
@@ -309,6 +310,23 @@ Aucun.
 
 ## 7. Reprise
 
+- **Dernier état (2026-11-23, lot 7 fait)** : lots 1 à 7 faits ; reste le lot 8 [humain] (recette par une mise à
+  jour réelle, attestation de `QUA-332`). Lot 7 : critères de la fiche reliés à `QUA-327` à `QUA-332` (textes
+  inchangés) ; `QUA-332` créé (contrat `Manuel` de la recette par une mise à jour réelle, preuve humaine, champ
+  `**Couvre**`) ; critère `drwil doctor` aligné sur le choix du demandeur du 2026-11-23 (`--fix` suit la règle de la
+  mise à jour : paire de couverture réécrite même retouchée, autre contrôle retouché seulement signalé), déjà dit par
+  `QUA-303`, dont la ligne « Modifié » cite ce choix ; carte du moteur (`docs/projects/kit-mechanics.md`, section 6, et
+  sa source livrée, section 3, sans les outils propres au dépôt) et `docs/architecture.md` : `readsChecks` et
+  `FINGERPRINT_SCHEME`, `kitPaths` partagé avec la CLI, points `doctor` et `--fix`, `repathConfig` et
+  `rewriteKitPaths` ; lignes sous « Unreleased » du `CHANGELOG` (Added : clé `format`, recette réelle recommandée ;
+  Changed : passe ciblée, empreinte par contrôle et première passe annoncée, chemins des contrôles générés).
+  Avant VERIFY, la session principale soumet au demandeur, par un sondage `drwil-limite`, les limites hors cadre :
+  `packages/drwil/src/doctor.ts` ne passe pas la racine à `checksPoints` (point `kit-paths`) ; la clé `format` et
+  `readsChecks` absentes de la page des contrôles livrée
+  (`packages/drwil/templates/common/base/docs/ia-first/4-checks-in-git.md`) ; les contrôles du projet joués en série
+  chez l'adoptant ; un adoptant en 0.10.0 sans reprise ; les globs larges `.githooks/**` et `packages/drwil/**` du
+  dépôt (audit par contrôle). Dans le cadre mais non traité (à trancher) : un formateur lancé par `npx` coûte environ
+  0,2 s par fichier au commit (`.githooks/format-staged.mjs`, un appel groupé le réduirait).
 - **Lot 6 fait (2026-11-23, commit `94157cb5`)** : une seule fonction calcule les chemins des contrôles générés,
   `kitPaths` de la barrière livrée (`packages/drwil/templates/common/base/.githooks/scope-gate-kit.mjs`, copie
   `.githooks/scope-gate-kit.mjs`), importée par la CLI : `<couche>/**` sous la racine ; à la racine, chaque dossier qui
@@ -395,7 +413,7 @@ Aucun.
   Limites hors cadre à soumettre (fin de BUILD) : la clé `format` n'est pas décrite dans la page des réglages livrée
   `packages/drwil/templates/common/base/docs/ia-first/4-checks-in-git.md` (hors scope) ; un formateur lancé par
   `npx` coûte environ 0,2 s par fichier au commit (un appel groupé par lot de fichiers le réduirait).
-- **Dernier état** (2026-11-23) : lots 1, 2, 3, 4 et 5 faits (lot 5 : voir plus haut). Lot 3 (D3) : l'empreinte d'un contrôle ne prend de
+- **État après le lot 5** (2026-11-23) : lots 1, 2, 3, 4 et 5 faits (lot 5 : voir plus haut). Lot 3 (D3) : l'empreinte d'un contrôle ne prend de
   `.drwil/ia-first.json` que ses réglages hors `checks` (`configView` de `.githooks/fingerprints.mjs`, gabarit et copie) ;
   un contrôle qui lit les déclarations des autres porte `readsChecks: true` et garde le fichier entier, comme
   `checks-self-test` (déclaration non objet) et une configuration illisible. Au commit, `stagedConfig` (même module,
@@ -472,4 +490,4 @@ Aucun.
   le contrôle en échec seul ou `npx drwil verify --failed` (`QUA-327`). Le commit du lot 2 ne touche aucun module
   `.githooks/*.mjs` ; le lot 3 touchera `.githooks/fingerprints.mjs`, qui invalide tous les contrôles au commit
   (mesure du lot 1 : 476 s) : prévoir un appel de fond par `node .githooks/wait-command.mjs git commit …`.
-- **Prochaine étape** : [IA] lot 7 — Contrats et carte.
+- **Prochaine étape** : sondage des limites hors cadre (session principale), passe complète et `drwil verify --agent`, puis [humain] lot 8 — Recette par une mise à jour réelle (`QUA-332`), et clôture.
