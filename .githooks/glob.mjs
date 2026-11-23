@@ -22,3 +22,15 @@ export function globToRegex(glob) {
   }
   return new RegExp(`^${out}$`);
 }
+
+/**
+ * Predicate of a `paths` list, in the manner of .gitignore: the last pattern that matches decides, `!pattern`
+ * removes the files taken so far, a later plain pattern takes them back. No plain pattern matching: not covered.
+ */
+export function matchPaths(paths) {
+  const rules = paths.map((p) => (p.startsWith("!") ? { keep: false, re: globToRegex(p.slice(1)) } : { keep: true, re: globToRegex(p) }));
+  return (file) => {
+    for (let i = rules.length - 1; i >= 0; i--) if (rules[i].re.test(file)) return rules[i].keep;
+    return false;
+  };
+}

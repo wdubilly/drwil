@@ -11,7 +11,7 @@
 import { spawn, spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { availableParallelism } from "node:os";
-import { globToRegex } from "./glob.mjs";
+import { matchPaths } from "./glob.mjs";
 
 const TEXTS = {
   fr: {
@@ -53,8 +53,8 @@ export function formatSetting(cfg) {
 export function stagedToFormat(paths) {
   const r = spawnSync("git", ["diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z"], { encoding: "utf8" });
   if (r.status !== 0) return null;
-  const globs = paths.map(globToRegex);
-  return r.stdout.split("\0").filter((f) => f && globs.some((g) => g.test(f)));
+  const inPaths = matchPaths(paths);
+  return r.stdout.split("\0").filter((f) => f && inPaths(f));
 }
 
 /** Staged files whose working copy differs from the index (partially staged, changed since): never checked in one call. */

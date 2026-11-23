@@ -8,7 +8,7 @@ import { randomUUID } from "node:crypto";
 import { availableParallelism, homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { globToRegex } from "./glob.mjs";
+import { matchPaths } from "./glob.mjs";
 import { controlFingerprints, stagedConfig, treeFingerprint } from "./fingerprints.mjs";
 import { mainBranchVerdict } from "./engine-branch.mjs";
 import { createLaunchers } from "./engine-launch.mjs";
@@ -118,8 +118,8 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
       if (docsOnly) return { status: "not-run", detail: T.docsOnly };
       if (sh?.skip) return sh.skip();
       if (staged && Array.isArray(c.paths) && c.paths.length) {
-        const patterns = c.paths.map(globToRegex);
-        if (!staged.some((f) => touches(f, c) && patterns.some((p) => p.test(f)))) return { status: "not-run", detail: T.deferred };
+        const inPaths = matchPaths(c.paths);
+        if (!staged.some((f) => touches(f, c) && inPaths(f))) return { status: "not-run", detail: T.deferred };
       }
       return null;
     };

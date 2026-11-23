@@ -112,3 +112,11 @@ test("GitHub en français : « aucun » quand le job n'a aucun déclencheur conn
   const r = projet({ ciFiles: [".gitlab-ci.yml"] }, { ".gitlab-ci.yml": "checks:\n  rules:\n    - when: manual\n" });
   assert.match(r.stdout, /\(changes : aucun\)/);
 });
+
+test("un motif d'exclusion `!` des paths n'est pas un déclencheur : le job du CI le dépasse sans erreur", () => {
+  const r = projet(
+    { ciFiles: [".github/workflows/ci.yml"], checks: [{ id: "tests", paths: ["src/**", "!src/*.test.mjs"], ciJob: "checks" }] },
+    { ".github/workflows/ci.yml": GITHUB },
+  );
+  assert.equal(r.status, 0, r.stdout);
+});

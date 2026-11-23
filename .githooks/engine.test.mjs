@@ -301,6 +301,24 @@ test("contrôles du projet : identifiant, name: nom, report au commit hors chemi
   assert.equal(checks(racine).length, 8);
 });
 
+test("QUA-141 : un motif `!` des paths retire un fichier du report au commit et de l'empreinte du contrôle", () => {
+  const racine = depot();
+  ecrire(racine, "src/a.txt", "a\n");
+  ecrire(racine, "src/a.test.txt", "t\n");
+  git(racine, "add", "-A");
+  git(racine, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "x");
+  const cfg = { checks: [{ id: "c", run: "node -e 0", paths: ["src/**", "!src/*.test.txt"] }] };
+  const report = parId(checks(racine, { cfg, staged: ["src/a.test.txt"] })).c.run();
+  assert.equal(report.status, "not-run", "seul un fichier exclu est indexé : reporté");
+  assert.equal(parId(checks(racine, { cfg, staged: ["src/a.txt"] })).c.run({ stdio: "pipe" }).status, "ok");
+  const empreinte = () => controlFingerprints(racine, checks(racine, { cfg })).get("c");
+  const base = empreinte();
+  ecrire(racine, "src/a.test.txt", "autre\n");
+  assert.equal(empreinte(), base, "un octet d'un fichier exclu ne change pas l'empreinte");
+  ecrire(racine, "src/a.txt", "autre\n");
+  assert.notEqual(empreinte(), base);
+});
+
 test("QUA-035 : commit de documentation seule : tests des contrôles et contrôles du projet non exécutés, signalés ; avec du code, rejoués", () => {
   const racine = depot();
   ecrire(racine, ".githooks/x.test.mjs", "import { test } from 'node:test'; test('t', () => {});\n");

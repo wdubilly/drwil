@@ -194,3 +194,14 @@ test("QUA-334 : une mise à jour n'active jamais `parallel` et garde le `paralle
     assert.deepEqual(config(dir).checks.find((c) => c.id === "b").parallel, false);
   });
 });
+
+test("QUA-141 : l'ordre des paths compte pour l'empreinte d'une preuve dès qu'un motif `!` s'y trouve, pas sans exclusion", async () => {
+  const { proofFingerprints } = await import("../dist/fingerprint.js");
+  const avec = (paths) => proofFingerprints({ checks: ["c"] }, { checks: [{ id: "c", run: "node -e 0", paths }] }).c;
+  assert.equal(avec(["a/**", "b/**"]), avec(["b/**", "a/**"]), "sans exclusion : l'ordre est indifférent");
+  assert.notEqual(
+    avec(["a/**", "!a/x", "a/x/y"]),
+    avec(["a/**", "a/x/y", "!a/x"]),
+    "avec exclusion : le dernier motif décide, l'ordre change l'effet",
+  );
+});

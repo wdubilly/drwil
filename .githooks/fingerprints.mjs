@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { globToRegex } from "./glob.mjs";
+import { matchPaths } from "./glob.mjs";
 
 /** QUA-141: scheme of the per-check fingerprint; an update from a kit without this marker says its first pass replays every check. */
 export const FINGERPRINT_SCHEME = 2;
@@ -111,11 +111,11 @@ export function controlFingerprints(root, list) {
     return hashes.get(key);
   };
   for (const c of wanted) {
-    const patterns = c.paths.map(globToRegex);
+    const inPaths = matchPaths(c.paths);
     const h = createHash("sha256").update(`${engine}\0${c.declaration}\0`);
     let judged = 0;
     for (const f of files) {
-      if (!patterns.some((p) => p.test(f))) continue;
+      if (!inPaths(f)) continue;
       const hash = hashOf(f, f !== CONFIG || readsChecks(c));
       if (hash === null) {
         judged = 0;

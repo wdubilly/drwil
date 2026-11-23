@@ -98,7 +98,7 @@ export function proofFingerprints(k: { checks?: string[] | null }, cfg: ProjectC
       const c = checks.find((x) => x.id === id);
       if (!c) return [id, sha({ id })];
       const { run, paths } = effect(c);
-      return [id, sha({ id, run, cwd: c.cwd ?? null, paths: paths ? [...paths].sort() : null })];
+      return [id, sha({ id, run, cwd: c.cwd ?? null, paths: paths && (paths.some((p) => p.startsWith("!")) ? paths : [...paths].sort()) })];
     }),
   );
 }
