@@ -224,7 +224,7 @@ QUA-304, non recopiées ici.
 déclaration et les réglages hors `checks` : un contrat ajouté ne rejoue plus les autres contrôles. Un contrôle qui lit
 les déclarations des autres porte `readsChecks: true` et garde le fichier entier ; la preuve de clôture garde
 l'empreinte de l'arbre entier. Son marqueur `FINGERPRINT_SCHEME`, comparé par la mise à jour, fait annoncer la
-première passe complète. `kitPaths` (`.githooks/scope-gate-kit.mjs`) calcule les chemins des contrôles que le kit
+première passe complète ; `drwil doctor` signale un kit antérieur (`staleFingerprints`, `packages/drwil/src/doctor-checks.ts`). `kitPaths` (`.githooks/scope-gate-kit.mjs`) calcule les chemins des contrôles que le kit
 génère (paire de couverture, `e2e`) au lieu de `["**"]` ; la CLI l'importe, si bien que la mise à jour, `doctor --fix`
 et la barrière de périmètre calculent les mêmes chemins. `.githooks/format-staged.mjs`, lancé par
 `.githooks/pre-commit` avant les contrôles, juge le formatage des fichiers indexés quand la clé `format` est déclarée,

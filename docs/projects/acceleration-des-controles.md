@@ -365,6 +365,18 @@ Aucun.
 
 ## 7. Reprise
 
+- **Lot 9 fait (2026-11-23)** : page livrée des contrôles
+  (`packages/drwil/templates/common/base/docs/ia-first/4-checks-in-git.md`, copie installée) : `readsChecks: true`,
+  réglage `parallel` (`parallel: false` par contrôle, jamais activé par une mise à jour) et clé `format` ; `QUA-333`
+  créé (test dans `packages/drwil/test/doctor-checks.test.mjs`, contrôle `tests-qua-333`). `packages/drwil/src/doctor.ts`
+  passe la racine à `checksPoints` : le point `kit-paths` se tait quand `kitPathsOf` rend `["**"]` (`QUA-303`).
+  Point `fingerprint` (« Reprise des verdicts ») : kit dont `FINGERPRINT_SCHEME` est antérieur ou absent, renvoi à
+  `npx drwil init` (`QUA-026`, `tests-qua-026` lance aussi `packages/drwil/test/doctor-checks.test.mjs`) ;
+  `staleFingerprints` vit dans `packages/drwil/src/doctor-checks.ts`, la mise à jour l'importe (une seule source).
+  Pour le lot 10 : la page décrit déjà `parallel` (ne pas la redire) ; le point `doctor` « parallel absent » va dans
+  `packages/drwil/src/doctor-checks.ts` à côté de `fingerprintPoints`, ses tests dans
+  `packages/drwil/test/doctor-checks.test.mjs`. Remarque : un projet neuf contient `.env.example` écrit par le kit,
+  que `kitPaths` ne range pas parmi les fichiers du kit (il délimite `*.example`).
 - **Dernier état (2026-11-23, lot 7 fait)** : lots 1 à 7 faits ; reste le lot 8 [humain] (recette par une mise à
   jour réelle, attestation de `QUA-332`). Lot 7 : critères de la fiche reliés à `QUA-327` à `QUA-332` (textes
   inchangés) ; `QUA-332` créé (contrat `Manuel` de la recette par une mise à jour réelle, preuve humaine, champ

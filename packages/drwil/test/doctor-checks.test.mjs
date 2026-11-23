@@ -1,7 +1,7 @@
 // Points de `drwil doctor` sur les contrôles déclarés : contrôles de contrats non groupés, contrôles CI sans paths (QUA-318).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { doctor, init } from "../dist/index.js";
@@ -115,4 +115,68 @@ test('QUA-303 point kit-paths : un contrôle généré par le kit encore sur `pa
   assert.match(fr.detail, /`npx drwil doctor --fix` pose les chemins du code et de sa configuration/);
   assert.match(point(checksPoints(checks, "en"), "kit-paths").detail, /`coverage-root` is on `"paths": \["\*\*"\]`/);
   assert.equal(point(checksPoints(checks.slice(3), "fr"), "kit-paths"), undefined);
+});
+
+test("QUA-303 point kit-paths : avec la racine, se tait quand rien ne se délimite sous elle, parle sinon", () => {
+  const checks = [{ id: "coverage-root", run: "npx c8 npm test", paths: ["**"] }];
+  const vide = mkdtempSync(join(tmpdir(), "drwil-doctor-kit-paths-"));
+  writeFileSync(join(vide, "README.md"), "# x\n");
+  assert.equal(point(checksPoints(checks, "fr", vide), "kit-paths"), undefined, "rien que du Markdown : rien à délimiter");
+  const code = mkdtempSync(join(tmpdir(), "drwil-doctor-kit-paths-"));
+  writeFileSync(join(code, "package.json"), "{}\n");
+  assert.match(point(checksPoints(checks, "fr", code), "kit-paths").detail, /`coverage-root` est sur/);
+});
+
+const projet = async () => {
+  const dir = mkdtempSync(join(tmpdir(), "drwil-doctor-empreinte-"));
+  const { log, warn } = console;
+  console.log = console.warn = () => {};
+  try {
+    await init({ lang: "fr", targetDir: dir, git: false, ci: "github", tools: "claude" });
+  } finally {
+    console.log = log;
+    console.warn = warn;
+  }
+  return dir;
+};
+
+test("QUA-303 doctor transmet la racine : un contrôle du kit sur tout le dépôt se tait quand rien ne se délimite", async () => {
+  const dir = await projet();
+  const fichier = join(dir, ".drwil/ia-first.json");
+  const cfg = JSON.parse(readFileSync(fichier, "utf8"));
+  cfg.checks = [...(cfg.checks ?? []), { id: "coverage-root", run: "npx c8 npm test", paths: ["**"] }];
+  writeFileSync(fichier, `${JSON.stringify(cfg, null, 2)}\n`);
+  const exec = () => ({ status: 1, stdout: "" });
+  rmSync(join(dir, ".env.example")); // seul fichier hors du kit qu'écrit init : il délimiterait `*.example`
+  assert.deepEqual(checksPoints(cfg.checks, "fr", dir), [], "le projet neuf ne délimite rien");
+  assert.equal(point((await doctor({ targetDir: dir, exec })).points, "kit-paths"), undefined);
+  writeFileSync(join(dir, "index.js"), "\n");
+  assert.equal(point((await doctor({ targetDir: dir, exec })).points, "kit-paths").state, "warning");
+});
+
+test("QUA-026 doctor signale un kit antérieur à l'empreinte par contrôle et renvoie à la mise à jour", async () => {
+  const dir = await projet();
+  const exec = () => ({ status: 1, stdout: "" });
+  assert.equal(point((await doctor({ targetDir: dir, exec })).points, "fingerprint"), undefined, "kit à jour : rien");
+  const empreintes = join(dir, ".githooks/fingerprints.mjs");
+  writeFileSync(empreintes, readFileSync(empreintes, "utf8").replace(/FINGERPRINT_SCHEME = \d+/, "FINGERPRINT_SCHEME = 1"));
+  const fr = point((await doctor({ targetDir: dir, exec })).points, "fingerprint");
+  assert.equal(fr.state, "warning");
+  assert.match(fr.detail, /aucun verdict n'est repris.*`npx drwil init`/);
+  rmSync(empreintes);
+  assert.equal(point((await doctor({ targetDir: dir, exec })).points, "fingerprint").state, "warning", "sans calcul d'empreinte du tout");
+  const cfg = JSON.parse(readFileSync(join(dir, ".drwil/ia-first.json"), "utf8"));
+  writeFileSync(join(dir, ".drwil/ia-first.json"), `${JSON.stringify({ ...cfg, lang: "en" }, null, 2)}\n`);
+  assert.match(point((await doctor({ targetDir: dir, exec })).points, "fingerprint").detail, /no verdict is reused.*`npx drwil init`/);
+});
+
+test("QUA-333 la page livrée des contrôles décrit les clés `format`, `readsChecks` et `parallel`, copie du dépôt comprise", () => {
+  const page = "docs/ia-first/4-checks-in-git.md";
+  for (const fichier of [new URL(`../templates/common/base/${page}`, import.meta.url), new URL(`../../../${page}`, import.meta.url)]) {
+    const texte = readFileSync(fichier, "utf8");
+    assert.match(texte, /`readsChecks: true`/, fichier.pathname);
+    assert.match(texte, /`"parallel": true`[\s\S]*`parallel: false`/, fichier.pathname);
+    assert.match(texte, /The `format` setting[\s\S]*"stdin"[\s\S]*"write"[\s\S]*"paths"/, fichier.pathname);
+    assert.doesNotMatch(texte, /QUA-3\d\d/, "la page livrée ne cite aucun contrat propre au dépôt");
+  }
 });

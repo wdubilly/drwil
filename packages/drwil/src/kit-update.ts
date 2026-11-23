@@ -1,15 +1,15 @@
 // Mise à jour du kit d'un projet équipé (QUA-206, QUA-237) : `init` coupe une branche dédiée depuis la branche
 // principale, applique la mise à jour et la commite lui-même, pour que la barrière de périmètre ne bloque pas le projet.
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { hooksPath } from "./essentials.js";
 import { readInstall, readManifest } from "./manifest.js";
 import { readConfig } from "./config.js";
 import { shardsPoints } from "./doctor-shards.js";
+import { staleFingerprints } from "./doctor-checks.js";
 import { repathConfig } from "./guarantees-e2e-tools.js";
-import { templatesDir } from "./render.js";
 
 export const UPDATE_BRANCH = "workstream/kit-update";
 /** Trailer et variable que la barrière de périmètre reconnaît (scope-gate-kit.mjs, livré par le gabarit). */
@@ -147,10 +147,6 @@ const FIRST_FULL_PASS: Record<MessageLang, string> = {
   en: "First full pass, then reuse of verdicts: each check's fingerprint is computed differently, so the next pass replays every check once — not a regression.",
 };
 
-/** QUA-141: scheme of the per-check fingerprint in a `fingerprints.mjs` (0: none, or no such file). */
-const fingerprintScheme = (f: string): number =>
-  existsSync(f) ? Number(/FINGERPRINT_SCHEME = (\d+)/.exec(readFileSync(f, "utf8"))?.[1] ?? 0) : 0;
-
 /** An update of an equipped project (a manifest) in a git repository; a first install is prepared by kit-install.ts. */
 export function prepareUpdate(dir: string): UpdatePlan | null {
   if (!existsSync(join(dir, ".git")) || !Object.keys(readManifest(dir)).length) return null;
@@ -158,9 +154,7 @@ export function prepareUpdate(dir: string): UpdatePlan | null {
   const previousVersion = readInstall(dir)?.version ?? null;
   const subject = (lang: MessageLang, version: string) =>
     `${lang === "fr" ? "Mise à jour du kit drwil" : "Update the drwil kit"}: ${previousVersion ?? "?"} → ${version}`;
-  const firstFullPass =
-    fingerprintScheme(join(dir, ".githooks", "fingerprints.mjs")) <
-    fingerprintScheme(join(templatesDir, "common", "base", ".githooks", "fingerprints.mjs"));
+  const firstFullPass = staleFingerprints(dir);
   return cut && { ...cut, previousVersion, firstFullPass, texts: TEXTS, subject };
 }
 

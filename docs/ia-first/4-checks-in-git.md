@@ -62,6 +62,29 @@ setting is part of the check's own fingerprint (the reuse of its last verdict)
 and, being an execution field, leaves an attestation citing the check
 untouched: only a change of its command, tests or `paths` makes it lapse.
 
+A check's fingerprint covers its own declaration and the settings, not the
+other checks' declarations: adding or changing one check does not rerun the
+others. A check that reads every declaration (a coverage-of-the-checks
+tool, for instance) sets `readsChecks: true`, so any change to
+`.drwil/ia-first.json` reruns it.
+
+The `parallel` setting (`"parallel": true` at the top of
+`.drwil/ia-first.json`, off by default) starts the project's command checks
+together, at most half the cores (two at least), and reports them in the
+declared order, as a sequential pass would. A check that cannot share the
+machine (a fixed port, a shared database…) sets `parallel: false` and keeps
+running alone; an update never turns the setting on.
+
+The `format` setting checks the formatting before each commit
+(`.githooks/format-staged.mjs`, run by `.githooks/pre-commit`):
+`{ "stdin": "<command printing {file} formatted from stdin>", "write":
+"<command that formats>", "paths": ["src/**"] }`. Each staged file matching
+`paths` is read from the index, piped to `stdin` and compared; one
+difference refuses the commit and names the `write` command with the files.
+Nothing is rewritten or re-staged: format, then stage again. Without the
+key, the commit is unchanged; an incomplete key or a formatter that cannot
+run refuses the commit.
+
 One detail makes this check actually run rather than get bypassed: **a
 check that did not run is visible** (QUA-013) — a check that cannot run on
 a workstation (missing tool) ends up "not run", never hidden as a silent

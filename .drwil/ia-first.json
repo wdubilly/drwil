@@ -424,7 +424,7 @@
     {
       "id": "tests-qua-026",
       "name": "tests de QUA-026, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node .githooks/contract-tests.mjs QUA-026 packages/drwil/test/kit-mise-a-jour.test.mjs",
+      "run": "node .githooks/contract-tests.mjs QUA-026 packages/drwil/test/kit-mise-a-jour.test.mjs packages/drwil/test/doctor-checks.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/contract-tests.mjs",
@@ -4730,6 +4730,15 @@
       "run": "node .githooks/contract-tests.mjs QUA-331 outils/recette-adoptant.test.mjs",
       "ciJob": "checks",
       "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", "outils/recette-adoptant.mjs", "outils/recette-adoptant.test.mjs", "package.json", ".drwil/ia-first.json"],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-333",
+      "name": "tests de QUA-333, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-333 packages/drwil/test/doctor-checks.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", "packages/drwil/**", "docs/ia-first/4-checks-in-git.md", "package.json", "package-lock.json", ".drwil/ia-first.json"],
+      "needsBuild": true,
       "degradable": false
     },
     {

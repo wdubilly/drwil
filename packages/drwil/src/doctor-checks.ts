@@ -1,7 +1,10 @@
 // Points of `drwil doctor` on the declared checks (QUA-318): read from the configuration only, nothing written.
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fill, type MessageLang } from "./i18n.js";
 import type { DiagnosisPoint } from "./doctor.js";
-import { kitCheck } from "./guarantees-e2e-tools.js";
+import { kitCheck, kitPathsOf, projectFiles } from "./guarantees-e2e-tools.js";
+import { templatesDir } from "./render.js";
 
 const TEXTS = {
   fr: {
@@ -14,6 +17,9 @@ const TEXTS = {
     wholeRepo: "Contrôles du kit sur tout le dépôt",
     wholeRepoDetail:
       '`{0}` est sur `"paths": ["**"]` : tout fichier modifié (une fiche, la mise à jour du kit) le rejoue et son verdict n\'est jamais repris ; `npx drwil doctor --fix` pose les chemins du code et de sa configuration (un `e2e` retouché à la main : à poser à la main)',
+    stale: "Reprise des verdicts",
+    staleDetail:
+      "le kit installé est antérieur au calcul d'empreinte par contrôle : aucun verdict n'est repris, chaque passe rejoue tous les contrôles ; mettre le kit à jour : `npx drwil init`",
   },
   en: {
     ungrouped: "Ungrouped contract checks",
@@ -25,6 +31,9 @@ const TEXTS = {
     wholeRepo: "Kit checks on the whole repository",
     wholeRepoDetail:
       '`{0}` is on `"paths": ["**"]`: any changed file (a brief, the kit update) replays it and its verdict is never reused; `npx drwil doctor --fix` sets the paths of the code and its configuration (an `e2e` modified by hand: to set by hand)',
+    stale: "Reuse of verdicts",
+    staleDetail:
+      "the installed kit predates the per-check fingerprint: no verdict is reused, every pass replays every check; update the kit: `npx drwil init`",
   },
 };
 
@@ -50,8 +59,9 @@ const named = (c: Check) => (typeof c.id === "string" ? c.id : String(c.run));
 /**
  * Points `contract-checks`, `ci-paths` and `kit-paths` (a kit check still on `["**"]`, QUA-303), each a warning only when it finds something; none otherwise. Only a check left to
  * the CI alone (`runAt: ["ci"]`) is named for its missing `paths`: the CI replay of the main branch's hooks plays it again.
+ * With `root`, a kit check is not named when nothing delimits under it (`kitPaths` gives `["**"]` back): no advice to follow.
  */
-export function checksPoints(checks: unknown, lang: MessageLang): DiagnosisPoint[] {
+export function checksPoints(checks: unknown, lang: MessageLang, root?: string): DiagnosisPoint[] {
   const T = TEXTS[lang];
   const list: Check[] = Array.isArray(checks) ? checks.filter((c) => c && typeof c === "object") : [];
   const ungrouped = list.flatMap((c) => {
@@ -61,10 +71,28 @@ export function checksPoints(checks: unknown, lang: MessageLang): DiagnosisPoint
   const blind = list
     .filter((c) => Array.isArray(c.runAt) && c.runAt.join() === "ci" && !(Array.isArray(c.paths) && c.paths.length))
     .map((c) => fill(T.unfingerprintedDetail, named(c)));
-  const whole = list.filter((c) => kitCheck(c.id) && JSON.stringify(c.paths) === '["**"]').map((c) => fill(T.wholeRepoDetail, named(c)));
+  const kit = list.filter((c) => kitCheck(c.id) && JSON.stringify(c.paths) === '["**"]');
+  const files = root && kit.length ? projectFiles(root) : [];
+  const delimits = (c: Check) => !root || JSON.stringify(kitPathsOf(c as never, files)) !== '["**"]';
+  const whole = kit.filter(delimits).map((c) => fill(T.wholeRepoDetail, named(c)));
   return [
     ...(ungrouped.length ? [{ id: "contract-checks", label: T.ungrouped, state: "warning" as const, detail: ungrouped.join(" ; ") }] : []),
     ...(blind.length ? [{ id: "ci-paths", label: T.unfingerprinted, state: "warning" as const, detail: blind.join(" ; ") }] : []),
     ...(whole.length ? [{ id: "kit-paths", label: T.wholeRepo, state: "warning" as const, detail: whole.join(" ; ") }] : []),
   ];
+}
+
+/** QUA-141: scheme of the per-check fingerprint in a `fingerprints.mjs` (0: none, or no such file). */
+const fingerprintScheme = (f: string): number =>
+  existsSync(f) ? Number(/FINGERPRINT_SCHEME = (\d+)/.exec(readFileSync(f, "utf8"))?.[1] ?? 0) : 0;
+
+/** The installed kit computes its fingerprints by an older scheme than this CLI's: no verdict recorded before is reused. */
+export const staleFingerprints = (root: string): boolean =>
+  fingerprintScheme(join(root, ".githooks", "fingerprints.mjs")) <
+  fingerprintScheme(join(templatesDir, "common", "base", ".githooks", "fingerprints.mjs"));
+
+/** Point `fingerprint` (QUA-026): a warning only for a kit older than the per-check fingerprint, none otherwise. */
+export function fingerprintPoints(root: string, lang: MessageLang): DiagnosisPoint[] {
+  const T = TEXTS[lang];
+  return staleFingerprints(root) ? [{ id: "fingerprint", label: T.stale, state: "warning", detail: T.staleDetail }] : [];
 }
