@@ -56,6 +56,9 @@ files:
   - packages/drwil/test/doctor-fix.test.mjs
   - packages/drwil/test/doctor-checks.test.mjs
   - packages/drwil/test/mise-a-jour-empreinte.test.mjs
+  - packages/drwil/templates/common/base/.githooks/scope-gate-kit.mjs
+  - .githooks/scope-gate-kit.mjs
+  - .githooks/scope-gate.test.mjs
 -->
 
 (Le bloc `scope` couvre les trois volets tels que tranchés : le hook de commit et son module de formatage, livrés
@@ -141,8 +144,10 @@ compte rendu de la mise à jour (`npx drwil init`) le lui dit.
 - Un projet neuf dont la couche est à la racine n'a aucun contrôle généré par le kit en `paths: ["**"]` : couverture,
   couverture du diff et e2e reçoivent les chemins du code et de sa configuration (sources, tests, configuration de
   l'outil, `package*.json`) — `QUA-087`, `QUA-089`
-- Une mise à jour (`npx drwil init`) réécrit les `paths: ["**"]` des contrôles restés tels que le kit les a posés et le
-  dit dans son compte rendu ; un contrôle retouché par l'adoptant n'est jamais réécrit, seulement signalé — `QUA-141`
+- Une mise à jour (`npx drwil init`) réécrit les `paths: ["**"]` des contrôles restés tels que le kit les a posés, et
+  ceux de la paire de couverture d'une couche (`coverage-<couche>`, `coverage-diff-<couche>`) même retouchée par
+  l'adoptant, avec les chemins calculés par le kit ; son compte rendu nomme chaque contrôle réécrit ; tout autre contrôle
+  retouché n'est que signalé ; la barrière de périmètre admet ce commit chez l'adoptant — `QUA-141`, `QUA-238`
 - `drwil doctor` signale un contrôle généré par le kit encore en `paths: ["**"]` ; `--fix` le réécrit s'il est intact —
   `QUA-303`
 
@@ -177,7 +182,17 @@ compte rendu de la mise à jour (`npx drwil init`) le lui dit.
   demandeur le 2026-11-22).
 - `QUA-141` (suite) — la mise à jour réécrit les `paths: ["**"]` des contrôles restés tels que le kit les a posés et le
   dit dans son compte rendu ; un contrôle retouché par l'adoptant n'est que signalé (validé par le demandeur le
-  2026-11-22, réécriture à la mise à jour choisie plutôt que par `doctor --fix` seul).
+  2026-11-22, réécriture à la mise à jour choisie plutôt que par `doctor --fix` seul) ; exception, la paire de
+  couverture d'une couche (`coverage-<couche>`, `coverage-diff-<couche>`) est réécrite même retouchée, comme celle de
+  marinade-poulet écrite à la main en Vitest (validé par le demandeur le 2026-11-23, risque accepté : une commande de
+  l'adoptant qui lirait d'autres fichiers reprendrait un verdict à tort ; le compte rendu nomme le contrôle réécrit).
+- `QUA-238` — ancien critère : le commit de mise à jour du kit n'admet, dans `.drwil/ia-first.json`, que les réglages
+  recalculés par `init` et des contrôles ajoutés ; tout contrôle existant modifié le fait juger comme un commit ordinaire
+  (refusé en SCOPING) — raison : la mise à jour réécrit les `paths: ["**"]` ; la barrière admet un contrôle existant dont
+  seuls les `paths` passent de `["**"]` aux chemins calculés par le kit (validé par le demandeur le 2026-11-23).
+- `packages/drwil/templates/common/base/.githooks/scope-gate-kit.mjs`, `.githooks/scope-gate-kit.mjs`,
+  `.githooks/scope-gate.test.mjs` — la barrière admet la réécriture des `paths` d'un contrôle par la mise à jour, et son
+  test (validé par le demandeur le 2026-11-23).
 - `packages/drwil/src/guarantees-layers.ts`, `packages/drwil/src/guarantees-e2e-tools.ts` — chemins du code et de sa configuration au lieu
   de `**` (validé par le demandeur le 2026-11-22).
 - `packages/drwil/src/doctor-fix.ts`, `packages/drwil/src/doctor-checks.ts` — signalement et réécriture d'un `["**"]` intact du kit
@@ -280,7 +295,8 @@ Aucun.
   outil de recette et avertissement non bloquant (dépôt), rejoués sur marinade-poulet et `drwil_walk`. Critère de
   sortie : une recette rejouée par l'outil, résultat au journal.
 - **Lot 6 — Chemins des contrôles générés** [IA] : tests d'abord (couche à la racine : couverture, couverture du diff
-  et e2e sans `["**"]` ; mise à jour : `["**"]` intact du kit réécrit et dit, contrôle retouché seulement signalé ;
+  et e2e sans `["**"]` ; mise à jour : `["**"]` intact du kit et paire de couverture réécrits et dits, autre contrôle retouché seulement signalé,
+  commit admis par la barrière (`QUA-238`) ;
   `doctor` signale, `--fix` réécrit s'il est intact) ; `packages/drwil/src/guarantees-layers.ts`, `packages/drwil/src/guarantees-e2e-tools.ts`,
   `packages/drwil/src/kit-update.ts`, `packages/drwil/src/doctor-checks.ts`, `packages/drwil/src/doctor-fix.ts` ; `QUA-087`, `QUA-089`, `QUA-303`, `QUA-141` mis à jour.
   Critère de sortie : tests verts.
