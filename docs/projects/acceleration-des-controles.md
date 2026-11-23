@@ -59,6 +59,15 @@ files:
   - packages/drwil/templates/common/base/.githooks/scope-gate-kit.mjs
   - .githooks/scope-gate-kit.mjs
   - .githooks/scope-gate.test.mjs
+  - packages/drwil/templates/common/base/docs/ia-first/4-checks-in-git.md
+  - docs/ia-first/4-checks-in-git.md
+  - packages/drwil/src/doctor.ts
+  - packages/drwil/templates/common/base/.githooks/glob.mjs
+  - .githooks/glob.mjs
+  - .githooks/glob.test.mjs
+  - packages/drwil/templates/common/tools/claude/.claude/hooks/bash-guard.mjs
+  - .claude/hooks/bash-guard.mjs
+  - packages/drwil/test/claude-hooks.test.mjs
 -->
 
 (Le bloc `scope` couvre les trois volets tels que tranchés : le hook de commit et son module de formatage, livrés
@@ -73,6 +82,12 @@ demande du demandeur (« oui on traite tout ») : les contrôles que le kit gén
 corrigent (`packages/drwil/src/doctor-checks.ts`, `packages/drwil/src/doctor-fix.ts`), et la mise à jour réécrit les déclarations intactes du kit
 (`packages/drwil/src/kit-update.ts`, déjà listé) ; avec leurs tests. Le 2026-11-23, choix du demandeur : les nouveaux tests des lots 3 et 6 sur la mise à jour et la reprise vont dans `packages/drwil/test/mise-a-jour-empreinte.test.mjs` (à créer), car `QUA-315` fige la liste des tests des fichiers `kit-*.test.mjs`.)
 
+
+(Élargi le 2026-11-23 par le sondage des limites, six réponses « Traiter maintenant » du demandeur : contrôles du projet
+en parallèle chez l'adoptant, page livrée des contrôles (`format`, `readsChecks`, `parallel`), racine transmise au point
+`doctor` des chemins du kit, chemins du dépôt resserrés avec exclusion dans les `paths`, boucles d'attente `pgrep`
+refusées par le garde des commandes, adoptant sans reprise des verdicts signalé par `doctor` ; lots 9 à 12. Dans le
+cadre, sans élargissement : un seul appel du formateur pour tous les fichiers indexés.)
 ## 1. Besoin
 
 Demandeur, 2026-11-22 : « ce gain est au final fait pour tout adoptant, c'est lui le vrai produit ». Le paquet livré
@@ -151,6 +166,19 @@ compte rendu de la mise à jour (`npx drwil init`) le lui dit.
 - `drwil doctor` signale un contrôle généré par le kit encore en `paths: ["**"]` ; `--fix` applique la même règle que
   la mise à jour : la paire de couverture d'une couche réécrite même retouchée, tout autre contrôle retouché seulement
   signalé (choix du demandeur le 2026-11-23) — `QUA-303`
+- Chez l'adoptant, l'adoption propose le réglage `parallel` quand le projet déclare plusieurs contrôles, `drwil doctor`
+  le signale sur un projet qui ne l'a pas, une mise à jour ne l'active jamais ; un contrôle qui ne supporte pas le
+  parallèle garde `parallel: false` — contrat à créer
+- La page livrée des contrôles décrit les clés `format`, `readsChecks` et `parallel` — contrat à créer
+- Le point `doctor` d'un contrôle du kit en `paths: ["**"]` se tait quand rien ne se délimite sous la racine — `QUA-303`
+- Un motif de `paths` précédé de `!` exclut des fichiers ; les contrôles du dépôt sur `.githooks/**` ou
+  `packages/drwil/**` excluent les tests des autres contrats quand ils ne les lisent pas, après audit contrôle par
+  contrôle ; nombre de contrôles rejoués pour un fichier mesuré avant et après — `QUA-141`
+- Le garde des commandes refuse une boucle d'attente `while`/`until` sur `pgrep` lancée par un agent et renvoie à
+  `node .githooks/wait-command.mjs` — contrat à créer
+- `drwil doctor` signale un kit installé antérieur au calcul d'empreinte par contrôle (`FINGERPRINT_SCHEME`) : ses
+  passes ne reprennent aucun verdict tant qu'il n'est pas mis à jour — `QUA-026`
+- Le formateur reçoit tous les fichiers indexés en un seul appel quand sa commande le permet — `QUA-328`
 
 ## Contrats modifiés
 
@@ -200,6 +228,21 @@ compte rendu de la mise à jour (`npx drwil init`) le lui dit.
   (validé par le demandeur le 2026-11-22).
 - `packages/drwil/test/guarantees.test.mjs`, `packages/drwil/test/doctor-fix.test.mjs`, `packages/drwil/test/doctor-checks.test.mjs` — tests des chemins
   générés, du signalement et de la réécriture (validé par le demandeur le 2026-11-22).
+- `QUA-303` (suite) — `packages/drwil/src/doctor.ts` transmet la racine du projet aux points des contrôles, pour que le
+  point des chemins du kit se taise quand rien ne se délimite (validé par le demandeur le 2026-11-23, sondage des
+  limites).
+- `QUA-026` — ancien critère : `doctor` signale la version installée — raison : un adoptant sur un kit antérieur à
+  l'empreinte par contrôle ne reprend aucun verdict ; `doctor` le dit et renvoie à la mise à jour (validé par le
+  demandeur le 2026-11-23, sondage des limites).
+- `QUA-141` (suite) — un motif de `paths` précédé de `!` exclut des fichiers de l'empreinte et du report au commit ; les
+  `paths` du dépôt sont resserrés après audit (validé par le demandeur le 2026-11-23, sondage des limites).
+- `packages/drwil/templates/common/base/.githooks/glob.mjs`, `.githooks/glob.mjs`, `.githooks/glob.test.mjs` — motif
+  d'exclusion `!` et ses tests (validé par le demandeur le 2026-11-23, sondage des limites).
+- `packages/drwil/templates/common/tools/claude/.claude/hooks/bash-guard.mjs`, `.claude/hooks/bash-guard.mjs`,
+  `packages/drwil/test/claude-hooks.test.mjs` — refus d'une boucle d'attente sur `pgrep`, et son test (validé par le
+  demandeur le 2026-11-23, sondage des limites).
+- `packages/drwil/src/doctor.ts` — racine transmise aux points des contrôles (validé par le demandeur le 2026-11-23,
+  sondage des limites).
 
 ## 2. Hors périmètre
 
@@ -307,6 +350,18 @@ Aucun.
   marinade-poulet (GitLab) et `drwil_walk` (GitHub) ; commit de mise à jour sans nouveau blocage ni clé `format` ajoutée,
   compte rendu qui signale la première passe complète et la réécriture des `paths: ["**"]` du kit, puis second commit
   (fichier du projet touché) dont les contrôles non concernés, couverture comprise, sont « repris ». Critère de sortie : attestation du contrat `Manuel` de la recette.
+- **Lot 9 — Page des contrôles et doctor** [IA] : clés `format`, `readsChecks`, `parallel` décrites dans la page
+  livrée des contrôles ; racine transmise par `packages/drwil/src/doctor.ts` ; `doctor` signale un kit antérieur à l'empreinte par contrôle
+  (`QUA-026`). Critère de sortie : tests verts.
+- **Lot 10 — Contrôles en parallèle chez l'adoptant** [IA] : l'adoption propose `parallel`, `doctor` le signale, la
+  mise à jour ne l'active jamais ; un seul appel du formateur pour tous les fichiers (`QUA-328`) ; gain mesuré sur une
+  copie de marinade-poulet. Critère de sortie : tests verts, gain chiffré.
+- **Lot 11 — Chemins du dépôt resserrés** [IA] : motif `!` dans `.githooks/glob.mjs` (tests d'abord), audit contrôle par
+  contrôle des `paths` sur `.githooks/**` et `packages/drwil/**`, mesure avant et après. Critère de sortie : tests
+  verts, gain chiffré.
+- **Lot 12 — Boucles d'attente refusées** [IA] : le garde des commandes refuse `while`/`until` sur `pgrep` et renvoie à
+  `.githooks/wait-command.mjs` (tests d'abord) ; contrats créés, carte, ligne du `CHANGELOG` pour les lots 9 à 12. Critère de
+  sortie : tests verts.
 
 ## 7. Reprise
 
