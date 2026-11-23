@@ -309,6 +309,41 @@ Aucun.
 
 ## 7. Reprise
 
+- **Lot 6 fait (2026-11-23, commit `94157cb5`)** : une seule fonction calcule les chemins des contrôles générés,
+  `kitPaths` de la barrière livrée (`packages/drwil/templates/common/base/.githooks/scope-gate-kit.mjs`, copie
+  `.githooks/scope-gate-kit.mjs`), importée par la CLI : `<couche>/**` sous la racine ; à la racine, chaque dossier qui
+  porte un fichier et chaque extension des fichiers de la racine, sans dossiers du kit (`.drwil`, `.githooks`,
+  `docs`, dossiers des outils d'IA et de la forge), sans Markdown ni fichiers de git (`.gitignore`, `.gitattributes`,
+  la CI GitLab, `.gitleaks.toml`) ; `["**"]` si rien ne se délimite. Création : `check()` de
+  `packages/drwil/src/guarantees-layers.ts` et `e2eDeclaration` (paramètre `paths`, `["**"]` par défaut : la
+  déclaration des kits précédents) ; l'e2e prend les chemins de la racine, même dans une couche. Mise à jour :
+  `repathConfig` (`packages/drwil/src/guarantees-e2e-tools.ts`), appelé par `finishUpdate` après `git add -A`, donc
+  calculé sur ce que contient le commit, comme la barrière ; la paire de couverture (tout `coverage-*`) réécrite même
+  retouchée, l'`e2e` seulement s'il est identique à la déclaration du kit, sinon « Reste à décider ». La barrière
+  (`configFromInit`) admet un contrôle `coverage-*` ou `e2e` dont seuls les `paths` passent de `["**"]` aux chemins
+  recalculés sur l'arbre du commit (index au commit, `ls-tree` au rejeu). `doctor` : point `kit-paths` ; `--fix`
+  applique la même règle que la mise à jour (`rewriteKitPaths`), et un contrôle confié à la CI sans `paths` reçoit les
+  chemins calculés au lieu de `["**"]`. `packages/drwil/src/kit-update.ts` à 200 lignes (plafond atteint). Contrats mis à jour : `QUA-087`,
+  `QUA-089`, `QUA-141`, `QUA-238`, `QUA-303` (règle, preuve, tests, ligne « Modifié ») ; `tests-qua-238` lance aussi
+  `packages/drwil/test/mise-a-jour-empreinte.test.mjs`, `tests-qua-303` aussi `packages/drwil/test/doctor-checks.test.mjs`.
+  Piège vu : `contract-tests` ne rattache un test qu'au contrat qui **commence** son nom (`QUA-141, QUA-238 : …` ne
+  compte que pour `QUA-141`) ; d'où un test par contrat.
+- **Recette rejouée (lot 6, 2026-11-23)** — `node outils/recette-adoptant.mjs --garder`, tarball `drwil-0.11.1.tgz` :
+  **marinade-poulet** ✓ mise à jour commitée (barrière passée, hooks actifs) en 3,4 s, arbre propre ; compte rendu
+  « Paths set by the kit on `coverage-root`, `coverage-diff-root` » ; chemins posés sur les deux :
+  `*.example`, `*.html`, `*.js`, `*.json`, `*.toml`, `.env`, `e2e/**`, `json_tool/**`, `public/**`, `scripts/**`,
+  `src/**` ; son `e2e` (écrit à la main, `runAt: ["ci"]`, sans `paths`) intouché. **drwil_walk** ✓ en 3,4 s ; rien à
+  réécrire (`coverage-app`, `coverage-diff-app` et `e2e` déjà sur `app/**`). Dépôts d'origine intacts (aucune branche
+  `workstream/kit-update`) ; copies supprimées. Constat hors chantier : la copie de travail d'origine de marinade-poulet
+  est sur une branche `detour/fix-scope-kit-sync` avec des changements indexés, travail de son auteur, non touché
+  (la recette clone la branche principale).
+- **Ce que le lot 6 transmet au lot 7** : citer dans les critères `QUA-327` à `QUA-331` (contrats créés), sans changer
+  leur texte ; carte du moteur et `docs/architecture.md` : `kitPaths` dans `.githooks/scope-gate-kit.mjs`, partagé
+  avec la CLI ; ligne du `CHANGELOG` (sous « Unreleased ») : contrôles générés sur les chemins du code, réécrits par la
+  mise à jour, signalés et réécrits par `doctor`. Ambiguïté à soumettre : `doctor --fix` réécrit la paire de
+  couverture même retouchée (même règle que la mise à jour), alors que le critère dit « s'il est intact ». Limite hors
+  cadre : `packages/drwil/src/doctor.ts` (hors scope) ne passe pas la racine à `checksPoints`, le point `kit-paths` ne peut donc pas taire
+  un contrôle où rien ne se délimite.
 - **Lot 5 fait (2026-11-23, D7 et D8)** : recommandation d'une recette réelle dès le lot 1 dans le modèle de fiche
   livré (`packages/drwil/templates/common/base/docs/projects/model-brief.md`, section des lots ; copie du dépôt
   `docs/projects/model-brief.md`, en français, écart déclaré) et dans le skill de lancement (gabarit et copie, puce « A brief
@@ -437,4 +472,4 @@ Aucun.
   le contrôle en échec seul ou `npx drwil verify --failed` (`QUA-327`). Le commit du lot 2 ne touche aucun module
   `.githooks/*.mjs` ; le lot 3 touchera `.githooks/fingerprints.mjs`, qui invalide tous les contrôles au commit
   (mesure du lot 1 : 476 s) : prévoir un appel de fond par `node .githooks/wait-command.mjs git commit …`.
-- **Prochaine étape** : [IA] lot 6 — Chemins des contrôles générés.
+- **Prochaine étape** : [IA] lot 7 — Contrats et carte.
