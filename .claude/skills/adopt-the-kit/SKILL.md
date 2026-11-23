@@ -19,5 +19,11 @@ brief, handled first; the branch protection (`--protect`) only with the
 requester's agreement. An adopted contract migrates
 from the catalog to the registry (`docs/contracts.md`), with its check
 actually wired up.
+When the project has a formatter (Prettier, Biome…), propose the `"format"` key of
+`.drwil/ia-first.json`, the requester's choice, never added by an update: `stdin`
+(prints `{file}` formatted from stdin, e.g. `npx --no-install prettier
+--stdin-filepath {file}`), `write` (formats the files, e.g. `npx prettier
+--write`) and `paths` (globs); the pre-commit then refuses an unformatted staged
+file, rewriting nothing.
 Verify: `node .githooks/run-checks.mjs` at every step, one commit per
 subject.

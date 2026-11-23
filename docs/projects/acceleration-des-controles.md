@@ -293,7 +293,32 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-23) : lots 1, 2 et 3 faits. Lot 3 (D3) : l'empreinte d'un contrôle ne prend de
+- **Lot 4 fait (2026-11-23, D4 à D6)** : `.githooks/format-staged.mjs` (gabarit `packages/drwil/templates/common/base/.githooks/format-staged.mjs`
+  et copie), lancé par `.githooks/pre-commit` avant `run-checks`. Clé `format` de `.drwil/ia-first.json` :
+  `{ "stdin": "<commande qui écrit {file} formaté depuis l'entrée standard>", "write": "<commande qui formate>",
+  "paths": [motifs] }` ; sans clé, rien (une exécution de node, 91 ms) ; clé incomplète, formateur en échec ou sortie
+  vide pour un contenu non vide (`npx --no-install` sans le paquet sort en code 0 sans rien écrire) : refus qui le dit.
+  Chaque fichier indexé (ACMR) des `paths` est lu dans l'index (`git show :f`), jamais la copie de travail, et passé au
+  formateur, en parallèle (un processus par fichier) ; refus avec `<write> "f…" && git add "f…"`, rien n'est réécrit.
+  Contrats créés : `QUA-328` (refus d'un fichier non formaté) et `QUA-329` (sans clé, rien ; l'adoption la propose ;
+  la mise à jour ne l'ajoute ni ne la retire), contrôles `tests-qua-328` et `tests-qua-329`, tests
+  `.githooks/format-staged.test.mjs` et `packages/drwil/test/format-avant-commit.test.mjs`. Proposition par le skill
+  `adopt-the-kit` (gabarit et copie). Module recensé dans le cadrage de la mécanique (`docs/projects/kit-mechanics.md` et sa source
+  `packages/drwil/templates/common/base/docs/projects/kit-mechanics.md`, admise d'office comme source de gabarit,
+  `QUA-311` cas 4 : sans elle, `check-docs` refusait le module chez tout projet installé) et dans la carte
+  `docs/architecture.md`. Le skill livré ne cite aucun ID de contrat du dépôt (un projet installé ne les a pas).
+- **Mesure du lot 4 (2026-11-23)** — temps ajouté au commit par `.githooks/format-staged.mjs` seul, projet temporaire, Biome
+  sur des fichiers JavaScript formatés, médiane de 5, machine locale à 8 processeurs : sans clé `format` 91 ms ;
+  binaire local (`node_modules/.bin/biome format --stdin-file-path={file}`) 219 ms pour 1 fichier, 455 ms pour 10,
+  1 649 ms pour 50 ; par `npx --no-install biome …` 763 ms, 2 328 ms et 9 786 ms (le lancement de npx par fichier
+  domine). À rapporter au journal de clôture (critère [humain], sans seuil, D6).
+- **Ce que le lot 4 transmet au lot 5** : rien à reprendre dans le code du lot 4. Le dépôt drwil ne déclare pas de clé
+  `format` (proposée à l'adoption, jamais posée d'office) : la poser ici reste une décision du demandeur. Les critères
+  de la fiche portent encore « contrat à créer » : `QUA-328` et `QUA-329` sont à y citer au lot 7, avec `QUA-327`.
+  Limites hors cadre à soumettre (fin de BUILD) : la clé `format` n'est pas décrite dans la page des réglages livrée
+  `packages/drwil/templates/common/base/docs/ia-first/4-checks-in-git.md` (hors scope) ; un formateur lancé par
+  `npx` coûte environ 0,2 s par fichier au commit (un appel groupé par lot de fichiers le réduirait).
+- **Dernier état** (2026-11-23) : lots 1, 2, 3 et 4 faits. Lot 3 (D3) : l'empreinte d'un contrôle ne prend de
   `.drwil/ia-first.json` que ses réglages hors `checks` (`configView` de `.githooks/fingerprints.mjs`, gabarit et copie) ;
   un contrôle qui lit les déclarations des autres porte `readsChecks: true` et garde le fichier entier, comme
   `checks-self-test` (déclaration non objet) et une configuration illisible. Au commit, `stagedConfig` (même module,
@@ -370,4 +395,4 @@ Aucun.
   le contrôle en échec seul ou `npx drwil verify --failed` (`QUA-327`). Le commit du lot 2 ne touche aucun module
   `.githooks/*.mjs` ; le lot 3 touchera `.githooks/fingerprints.mjs`, qui invalide tous les contrôles au commit
   (mesure du lot 1 : 476 s) : prévoir un appel de fond par `node .githooks/wait-command.mjs git commit …`.
-- **Prochaine étape** : [IA] lot 4 — Formatage vérifié avant commit.
+- **Prochaine étape** : [IA] lot 5 — Recette réelle dès le premier lot.

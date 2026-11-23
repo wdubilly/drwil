@@ -4691,6 +4691,24 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-328",
+      "name": "tests de QUA-328, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-328 .githooks/format-staged.test.mjs packages/drwil/test/format-avant-commit.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/format-staged.mjs", ".githooks/format-staged.test.mjs", ".githooks/glob.mjs", ".githooks/pre-commit", ".claude/skills/adopt-the-kit/SKILL.md", "packages/drwil/**", "package.json", "package-lock.json", ".drwil/ia-first.json"],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-329",
+      "name": "tests de QUA-329, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-329 .githooks/format-staged.test.mjs packages/drwil/test/format-avant-commit.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/format-staged.mjs", ".githooks/format-staged.test.mjs", ".githooks/glob.mjs", ".githooks/pre-commit", ".claude/skills/adopt-the-kit/SKILL.md", "packages/drwil/**", "package.json", "package-lock.json", ".drwil/ia-first.json"],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
       "id": "couverture-diff",
       "readsChecks": true,
       "runAt": [

@@ -3214,3 +3214,23 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `.githooks/run-checks.test.mjs`
 **Origine** : acceleration-des-controles — « Pendant un lot, la conduite livrée (consignes, skill de lancement, sous-agent des contrôles) ne lance que le commit et, après un échec, les contrôles touchés et les tests cités par les contrats de la fiche, choisis par l'outil ; la passe complète reste exigée avant VERIFY et la clôture, et la CI reste complète »
 **Raison** : sur le chantier `installation-dans-un-depot-existant`, chaque sous-agent de lot relançait 2 à 3 passes complètes d'environ 7 min, alors qu'un commit de code coûte déjà autant qu'une passe (mesure du lot 1 : 476 s dans le dépôt) ; la consigne de `QUA-171` n'était pas tenue par le sous-agent des contrôles (D1 et D2, tranchées par le demandeur le 2026-11-22).
+
+## QUA-328 — Avec un formateur déclaré, un fichier indexé non formaté refuse le commit, sans rien modifier, avec la commande qui le formate et les fichiers en cause
+**Règle** : Livré à tout projet. Quand `.drwil/ia-first.json` déclare la clé `format` (`stdin` : commande qui écrit `{file}` formaté depuis l'entrée standard ; `write` : commande qui formate ; `paths` : motifs), le pre-commit juge, avant les contrôles, chaque fichier indexé (ajouté, copié, modifié, renommé) qui correspond à `paths` : son contenu lu dans l'index, jamais dans la copie de travail, passe par `stdin` ; une différence refuse le commit, en nommant les fichiers et la commande exacte (`write` suivi des fichiers, puis `git add` des mêmes). Aucun fichier n'est réécrit ni ré-indexé (décision D4). Un formateur absent ou en échec, ou une clé incomplète, refuse aussi le commit en le disant (QUA-013).
+**Périmètre** : le pre-commit livré et son module de formatage ; ni le push, ni la CI.
+**Source de vérité** : `packages/drwil/templates/common/base/.githooks/format-staged.mjs`, lancé par `packages/drwil/templates/common/base/.githooks/pre-commit`.
+**Preuve** : tests sur un dépôt temporaire équipé du vrai pre-commit (fichier non formaté refusé, commande et fichier nommés, copie de travail et index intacts ; fichier formaté accepté ; seul l'index jugé ; hors chemins et supprimés ignorés ; formateur absent ; clé incomplète, en anglais) et sur un projet installé par `drwil init`.
+**Contrôle** : `tests-qua-328`
+**Tests** : `.githooks/format-staged.test.mjs`, `packages/drwil/test/format-avant-commit.test.mjs`
+**Origine** : acceleration-des-controles — « Avec un formateur déclaré, un commit dont un fichier indexé n'est pas formaté est refusé, sans qu'aucun fichier soit modifié, avec la commande exacte qui le formate et les fichiers en cause »
+**Raison** : sur le chantier `installation-dans-un-depot-existant`, un commit refusé par le lint pour un simple formatage coûtait une nouvelle passe ; le dire au commit, avec la commande, évite la relance (D4 à D6, tranchées par le demandeur le 2026-11-22).
+
+## QUA-329 — Sans clé `format`, le commit est inchangé ; l'adoption la propose, une mise à jour ne l'active jamais
+**Règle** : Livré à tout projet. Sans clé `format` dans `.drwil/ia-first.json`, le module de formatage ne juge rien et n'écrit rien, et le pre-commit lance ses contrôles comme avant. `drwil init` n'écrit jamais la clé, ni à l'installation ni à une mise à jour, et une mise à jour garde telle quelle celle de l'adoptant. Le skill d'adoption (`adopt-the-kit`) la propose quand le projet a un formateur, au choix du demandeur.
+**Périmètre** : le pre-commit livré, `drwil init` et le skill d'adoption livré.
+**Source de vérité** : `packages/drwil/templates/common/base/.githooks/format-staged.mjs` (`formatSetting`), `packages/drwil/templates/common/tools/claude/.claude/skills/adopt-the-kit/SKILL.md`.
+**Preuve** : tests : commit sans clé accepté sans message, contrôles lancés ; installation neuve sans clé ; mise à jour qui ne l'ajoute pas et garde celle de l'adoptant ; skill d'adoption (gabarit et copie du dépôt) qui la propose.
+**Contrôle** : `tests-qua-329`
+**Tests** : `.githooks/format-staged.test.mjs`, `packages/drwil/test/format-avant-commit.test.mjs`
+**Origine** : acceleration-des-controles — « Sans clé `format`, le commit est inchangé ; l'adoption la propose, une mise à jour ne l'active jamais »
+**Raison** : ne jamais ralentir ni casser l'adoptant : un formateur déduit de la stack et actif par défaut bloquerait un projet existant à sa mise à jour (D5, tranchée par le demandeur le 2026-11-22).

@@ -17,6 +17,8 @@ files:
   - .githooks/check-architecture.test.mjs
   - .githooks/check-control-coverage.mjs
   - .githooks/glob.mjs
+  - .githooks/format-staged.mjs
+  - .githooks/format-staged.test.mjs
   - .githooks/engine.mjs
   - .githooks/fingerprints.mjs
   - .githooks/contracts.mjs
