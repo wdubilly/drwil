@@ -432,6 +432,8 @@ critère de sortie de chaque fiche —
 
 - [ ] [décision] (0.13.0) Suites de l'attente outillée des commandes longues : Windows, garde de commande, double lancement simultané —
   `docs/intentions/attente-commandes-longues-suites.md`.
+- [ ] [décision] Tests à dépendances déclarées : des contrôles de tests moins souvent invalidés (6 sur 264 resserrés au lot 13) —
+  `docs/intentions/tests-a-dependances-declarees.md`.
 - [ ] [décision] [P1] Codex, après la 0.6.7 (intention : à installer, rien
   d'essayé) — `docs/intentions/compatibilite-des-outils.md` (partie « ex-compat-codex »).
 - [ ] [décision] [P1] Cursor, après la 0.6.7 (intention : mode de preuve à
