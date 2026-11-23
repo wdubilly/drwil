@@ -8,6 +8,7 @@ import { hooksPath } from "./essentials.js";
 import { readInstall, readManifest } from "./manifest.js";
 import { readConfig } from "./config.js";
 import { shardsPoints } from "./doctor-shards.js";
+import { repathConfig } from "./guarantees-e2e-tools.js";
 import { templatesDir } from "./render.js";
 
 export const UPDATE_BRANCH = "workstream/kit-update";
@@ -166,6 +167,8 @@ export function prepareUpdate(dir: string): UpdatePlan | null {
 /** Commits the kit on its branch (hooks included, the scope gate recognises it by its manifest), then says what was done. */
 export function finishUpdate(dir: string, lang: MessageLang, plan: UpdatePlan, version: string, drifted: number): void {
   const T = plan.texts[lang];
+  run(dir, ["add", "-A"]);
+  repathConfig(dir, lang); // QUA-141: computed on what the commit holds, as the scope gate recomputes them (QUA-238).
   const changed = run(dir, ["status", "--porcelain", "-uall"]);
   if (!changed) {
     run(dir, ["checkout", "--quiet", plan.from]);
@@ -186,7 +189,7 @@ export function finishUpdate(dir: string, lang: MessageLang, plan: UpdatePlan, v
   } catch (e) {
     console.warn(fill(T.notCommitted, plan.branch, firstLines(e)));
   }
-  // Never written here: the scope gate (QUA-238) would refuse a changed check in this commit; `doctor --fix` sets it.
+  // Never written here: the scope gate (QUA-238) admits a changed check's `paths` only; `doctor --fix` sets the shards.
   for (const p of shardsPoints(dir, readConfig(dir)?.checks, lang)) console.log(fill(T.shards, p.label, p.detail));
   const hooks = hooksPath(dir);
   if (hooks && hooks !== ".githooks") console.log(fill(T.hooks, hooks));

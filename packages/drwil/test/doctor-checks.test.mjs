@@ -54,7 +54,8 @@ test("QUA-318 points : un contrôle non groupé et un contrôle CI sans paths si
   assert.match(point(fr, "contract-checks").detail, /`npx jest -t APP-003` .*--runner jest APP-003/);
   assert.doesNotMatch(point(fr, "contract-checks").detail, /app-002/);
   const ci = point(fr, "ci-paths").detail;
-  assert.match(ci, /`e2e` .*la CI le rejoue .*"paths": \["\*\*"\]/);
+  assert.match(ci, /`e2e` .*la CI le rejoue .*poser ses `paths` .*`npx drwil doctor --fix` pose ceux que le kit calcule/);
+  assert.doesNotMatch(ci, /"paths": \["\*\*"\]/, "le conseil ne pose plus tout le dépôt");
   assert.match(ci, /`e2e-vide`/);
   assert.doesNotMatch(ci, /APP-003/);
   assert.doesNotMatch(ci, /e2e-ok/);
@@ -96,4 +97,22 @@ test("QUA-318 doctor : signale sans rien écrire dans la configuration", async (
   assert.equal(point(d.points, "contract-checks").state, "warning");
   assert.equal(point(d.points, "ci-paths").state, "warning");
   assert.equal(readFileSync(fichier, "utf8"), avant);
+});
+
+test('QUA-303 point kit-paths : un contrôle généré par le kit encore sur `paths: ["**"]` est signalé, en français et en anglais ; les autres non', () => {
+  const checks = [
+    { id: "coverage-root", run: "npx c8 npm test", paths: ["**"] },
+    { id: "coverage-diff-api", run: "diff-cover x", cwd: "api", paths: ["**"] },
+    { id: "e2e", run: "npx playwright test", paths: ["**"] },
+    { id: "coverage-web", run: "npx c8 npm test", cwd: "web", paths: ["web/**"] },
+    { id: "lint", run: "npx biome check", paths: ["**"] },
+    { id: "e2e-ci", run: "npx playwright test", paths: ["**"] },
+  ];
+  const fr = point(checksPoints(checks, "fr"), "kit-paths");
+  assert.equal(fr.state, "warning");
+  for (const id of ["coverage-root", "coverage-diff-api", "e2e"]) assert.match(fr.detail, new RegExp(`\`${id}\` est sur`), id);
+  for (const id of ["coverage-web", "lint", "e2e-ci"]) assert.doesNotMatch(fr.detail, new RegExp(`\`${id}\``), id);
+  assert.match(fr.detail, /`npx drwil doctor --fix` pose les chemins du code et de sa configuration/);
+  assert.match(point(checksPoints(checks, "en"), "kit-paths").detail, /`coverage-root` is on `"paths": \["\*\*"\]`/);
+  assert.equal(point(checksPoints(checks.slice(3), "fr"), "kit-paths"), undefined);
 });

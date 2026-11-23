@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
 import { init, verify } from "../dist/index.js";
+import { E2E_TOOLS, e2eDeclaration } from "../dist/guarantees-e2e-tools.js";
 import { tmp, capture, git, read, config, contrat, projetReprise } from "./kit-commun.mjs";
 
 const IDENTITE = { GIT_AUTHOR_NAME: "t", GIT_AUTHOR_EMAIL: "t@t", GIT_COMMITTER_NAME: "t", GIT_COMMITTER_EMAIL: "t@t" };
@@ -25,7 +26,7 @@ async function avecIdentite(fn) {
 }
 
 /** Un projet équipé, commité sur `master`, dont l'installation se dit plus ancienne ; `empreinte` : contenu de son fingerprints.mjs. */
-async function projetInstalle(lang, empreinte) {
+async function projetInstalle(lang, empreinte, avant = () => {}) {
   const dir = tmp();
   git(dir, "init", "-q", "-b", "master");
   git(dir, "config", "core.autocrlf", "false");
@@ -38,6 +39,7 @@ async function projetInstalle(lang, empreinte) {
     manifeste[f] = createHash("sha256").update(read(dir, f)).digest("hex");
   writeFileSync(join(dir, ".drwil/installed-files.json"), JSON.stringify(manifeste, null, 2) + "\n");
   writeFileSync(join(dir, ".drwil/install.json"), JSON.stringify({ format: 1, version: "0.0.1", firstVersion: "0.0.1" }));
+  avant(dir);
   git(dir, "add", "-A");
   assert.equal(git(dir, "commit", "-q", "-m", "kit ancien").status, 0);
   return dir;
@@ -98,4 +100,82 @@ test("QUA-141 : verify reprend le verdict d'un contrôle qui lit .drwil/ia-first
 
   writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ ...cfg, projectShort: "autre" }));
   assert.deepEqual(bases(await verify({ targetDir: dir })), { ko: "rejoué", ok: "rejoué" }, "un réglage changé : rejoués");
+});
+
+/** Contrôles d'un projet d'un kit antérieur aux chemins calculés : la paire de couverture Vitest écrite à la main, `e2e` du kit. */
+const surToutLeDepot = (e2e) => (dir) => {
+  for (const f of ["src/a.js", "src/a.test.js", "vite.config.js", "playwright.config.ts", "package-lock.json"])
+    writeFileSync(join(mkdir(dir, f), f.split("/").pop()), "x\n");
+  writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "demo", scripts: { test: "vitest" } }));
+  appendFileSync(join(dir, "docs/architecture.md"), "\n- `src/` — le code de l'application.\n");
+  const cfg = config(dir);
+  cfg.checks = [
+    ...(cfg.checks ?? []),
+    { id: "coverage-root", run: "npx vitest run --coverage --coverage.thresholds.lines=100", paths: ["**"], degradable: false },
+    { id: "coverage-diff-root", run: "npx vitest run --coverage && diff-cover coverage/cobertura-coverage.xml", paths: ["**"] },
+    e2e,
+    { id: "lint", run: "npx biome check", paths: ["**"] },
+  ];
+  writeFileSync(join(dir, ".drwil/ia-first.json"), `${JSON.stringify(cfg, null, 2)}\n`);
+};
+const mkdir = (dir, f) => {
+  const d = join(dir, f.split("/").slice(0, -1).join("/"));
+  mkdirSync(d, { recursive: true });
+  return d;
+};
+const KIT_E2E = e2eDeclaration(E2E_TOOLS[0], "playwright.config.ts", ".");
+const CALCULES = ["*.example", "*.js", "*.json", "*.ts", "src/**"];
+
+test('QUA-141 : la mise à jour réécrit les `paths: ["**"]` de la paire de couverture, même retouchée, et de l\'e2e intact du kit, et les nomme', async () => {
+  await avecIdentite(async () => {
+    const dir = await projetInstalle("fr", undefined, surToutLeDepot({ ...KIT_E2E }));
+    const sortie = (await capture(() => init({ lang: "fr", targetDir: dir, name: "demo" }))).join("\n");
+    assert.match(sortie, /Chemins posés par le kit sur `coverage-root`, `coverage-diff-root`, `e2e`/, sortie);
+    assert.doesNotMatch(sortie, /Reste à décider : `e2e`/);
+    const commite = JSON.parse(git(dir, "show", "HEAD:.drwil/ia-first.json").stdout).checks;
+    const par = (id) => commite.find((c) => c.id === id);
+    for (const id of ["coverage-root", "coverage-diff-root", "e2e"]) assert.deepEqual(par(id).paths, CALCULES, id);
+    assert.deepEqual(par("e2e"), { ...KIT_E2E, paths: CALCULES }, "seuls les paths changent");
+    assert.deepEqual(par("lint").paths, ["**"], "un contrôle du projet n'est jamais réécrit");
+  });
+});
+
+test("QUA-238 : le commit d'une mise à jour qui réécrit les chemins des contrôles du kit passe la barrière, hooks actifs", async () => {
+  await avecIdentite(async () => {
+    const dir = await projetInstalle("fr", undefined, surToutLeDepot({ ...KIT_E2E }));
+    git(dir, "config", "core.hooksPath", ".githooks");
+    const warn = console.warn;
+    const avert = [];
+    console.warn = (...a) => avert.push(a.join(" "));
+    let sortie;
+    try {
+      sortie = [...(await capture(() => init({ lang: "fr", targetDir: dir, name: "demo" }))), ...avert].join("\n");
+    } finally {
+      console.warn = warn;
+    }
+    assert.match(sortie, /Fait : mise à jour du kit vers/, sortie);
+    assert.match(git(dir, "log", "-1", "--format=%B").stdout, /Drwil-Kit-Update/);
+    const e2e = JSON.parse(git(dir, "show", "HEAD:.drwil/ia-first.json").stdout).checks.find((c) => c.id === "e2e");
+    assert.deepEqual(e2e.paths, CALCULES, "les chemins réécrits sont dans le commit admis");
+    assert.equal(git(dir, "status", "--porcelain").stdout, "", "arbre propre");
+  });
+});
+
+test('QUA-141 : un `e2e` retouché à la main reste sur `["**"]` et n\'est que signalé, en français et en anglais', async () => {
+  await avecIdentite(async () => {
+    for (const [lang, motif] of [
+      ["fr", /Reste à décider : `e2e` retouché à la main reste sur `paths: \["\*\*"\]`/],
+      ["en", /Left to decide: `e2e`, modified by hand, stays on `paths: \["\*\*"\]`/],
+    ]) {
+      const dir = await projetInstalle(lang, undefined, surToutLeDepot({ ...KIT_E2E, run: "npm run build && npx playwright test" }));
+      const sortie = (await capture(() => init({ lang, targetDir: dir, name: "demo" }))).join("\n");
+      assert.match(sortie, motif, sortie);
+      assert.match(
+        sortie,
+        lang === "fr" ? /sur `coverage-root`, `coverage-diff-root` :/ : /Paths set by the kit on `coverage-root`, `coverage-diff-root`:/,
+      );
+      const commite = JSON.parse(git(dir, "show", "HEAD:.drwil/ia-first.json").stdout).checks;
+      assert.deepEqual(commite.find((c) => c.id === "e2e").paths, ["**"]);
+    }
+  });
 });

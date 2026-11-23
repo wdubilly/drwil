@@ -965,6 +965,55 @@ test("QUA-238 : des contrôles absents avant la mise à jour ne se reconnaissent
   assert.equal(checkScope(racine, { ...blocage, staged: fichiers, env: MAJ }).status, "fail");
 });
 
+test('QUA-238 : la mise à jour qui fait passer les `paths` d\'un contrôle du kit de `["**"]` aux chemins calculés passe ; tout autre changement de contrôle reste jugé', () => {
+  const avant = [
+    { id: "a", run: "x" },
+    { id: "coverage-root", run: "npx vitest run --coverage", paths: ["**"] },
+    { id: "coverage-diff-api", run: "diff-cover x", cwd: "api", paths: ["**"] },
+    { id: "e2e", run: "npx playwright test", paths: ["**"] },
+    { id: "lint", run: "npx biome check", paths: ["**"] },
+  ];
+  const equipe = () => {
+    const racine = projetEquipe({ scopeGate: "blocking", layers: [], checks: avant });
+    // Le code du projet est sur la branche principale, avant la branche de mise à jour.
+    git(racine, "checkout", "-q", "main");
+    for (const f of ["src/a.js", "api/b.js", "package.json", "README.md"]) ecrire(racine, f, "x\n");
+    git(racine, "add", "-A");
+    git(racine, "commit", "-q", "-m", "code du projet");
+    git(racine, "checkout", "-q", "-B", "workstream/kit-update");
+    return racine;
+  };
+  const calcules = ["*.json", "api/**", "src/**"];
+  const repathe = (changer) => {
+    const checks = avant.map((c) => ({ ...c }));
+    changer(checks);
+    return { scopeGate: "blocking", layers: [], checks };
+  };
+  const admis = repathe((c) => {
+    c[1].paths = calcules;
+    c[2].paths = ["api/**"];
+    c[3].paths = calcules;
+  });
+  const racine = equipe();
+  const fichiers = appliquerMiseAJour(racine, { config: admis });
+  assert.deepEqual(checkScope(racine, { ...blocage, staged: fichiers, env: MAJ }).problems, []);
+  commiterMaj(racine, true);
+  assert.equal(checkScope(racine, { ...blocage, env: { DRWIL_BASE: "main" } }).status, "ok", "au rejeu de la branche aussi");
+  const refus = [
+    ["chemins autres que ceux du kit", (c) => (c[1].paths = ["src/**"])],
+    ["chemins et commande changés", (c) => Object.assign(c[1], { paths: calcules, run: "npx vitest run" })],
+    ["contrôle du projet resserré", (c) => (c[4].paths = calcules)],
+    ["chemins du kit plus tout le dépôt", (c) => Object.assign(c[3], { paths: ["**", ...calcules] })],
+  ];
+  for (const [nom, changer] of refus) {
+    const r = equipe();
+    const f = appliquerMiseAJour(r, { config: repathe(changer) });
+    assert.equal(checkScope(r, { ...blocage, staged: f, env: MAJ }).status, "fail", nom);
+    commiterMaj(r, true);
+    assert.equal(checkScope(r, { ...blocage, env: { DRWIL_BASE: "main" } }).status, "fail", `${nom} (rejeu)`);
+  }
+});
+
 /** Commit d'installation dans un dépôt existant : parent sans manifeste, kit, manifeste et configuration créés. */
 function appliquerInstallation({ extra = {}, config = { scopeGate: "blocking", layers: [], checks: [{ id: "a" }] } } = {}) {
   const racine = depot();

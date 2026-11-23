@@ -16,6 +16,7 @@ import {
 } from "./guarantees-table.js";
 import { toolFor } from "./guarantees-tools.js";
 import { mergeSeriesPair } from "./guarantees-merge.js";
+import { kitPaths, projectFiles } from "./guarantees-e2e-tools.js";
 import { fill, type MessageLang } from "./i18n.js";
 
 export interface LayerReport {
@@ -54,8 +55,10 @@ export interface LayerContext {
   briefs: GuaranteeBrief[];
 }
 
-function check(id: string, layer: string, run: string, name: string) {
-  return { id, name, run, ...(layer === "." ? {} : { cwd: layer }), paths: [layer === "." ? "**" : `${layer}/**`], degradable: false };
+// Paths computed by the kit (QUA-013: `**` only when nothing delimits), the same at the update, in `doctor` and in the scope gate.
+function check(ctx: LayerContext, id: string, layer: string, run: string, name: string) {
+  const paths = kitPaths(layer, projectFiles(ctx.root));
+  return { id, name, run, ...(layer === "." ? {} : { cwd: layer }), paths, degradable: false };
 }
 
 /** One layer: wired, kept or blocked (QUA-087, QUA-088, QUA-090, QUA-091, QUA-093, QUA-301, QUA-302). */
@@ -115,7 +118,7 @@ export function coverLayer(ctx: LayerContext, layer: string, technos: string[]):
 
 function wire(ctx: LayerContext, report: LayerReport, tool: CoverageTool, id: string, t: Thresholds, ex: string[]): LayerReport {
   const T = TEXTS[ctx.lang];
-  ctx.checks.push(check(id, report.layer, tool.run(t, ex), `coverage of ${report.layer} (${tool.tool})`));
+  ctx.checks.push(check(ctx, id, report.layer, tool.run(t, ex), `coverage of ${report.layer} (${tool.tool})`));
   report.status = "wired";
   report.lines.push(fill(T.wired, id, tool.metrics.join(", "), tool.tool), T.cite);
   return report;
@@ -147,10 +150,10 @@ function existing(
     // One run judges the ratchet then the diff (QUA-301): never wired without the diff tool, the brief blocks.
     if (!diffTool()) return block(fill(T.noDiff, tool.tool, tool.diff?.probe ?? "—"));
     const run = tool.single(floor, ex);
-    ctx.checks.push(check(diffId, report.layer, run, `coverage ratchet and diff of ${report.layer} (${tool.tool})`));
+    ctx.checks.push(check(ctx, diffId, report.layer, run, `coverage ratchet and diff of ${report.layer} (${tool.tool})`));
     report.lines.push(fill(T.single, diffId, fmt(floor)), T.cite);
   } else {
-    ctx.checks.push(check(id, report.layer, tool.run(floor, ex), `coverage ratchet of ${report.layer} (${tool.tool})`));
+    ctx.checks.push(check(ctx, id, report.layer, tool.run(floor, ex), `coverage ratchet of ${report.layer} (${tool.tool})`));
     report.lines.push(fill(T.ratchet, id, fmt(floor)), T.cite);
   }
   report.status = "wired";
@@ -164,7 +167,7 @@ function existing(
   if (tool.single) return report;
   if (ctx.checks.some((c) => c?.id === diffId)) report.lines.push(fill(T.kept, diffId));
   else if (tool.diff && diffTool()) {
-    ctx.checks.push(check(diffId, report.layer, tool.diff.run, `diff coverage of ${report.layer}`));
+    ctx.checks.push(check(ctx, diffId, report.layer, tool.diff.run, `diff coverage of ${report.layer}`));
     report.lines.push(fill(T.diffWired, diffId));
   } else return block(fill(T.noDiff, tool.tool, tool.diff?.probe ?? "—"));
   return report;

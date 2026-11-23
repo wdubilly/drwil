@@ -3344,7 +3344,7 @@
     {
       "id": "tests-qua-238",
       "name": "tests de QUA-238, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node .githooks/contract-tests.mjs QUA-238 .githooks/scope-gate.test.mjs packages/drwil/test/kit-mise-a-jour.test.mjs",
+      "run": "node .githooks/contract-tests.mjs QUA-238 .githooks/scope-gate.test.mjs packages/drwil/test/kit-mise-a-jour.test.mjs packages/drwil/test/mise-a-jour-empreinte.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/contract-tests.mjs",
@@ -4359,7 +4359,7 @@
     {
       "id": "tests-qua-303",
       "name": "tests de QUA-303, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node .githooks/contract-tests.mjs QUA-303 packages/drwil/test/coverage-merge.test.mjs packages/drwil/test/coverage-vitest.test.mjs packages/drwil/test/doctor-fix.test.mjs",
+      "run": "node .githooks/contract-tests.mjs QUA-303 packages/drwil/test/coverage-merge.test.mjs packages/drwil/test/coverage-vitest.test.mjs packages/drwil/test/doctor-fix.test.mjs packages/drwil/test/doctor-checks.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/contract-tests.mjs",

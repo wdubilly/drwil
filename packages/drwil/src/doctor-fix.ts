@@ -3,6 +3,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { declaredPair, singleFromPair } from "./guarantees-merge.js";
+import { kitPathsOf, projectFiles, rewriteKitPaths } from "./guarantees-e2e-tools.js";
 import { fill, type MessageLang } from "./i18n.js";
 import { loadProject } from "./verify-project.js";
 import type { DiagnosisPoint } from "./doctor.js";
@@ -11,18 +12,21 @@ const TEXTS = {
   fr: {
     label: "Corrigé par --fix",
     grouped: "`{0}` groupé",
-    paths: '`{0}` : "paths": ["**"]',
+    paths: '`{0}` : "paths": {1}',
     merged: "`{0}` fusionné dans `{1}`",
   },
   en: {
     label: "Fixed by --fix",
     grouped: "`{0}` grouped",
-    paths: '`{0}`: "paths": ["**"]',
+    paths: '`{0}`: "paths": {1}',
     merged: "`{0}` merged into `{1}`",
   },
 };
 
-export type Fix = { kind: "grouped" | "paths"; id: string } | { kind: "merged"; id: string; into: string };
+export type Fix =
+  | { kind: "grouped"; id: string }
+  | { kind: "paths"; id: string; paths: string[] }
+  | { kind: "merged"; id: string; into: string };
 type Check = Record<string, unknown>;
 
 const ID = "[A-Z][A-Z0-9]*-\\d+";
@@ -69,11 +73,16 @@ export function fixChecks(checks: unknown[], ctx: { root: string; cited: Set<str
       c.run = grouped;
       fixes.push({ kind: "grouped", id });
     }
-    // An empty list may be meant (never at commit): only a missing `paths` is set.
+    // An empty list may be meant (never at commit): only a missing `paths` is set, the ones the kit computes (QUA-013).
     if (Array.isArray(c.runAt) && c.runAt.join() === "ci" && !("paths" in c)) {
-      c.paths = ["**"];
-      fixes.push({ kind: "paths", id });
+      c.paths = kitPathsOf(c, projectFiles(ctx.root));
+      fixes.push({ kind: "paths", id, paths: c.paths as string[] });
     }
+  }
+  // The kit's checks still on `["**"]` (the update rewrites them the same way).
+  for (const id of rewriteKitPaths(list, ctx.root).rewritten) {
+    const c = list.find((k) => k.id === id);
+    fixes.push({ kind: "paths", id, paths: c?.paths as string[] });
   }
   for (const diff of list) {
     const slug = typeof diff.id === "string" ? /^coverage-diff-(.+)$/.exec(diff.id)?.[1] : undefined;
@@ -110,6 +119,12 @@ export async function fixConfig(root: string): Promise<Fix[]> {
 /** Point `fixed`: what `--fix` rewrote, none when nothing was. */
 export function fixedPoints(fixes: Fix[], lang: MessageLang = "fr"): DiagnosisPoint[] {
   const T = TEXTS[lang];
-  const said = fixes.map((f) => (f.kind === "merged" ? fill(T.merged, f.id, f.into) : fill(T[f.kind], f.id)));
+  const said = fixes.map((f) =>
+    f.kind === "merged"
+      ? fill(T.merged, f.id, f.into)
+      : f.kind === "paths"
+        ? fill(T.paths, f.id, JSON.stringify(f.paths))
+        : fill(T.grouped, f.id),
+  );
   return said.length ? [{ id: "fixed", label: T.label, state: "ok", detail: said.join(" ; ") }] : [];
 }
