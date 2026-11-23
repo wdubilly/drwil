@@ -72,6 +72,8 @@ files:
   - .githooks/check-control-coverage.test.mjs
   - packages/drwil/templates/common/base/.githooks/check-control-coverage.mjs
   - packages/drwil/src/fingerprint.ts
+  - outils/resserrer-paths.mjs
+  - outils/resserrer-paths.test.mjs
 -->
 
 (Le bloc `scope` couvre les trois volets tels que tranchés : le hook de commit et son module de formatage, livrés
@@ -247,6 +249,8 @@ compte rendu de la mise à jour (`npx drwil init`) le lui dit.
   demandeur le 2026-11-23, sondage des limites).
 - `packages/drwil/src/doctor.ts` — racine transmise aux points des contrôles (validé par le demandeur le 2026-11-23,
   sondage des limites).
+- l'outil resserrer-paths (dossier outils/) et son test — outil qui suit les imports pour resserrer les `paths` des contrôles de
+  tests (validé par le demandeur le 2026-11-23, sondage des limites ; contrat modifié : `QUA-141`, déjà déclaré).
 
 ## 2. Hors périmètre
 
@@ -366,6 +370,10 @@ Aucun.
 - **Lot 12 — Boucles d'attente refusées** [IA] : le garde des commandes refuse `while`/`until` sur `pgrep` et renvoie à
   `.githooks/wait-command.mjs` (tests d'abord) ; contrats créés, carte, ligne du `CHANGELOG` pour les lots 9 à 12. Critère de
   sortie : tests verts.
+- **Lot 13 — Chemins resserrés par les imports** [IA] : outil du dépôt resserrer-paths (dossier outils/, tests d'abord) qui
+  suit les imports statiques d'un fichier de test et propose les `paths` exacts du contrôle ; appliqué aux contrôles de
+  tests qui citent `.githooks/**` et `packages/drwil/**` (`.githooks/state.mjs`, `.githooks/engine.mjs`, `.githooks/contract-tests.mjs` : 194 à 294
+  contrôles invalidés), mesure avant et après. Critère de sortie : tests verts, gain chiffré.
 
 ## 7. Reprise
 
