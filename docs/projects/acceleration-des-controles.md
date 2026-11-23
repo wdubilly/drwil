@@ -55,6 +55,7 @@ files:
   - packages/drwil/test/guarantees.test.mjs
   - packages/drwil/test/doctor-fix.test.mjs
   - packages/drwil/test/doctor-checks.test.mjs
+  - packages/drwil/test/mise-a-jour-empreinte.test.mjs
 -->
 
 (Le bloc `scope` couvre les trois volets tels que tranchés : le hook de commit et son module de formatage, livrés
@@ -67,7 +68,7 @@ neuve va dans `.githooks/fingerprints.mjs` ou un module découpé, à lister par
 demande du demandeur (« oui on traite tout ») : les contrôles que le kit génère ne reçoivent plus `paths: ["**"]`
 (`packages/drwil/src/guarantees-layers.ts`, `packages/drwil/src/guarantees-e2e-tools.ts`), `drwil doctor` et `--fix` le signalent et le
 corrigent (`packages/drwil/src/doctor-checks.ts`, `packages/drwil/src/doctor-fix.ts`), et la mise à jour réécrit les déclarations intactes du kit
-(`packages/drwil/src/kit-update.ts`, déjà listé) ; avec leurs tests.)
+(`packages/drwil/src/kit-update.ts`, déjà listé) ; avec leurs tests. Le 2026-11-23, choix du demandeur : les nouveaux tests des lots 3 et 6 sur la mise à jour et la reprise vont dans `packages/drwil/test/mise-a-jour-empreinte.test.mjs` (à créer), car `QUA-315` fige la liste des tests des fichiers `kit-*.test.mjs`.)
 
 ## 1. Besoin
 
