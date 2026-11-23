@@ -1514,6 +1514,43 @@ test("bash-guard : demande un accord pour un secret, refuse le saut des hooks et
   assert.match(cli.stdout, /"ask"/);
 });
 
+test("QUA-337 bash-guard : refuse une boucle while/until sur pgrep et renvoie à wait-command, laisse passer le reste", async () => {
+  const g = await load("bash-guard.mjs");
+  const sortie = (command) => g.main(JSON.stringify({ tool_name: "Bash", tool_input: { command } }));
+  const refus = [
+    "while pgrep -f run-checks; do sleep 5; done",
+    "until ! pgrep -f verify; do sleep 2; done",
+    "while pgrep -f x >/dev/null 2>&1; do sleep 1; done; echo fini",
+    "cd /tmp && while /usr/bin/pgrep -f x; do sleep 1; done",
+    'while [ -n "$(pgrep -f x)" ]; do sleep 1; done',
+    "while ! pgrep -f x && true; do sleep 1; done",
+    "while test -n `pgrep node`; do sleep 1; done",
+    'bash -c "while pgrep -f x; do sleep 1; done"',
+  ];
+  for (const c of refus) {
+    const out = JSON.parse(sortie(c)).hookSpecificOutput;
+    assert.equal(out.permissionDecision, "deny", c);
+    assert.match(out.permissionDecisionReason, /wait-command\.mjs/, c);
+    assert.match(out.permissionDecisionReason, /QUA-337/, c);
+  }
+  const permis = [
+    "pgrep -f x",
+    "node .githooks/wait-command.mjs node .githooks/run-checks.mjs",
+    "while read l; do echo $l; done < f",
+    "until test -f ok; do sleep 1; done",
+    "for i in 1 2; do pgrep -f x; done",
+    "while true; do echo pgrep; break; done",
+    'git commit -m "boucle while pgrep refusée"',
+    "echo while pgrep -f x",
+    "sed -i 's/a/la boucle `while`\\/`until` sur `pgrep`/' f",
+  ];
+  for (const c of permis) assert.equal(sortie(c), "", c);
+  const cli = run("bash-guard.mjs", { tool_name: "Bash", tool_input: { command: "while pgrep -f x; do sleep 1; done" } });
+  assert.match(cli.stdout, /"deny"/);
+  const en = g.main(JSON.stringify({ tool_name: "Bash", tool_input: { command: "until pgrep x; do :; done" } }));
+  assert.match(JSON.parse(en).hookSpecificOutput.permissionDecisionReason, /wait-command\.mjs/);
+});
+
 test("scope-reminder : refuse (blocking), rappelle (warning) ou se tait selon le réglage et la fiche", async () => {
   const { remind, main } = await load("scope-reminder.mjs");
   const fiche = "<!-- scope\nfiles:\n  - src/couvert.ts\n-->\n";

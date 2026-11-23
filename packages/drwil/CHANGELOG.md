@@ -15,6 +15,19 @@ release renames this section to its version.
   command that formats them; nothing is rewritten. Without the key, the
   commit is unchanged; the adoption skill proposes it, an update never
   adds it.
+- Faster checks at the adopter: the adoption skill proposes `"parallel": true`
+  on a project with several checks (a check that cannot share the machine
+  keeps `"parallel": false`) and `drwil doctor` reports its absence; an
+  update never turns it on. `drwil doctor` also reports a kit older than the
+  per-check fingerprint, and the shipped checks page now describes the
+  `format`, `readsChecks` and `parallel` keys. The formatter is called once
+  for all staged files.
+- A `paths` entry of a check can start with `!` to exclude files, as in
+  `.gitignore`: the last matching entry decides, and without a positive
+  entry nothing matches.
+- Claude Code's shell guard refuses a `while` or `until` loop that waits on
+  `pgrep` (it sees itself and never ends) and points to
+  `node .githooks/wait-command.mjs`, which waits within a bound.
 - The brief model and the launch skill recommend a real acceptance run from
   the first increment of a workstream that changes what users install or
   update: the update installed on a copy of a real project, never the

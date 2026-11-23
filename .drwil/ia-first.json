@@ -5335,6 +5335,28 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-337",
+      "name": "tests de QUA-337, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-337 packages/drwil/test/claude-hooks.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        "packages/drwil/**",
+        ".claude/hooks/bash-guard.mjs",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/claude-hooks.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
+      ],
+      "needsBuild": true,
+      "degradable": false
+    },
+    {
       "id": "couverture-diff",
       "readsChecks": true,
       "runAt": [

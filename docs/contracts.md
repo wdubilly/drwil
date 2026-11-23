@@ -3289,3 +3289,13 @@ régression sauf si la fiche active déclare le changement (section
 **Tests** : `packages/drwil/test/doctor-checks.test.mjs`
 **Origine** : acceleration-des-controles — « La page livrée des contrôles décrit les clés `format`, `readsChecks` et `parallel` »
 **Raison** : un réglage que la page livrée ne décrit pas ne s'adopte pas : la clé `format` et `readsChecks` n'étaient documentées que dans le code (limite relevée au lot 7, traitée sur réponse du demandeur au sondage des limites du 2026-11-23).
+
+## QUA-337 — La garde shell de Claude Code refuse une boucle `while` ou `until` qui attend sur `pgrep` et renvoie à `wait-command`
+**Règle** : Livré à tout projet équipé de Claude Code. Le hook `PreToolUse` `.claude/hooks/bash-guard.mjs` refuse (`deny`), sans demander l'accord, toute commande qui contient une boucle `while` ou `until` dont la condition (jusqu'au `do`) lance `pgrep` : `while pgrep …`, `until ! pgrep …`, `while [ -n "$(pgrep …)" ]`, au milieu d'une commande composée ou dans une chaîne `sh -c "…"`. Le refus dit pourquoi (la boucle se voit elle-même et ne finit jamais) et renvoie à `node .githooks/wait-command.mjs <commande>` en appel de fond (QUA-219, QUA-220), en français ou en anglais selon le projet. Un `pgrep` hors condition de boucle, une boucle sans `pgrep`, un message de commit qui cite la boucle passent. Limite : une chaîne entre guillemets qui commence par une telle boucle (texte écrit par un heredoc) est refusée aussi, comme pour QUA-114 ; une attente cachée derrière une variable n'est pas vue.
+**Périmètre** : `.claude/hooks/bash-guard.mjs` (gabarit `tools/claude`).
+**Source de vérité** : `.claude/hooks/bash-guard.mjs` (`waitsOnPgrep`).
+**Preuve** : test du paquet : chaque forme refusée (simple, `until !`, `$(…)`, accent grave, composée, `bash -c`) ; une boucle citée dans un texte (`while` entre accents graves) passe avec la raison citant `.githooks/wait-command.mjs` et QUA-337, par le hook lancé en ligne de commande aussi, en anglais ; les formes voisines qui passent ; la copie du dépôt est identique au gabarit (contrôle des miroirs).
+**Contrôle** : `tests-qua-337`
+**Tests** : `packages/drwil/test/claude-hooks.test.mjs`
+**Origine** : acceleration-des-controles — « Le garde des commandes refuse les boucles `while` et `until` sur `pgrep` et renvoie à `.githooks/wait-command.mjs` »
+**Raison** : la consigne (QUA-221, QUA-224) ne suffit pas : le 2026-10-30, 15 boucles d'attente sur `pgrep` restaient zombies ; seul un refus à l'appel les empêche, et son texte donne l'outil qui attend sans fin de boucle.
