@@ -175,14 +175,14 @@ compte rendu de la mise à jour (`npx drwil init`) le lui dit.
   signalé (choix du demandeur le 2026-11-23) — `QUA-303`
 - Chez l'adoptant, l'adoption propose le réglage `parallel` quand le projet déclare plusieurs contrôles, `drwil doctor`
   le signale sur un projet qui ne l'a pas, une mise à jour ne l'active jamais ; un contrôle qui ne supporte pas le
-  parallèle garde `parallel: false` — contrat à créer
-- La page livrée des contrôles décrit les clés `format`, `readsChecks` et `parallel` — contrat à créer
+  parallèle garde `parallel: false` — `QUA-334`
+- La page livrée des contrôles décrit les clés `format`, `readsChecks` et `parallel` — `QUA-333`
 - Le point `doctor` d'un contrôle du kit en `paths: ["**"]` se tait quand rien ne se délimite sous la racine — `QUA-303`
 - Un motif de `paths` précédé de `!` exclut des fichiers ; les contrôles du dépôt sur `.githooks/**` ou
   `packages/drwil/**` excluent les tests des autres contrats quand ils ne les lisent pas, après audit contrôle par
   contrôle ; nombre de contrôles rejoués pour un fichier mesuré avant et après — `QUA-141`
 - Le garde des commandes refuse une boucle d'attente `while`/`until` sur `pgrep` lancée par un agent et renvoie à
-  `node .githooks/wait-command.mjs` — contrat à créer
+  `node .githooks/wait-command.mjs` — `QUA-337`
 - `drwil doctor` signale un kit installé antérieur au calcul d'empreinte par contrôle (`FINGERPRINT_SCHEME`) : ses
   passes ne reprennent aucun verdict tant qu'il n'est pas mis à jour — `QUA-026`
 - Le formateur reçoit tous les fichiers indexés en un seul appel quand sa commande le permet — `QUA-328`
