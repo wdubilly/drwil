@@ -68,6 +68,10 @@ files:
   - packages/drwil/templates/common/tools/claude/.claude/hooks/bash-guard.mjs
   - .claude/hooks/bash-guard.mjs
   - packages/drwil/test/claude-hooks.test.mjs
+  - .githooks/check-control-coverage.mjs
+  - .githooks/check-control-coverage.test.mjs
+  - packages/drwil/templates/common/base/.githooks/check-control-coverage.mjs
+  - packages/drwil/src/fingerprint.ts
 -->
 
 (Le bloc `scope` couvre les trois volets tels que tranchés : le hook de commit et son module de formatage, livrés
