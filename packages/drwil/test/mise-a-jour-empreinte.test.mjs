@@ -179,3 +179,18 @@ test('QUA-141 : un `e2e` retouché à la main reste sur `["**"]` et n\'est que s
     }
   });
 });
+
+test("QUA-334 : une mise à jour n'active jamais `parallel` et garde le `parallel: false` d'un contrôle", async () => {
+  await avecIdentite(async () => {
+    const checks = [
+      { id: "a", run: "node -e 0" },
+      { id: "b", run: "node -e 0", parallel: false },
+    ];
+    const dir = await projetInstalle("fr", ANCIENNE, (d) =>
+      writeFileSync(join(d, ".drwil/ia-first.json"), JSON.stringify({ ...config(d), checks })),
+    );
+    await capture(() => init({ lang: "fr", targetDir: dir, name: "demo" }));
+    assert.equal("parallel" in config(dir), false);
+    assert.deepEqual(config(dir).checks.find((c) => c.id === "b").parallel, false);
+  });
+});

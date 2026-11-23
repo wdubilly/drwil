@@ -4733,6 +4733,15 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-334",
+      "name": "tests de QUA-334, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-334 packages/drwil/test/doctor-checks.test.mjs packages/drwil/test/mise-a-jour-empreinte.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", "packages/drwil/**", ".claude/skills/adopt-the-kit/SKILL.md", "package.json", "package-lock.json", ".drwil/ia-first.json"],
+      "needsBuild": true,
+      "degradable": false
+    },
+    {
       "id": "tests-qua-333",
       "name": "tests de QUA-333, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-333 packages/drwil/test/doctor-checks.test.mjs",

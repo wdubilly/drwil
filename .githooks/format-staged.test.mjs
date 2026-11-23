@@ -142,3 +142,49 @@ test("QUA-329 : sans clé format, le commit est inchangé : rien n'est jugé, au
   assert.equal(r.stderr.includes("Format"), false);
   assert.equal(lire(dir, "checks-lances"), "oui");
 });
+
+// Vérificateur factice en un appel (`check`) : note ses fichiers dans .git/appels, sort en 1 si l'un n'est pas formaté.
+const VERIFICATEUR = `const fs=require("fs");const f=process.argv.slice(2);fs.appendFileSync(".git/appels",f.join(" ")+"\\n");console.log("Checked "+f.length);process.exit(f.some((x)=>/[ \\t]$/m.test(fs.readFileSync(x,"utf8")))?1:0);`;
+const appels = (dir) => lire(dir, ".git/appels").trim().split("\n");
+
+test("QUA-328 : avec `check`, les fichiers indexés formatés sont jugés en un seul appel, sans un appel par fichier", () => {
+  const dir = depot({ format: { ...FORMAT, stdin: "formateur-inexistant-drwil {file}", check: "node chk.cjs" } });
+  writeFileSync(join(dir, "chk.cjs"), VERIFICATEUR);
+  for (const n of ["a", "b", "c"]) writeFileSync(join(dir, `src/${n}.js`), `const ${n} = 1;\n`);
+  git(dir, "add", "-A");
+  const r = git(dir, "commit", "-m", "essai");
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.deepEqual(appels(dir), ["src/a.js src/b.js src/c.js"]);
+});
+
+test("QUA-328 : avec `check`, un fichier non formaté est nommé seul par le jugement fichier par fichier, rien n'est modifié", () => {
+  const dir = depot({ format: { ...FORMAT, check: "node chk.cjs" } });
+  writeFileSync(join(dir, "chk.cjs"), VERIFICATEUR);
+  writeFileSync(join(dir, "src/a.js"), "const a = 1;   \n");
+  writeFileSync(join(dir, "src/b.js"), "const b = 2;\n");
+  git(dir, "add", "-A");
+  const r = git(dir, "commit", "-m", "essai");
+  assert.notEqual(r.status, 0);
+  assert.match(r.stdout + r.stderr, /npx fmt --write "src\/a\.js" && git add "src\/a\.js"/);
+  assert.doesNotMatch(r.stdout + r.stderr, /src\/b\.js/);
+  assert.equal(lire(dir, "src/a.js"), "const a = 1;   \n");
+});
+
+test("QUA-328 : un `check` muet (npx sans le paquet) ne vaut pas accord, et un fichier dont la copie diffère de l'index est jugé dans l'index", () => {
+  const dir = depot({ format: { ...FORMAT, check: "node -e 0" } });
+  writeFileSync(join(dir, "src/a.js"), "const a = 1;   \n");
+  git(dir, "add", "-A");
+  assert.match(git(dir, "commit", "-m", "essai").stderr, /src\/a\.js/, "check muet : jugé fichier par fichier");
+  writeFileSync(join(dir, "chk.cjs"), VERIFICATEUR);
+  writeFileSync(join(dir, ".drwil/ia-first.json"), JSON.stringify({ lang: "fr", format: { ...FORMAT, check: "node chk.cjs" } }));
+  writeFileSync(join(dir, "src/a.js"), "const a = 1;\n"); // copie formatée, index non formaté
+  assert.notEqual(git(dir, "commit", "-m", "essai").status, 0);
+  assert.equal(lire(dir, "src/a.js"), "const a = 1;\n");
+});
+
+test("QUA-328 : une clé `check` qui n'est pas une chaîne rend la clé format incomplète", () => {
+  const dir = depot({ format: { ...FORMAT, check: ["node", "chk.cjs"] } });
+  writeFileSync(join(dir, "src/a.js"), "const a = 1;\n");
+  git(dir, "add", "-A");
+  assert.match(git(dir, "commit", "-m", "essai").stderr, /incomplète/);
+});

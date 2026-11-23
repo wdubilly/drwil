@@ -6,6 +6,8 @@
 // partially staged file is judged as it will be committed), piped to "stdin" and compared: one difference refuses
 // the commit, naming "write" with the files. Nothing is ever rewritten or re-staged (decision D4): an agent or a
 // human formats, then stages again. A formatter that cannot run refuses too: a check not run is not passed (QUA-013).
+// Optional "check" (a command that checks the files it is given, exit 0 when all are formatted): the staged files whose
+// working copy equals the index are checked in one call (npx costs ~0.2 s per launch); any doubt, one by one through "stdin".
 import { spawn, spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { availableParallelism } from "node:os";
@@ -37,7 +39,13 @@ const quote = (f) => `"${f.replace(/"/g, '\\"')}"`;
 export function formatSetting(cfg) {
   const f = cfg?.format;
   if (f === undefined) return null;
-  const ok = f && typeof f.stdin === "string" && typeof f.write === "string" && Array.isArray(f.paths) && f.paths.length > 0;
+  const ok =
+    f &&
+    typeof f.stdin === "string" &&
+    typeof f.write === "string" &&
+    Array.isArray(f.paths) &&
+    f.paths.length > 0 &&
+    (f.check === undefined || typeof f.check === "string");
   return ok ? f : false;
 }
 
@@ -47,6 +55,35 @@ export function stagedToFormat(paths) {
   if (r.status !== 0) return null;
   const globs = paths.map(globToRegex);
   return r.stdout.split("\0").filter((f) => f && globs.some((g) => g.test(f)));
+}
+
+/** Staged files whose working copy differs from the index (partially staged, changed since): never checked in one call. */
+function unstaged() {
+  const r = spawnSync("git", ["diff", "--name-only", "-z"], { encoding: "utf8" });
+  return r.status === 0 ? new Set(r.stdout.split("\0").filter(Boolean)) : null;
+}
+
+/** Batches of files short enough for one command line (cmd.exe stops near 8,000 characters). */
+function batches(files) {
+  const out = [[]];
+  let size = 0;
+  for (const f of files) {
+    if (size + f.length > 6000 && out.at(-1).length) {
+      out.push([]);
+      size = 0;
+    }
+    out.at(-1).push(f);
+    size += f.length + 3;
+  }
+  return out;
+}
+
+/** True only when `check` passes every batch saying something: `npx --no-install` without the package exits 0 silently. */
+function checkedAtOnce(command, files) {
+  return batches(files).every((b) => {
+    const r = spawnSync(`${command} ${b.map(quote).join(" ")}`, { shell: true, encoding: "utf8", maxBuffer: 1 << 26 });
+    return r.status === 0 && `${r.stdout}${r.stderr}`.trim().length > 0;
+  });
 }
 
 /** Formats the staged content of `file` through `command`: { same } or { code, err } when the formatter fails. */
@@ -83,12 +120,18 @@ export async function checkStaged(cfg) {
   const files = stagedToFormat(setting.paths);
   if (files === null) return { code: 1, lines: [T.unreadable] };
   const results = new Array(files.length);
+  if (setting.check) {
+    const dirty = unstaged() ?? new Set(files);
+    const clean = files.filter((f) => !dirty.has(f));
+    if (clean.length && checkedAtOnce(setting.check, clean)) for (const f of clean) results[files.indexOf(f)] = { same: true };
+  }
+  const todo = files.flatMap((_, i) => (results[i] ? [] : [i]));
   let next = 0;
-  const width = Math.max(1, Math.min(files.length, availableParallelism()));
+  const width = Math.max(1, Math.min(todo.length, availableParallelism()));
   await Promise.all(
     Array.from({ length: width }, async () => {
-      while (next < files.length) {
-        const i = next++;
+      while (next < todo.length) {
+        const i = todo[next++];
         results[i] = await judge(setting.stdin, files[i]);
       }
     }),

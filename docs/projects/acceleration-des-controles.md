@@ -365,6 +365,13 @@ Aucun.
 
 ## 7. Reprise
 
+- **Lot 10 fait (2026-11-23)** : sous-clé `check` de `format` (un appel pour les fichiers indexés dont la copie égale
+  l'index, repli par `stdin`), `QUA-334` (skill d'adoption, point `doctor` `parallel`, mise à jour sans `parallel`).
+  **Mesure sur une copie de marinade-poulet** (passe sans reprise, 8 processeurs, référence en série 574,2 s) :
+  `parallel: true` seul 442,3 s mais 2 échecs (les deux couvertures écrivent `coverage/`) ; `parallel: false` sur ces
+  deux : 639,0 s et 1 échec (SRC-002, test de balayage, délai dépassé sous charge). **Gain non démontré** : le
+  parallèle chez cet adoptant échoue ou ne gagne rien tant que ses tests sensibles au temps partagent la machine ;
+  `parallel` reste au choix de l'adoptant, jamais posé par défaut.
 - **Lot 9 fait (2026-11-23)** : page livrée des contrôles
   (`packages/drwil/templates/common/base/docs/ia-first/4-checks-in-git.md`, copie installée) : `readsChecks: true`,
   réglage `parallel` (`parallel: false` par contrôle, jamais activé par une mise à jour) et clé `format` ; `QUA-333`

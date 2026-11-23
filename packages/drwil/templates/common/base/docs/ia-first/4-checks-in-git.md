@@ -81,9 +81,12 @@ The `format` setting checks the formatting before each commit
 "<command that formats>", "paths": ["src/**"] }`. Each staged file matching
 `paths` is read from the index, piped to `stdin` and compared; one
 difference refuses the commit and names the `write` command with the files.
-Nothing is rewritten or re-staged: format, then stage again. Without the
-key, the commit is unchanged; an incomplete key or a formatter that cannot
-run refuses the commit.
+Nothing is rewritten or re-staged: format, then stage again. An optional
+`"check"` (a command that checks the files it is given, such as `npx
+--no-install prettier --check`) judges in one call the staged files whose
+working copy equals the index; on any failure or silence, each file goes
+through `stdin`. Without the key, the commit is unchanged; an incomplete key
+or a formatter that cannot run refuses the commit.
 
 One detail makes this check actually run rather than get bypassed: **a
 check that did not run is visible** (QUA-013) — a check that cannot run on

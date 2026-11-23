@@ -20,6 +20,9 @@ const TEXTS = {
     stale: "Reprise des verdicts",
     staleDetail:
       "le kit installé est antérieur au calcul d'empreinte par contrôle : aucun verdict n'est repris, chaque passe rejoue tous les contrôles ; mettre le kit à jour : `npx drwil init`",
+    serial: "Contrôles joués l'un après l'autre",
+    serialDetail:
+      '{0} contrôles de commande déclarés, sans réglage `parallel` : poser `"parallel": true` en tête de `.drwil/ia-first.json` pour les lancer ensemble (au choix du demandeur, jamais posé par une mise à jour), et `"parallel": false` sur un contrôle qui ne partage pas la machine (port fixe, dossier de sortie partagé, e2e)',
   },
   en: {
     ungrouped: "Ungrouped contract checks",
@@ -34,6 +37,9 @@ const TEXTS = {
     stale: "Reuse of verdicts",
     staleDetail:
       "the installed kit predates the per-check fingerprint: no verdict is reused, every pass replays every check; update the kit: `npx drwil init`",
+    serial: "Checks run one after the other",
+    serialDetail:
+      '{0} command checks declared, no `parallel` setting: set `"parallel": true` at the top of `.drwil/ia-first.json` to start them together (the requester\'s choice, never set by an update), and `"parallel": false` on a check that cannot share the machine (fixed port, shared output folder, e2e)',
   },
 };
 
@@ -95,4 +101,13 @@ export const staleFingerprints = (root: string): boolean =>
 export function fingerprintPoints(root: string, lang: MessageLang): DiagnosisPoint[] {
   const T = TEXTS[lang];
   return staleFingerprints(root) ? [{ id: "fingerprint", label: T.stale, state: "warning", detail: T.staleDetail }] : [];
+}
+
+/** Point `parallel`: several local command checks and no `parallel` setting; an explicit `false` is a choice, never named. */
+export function parallelPoints(cfg: { parallel?: unknown; checks?: unknown }, lang: MessageLang): DiagnosisPoint[] {
+  const T = TEXTS[lang];
+  const list: Check[] = Array.isArray(cfg.checks) ? cfg.checks.filter((c) => c && typeof c === "object") : [];
+  const local = list.filter((c) => typeof c.run === "string" && !(Array.isArray(c.runAt) && c.runAt.join() === "ci"));
+  if (cfg.parallel !== undefined || local.length < 2) return [];
+  return [{ id: "parallel", label: T.serial, state: "warning", detail: fill(T.serialDetail, local.length) }];
 }

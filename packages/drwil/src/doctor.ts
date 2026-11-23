@@ -13,7 +13,7 @@ import { computeProtection, formatProtection, protectionJson, type Protection } 
 import { upgradeTraces } from "./doctor-upgrade.js";
 import { installPoints } from "./doctor-install.js";
 import { coveragePoints } from "./doctor-coverage.js";
-import { checksPoints, fingerprintPoints } from "./doctor-checks.js";
+import { checksPoints, fingerprintPoints, parallelPoints } from "./doctor-checks.js";
 import { fixShards, shardsPoints } from "./doctor-shards.js";
 import { fixConfig, fixedPoints } from "./doctor-fix.js";
 import { defaultExec, type Exec } from "./guarantees-table.js";
@@ -64,7 +64,7 @@ export async function doctor(opts: { targetDir: string; exec?: Exec; fix?: boole
   );
   const live = contracts.filter((k) => !k.retired); // a retired contract, without proof (QUA-298), is not counted
   points.push(...coveragePoints(live, lang, cfg.checks), ...checksPoints(cfg.checks, lang, root), ...fixedPoints(fixed, lang));
-  points.push(...fingerprintPoints(root, lang));
+  points.push(...fingerprintPoints(root, lang), ...parallelPoints(cfg, lang));
   points.push(...shardsPoints(root, cfg.checks, lang, sliced));
 
   // A hook manager of the project (husky…) is fine as long as it calls the drwil hooks.

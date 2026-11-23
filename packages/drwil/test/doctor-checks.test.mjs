@@ -5,7 +5,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { doctor, init } from "../dist/index.js";
-import { checksPoints, groupedForm } from "../dist/doctor-checks.js";
+import { checksPoints, groupedForm, parallelPoints } from "../dist/doctor-checks.js";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
@@ -179,4 +179,30 @@ test("QUA-333 la page livrée des contrôles décrit les clés `format`, `readsC
     assert.match(texte, /The `format` setting[\s\S]*"stdin"[\s\S]*"write"[\s\S]*"paths"/, fichier.pathname);
     assert.doesNotMatch(texte, /QUA-3\d\d/, "la page livrée ne cite aucun contrat propre au dépôt");
   }
+});
+
+test("QUA-334 doctor signale plusieurs contrôles de commande sans `parallel`, se tait sur un choix posé ; l'adoption le propose", async () => {
+  const checks = [
+    { id: "a", run: "npm test" },
+    { id: "b", run: "npm run lint" },
+    { id: "e2e", run: "npx playwright test", runAt: ["ci"] },
+  ];
+  assert.match(point(parallelPoints({ checks }, "fr"), "parallel").detail, /2 contrôles.*`"parallel": true`.*`"parallel": false`/);
+  assert.match(point(parallelPoints({ checks }, "en"), "parallel").detail, /2 command checks.*`"parallel": true`/);
+  for (const cfg of [{ checks, parallel: false }, { checks, parallel: true }, { checks: checks.slice(1) }])
+    assert.deepEqual(parallelPoints(cfg, "fr"), []);
+  const dir = await projet();
+  const fichier = join(dir, ".drwil/ia-first.json");
+  writeFileSync(fichier, JSON.stringify({ ...JSON.parse(readFileSync(fichier, "utf8")), checks }));
+  assert.equal(point((await doctor({ targetDir: dir, exec: () => ({ status: 1, stdout: "" }) })).points, "parallel").state, "warning");
+  assert.equal("parallel" in JSON.parse(readFileSync(fichier, "utf8")), false, "doctor n'écrit rien");
+  for (const skill of [
+    "../templates/common/tools/claude/.claude/skills/adopt-the-kit/SKILL.md",
+    "../../../.claude/skills/adopt-the-kit/SKILL.md",
+  ])
+    assert.match(
+      readFileSync(new URL(skill, import.meta.url), "utf8"),
+      /several checks[\s\S]*"parallel": true[\s\S]*"parallel": false[\s\S]*fixed port[\s\S]*output folder[\s\S]*end-to-end/,
+      skill,
+    );
 });

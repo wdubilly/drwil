@@ -23,7 +23,13 @@ When the project has a formatter (Prettier, Biome…), propose the `"format"` ke
 `.drwil/ia-first.json`, the requester's choice, never added by an update: `stdin`
 (prints `{file}` formatted from stdin, e.g. `npx --no-install prettier
 --stdin-filepath {file}`), `write` (formats the files, e.g. `npx prettier
---write`) and `paths` (globs); the pre-commit then refuses an unformatted staged
-file, rewriting nothing.
+--write`), `paths` (globs) and, optionally, `check` (checks the files it is
+given in one call, e.g. `npx --no-install prettier --check`); the pre-commit then
+refuses an unformatted staged file, rewriting nothing.
+When the project declares several checks, propose `"parallel": true` at the top
+of `.drwil/ia-first.json`, the requester's choice, never set by an update: the
+command checks then start together. A check that cannot share the machine keeps
+`"parallel": false` on its declaration: a fixed port, a shared output folder
+(`coverage/`…), an end-to-end suite.
 Verify: `node .githooks/run-checks.mjs` at every step, one commit per
 subject.
