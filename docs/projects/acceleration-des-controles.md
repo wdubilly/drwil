@@ -379,6 +379,28 @@ Aucun.
 
 ## 7. Reprise
 
+- **Lot 13 fait (2026-11-23)** : outil du dépôt `outils/resserrer-paths.mjs` (lecture des sources dans
+  `outils/resserrer-paths-lecture.mjs`, plafond de 200 lignes par fichier ; tests d'abord dans `outils/resserrer-paths.test.mjs`) :
+  il suit les imports statiques relatifs (`import`, `export from`, `import()` et `require` littéraux, `dist` lu dans `src`) des
+  fichiers de test d'un contrôle, de proche en proche, plus les fichiers que nomment leurs chaînes (chemin existant, ou nom de
+  fichier, le plus proche du citeur), et propose les `paths` exacts à la place de `.githooks/**` et `packages/drwil/**`. Il garde le
+  motif large au moindre doute : import non résolu ou calculé, `worker_threads`, sous-processus de commande inconnue, dossier
+  du dépôt lu, commande composée. Sans `--appliquer` rien n'est écrit ; avec, seul le tableau `paths` des contrôles resserrés est
+  réécrit, dans son style. Contrat `QUA-338`, contrôle `tests-qua-338` ; `QUA-141` inchangé (son texte ne change pas). **Résultat
+  honnête** : sur 264 contrôles de tests aux motifs larges, 6 sont resserrés (`tests-qua-191`, `-192`, `-193`, `-198`, `-316`,
+  `-317`), 258 gardent leur motif large : leurs tests copient ou parcourent les hooks et le gabarit du paquet, ou importent `dist`,
+  donc `packages/drwil/src` (sous-processus et `import()` calculés), si bien que le motif large est leur vraie dépendance. Chaque
+  contrôle resserré a été rejoué sous une trace des lectures de fichiers : aucun fichier lu hors des nouveaux `paths`. **Mesure**
+  (contrôles invalidés par un fichier touché, 315 contrôles) avant → après : `.githooks/state.mjs` 194 → 188 ;
+  `.githooks/engine.mjs` 194 → 188 ; `.githooks/briefs.mjs` 196 → 190 ; `.githooks/dashboard.mjs` 194 → 189 ;
+  `.githooks/check-diff-coverage.mjs` 194 → 191 ; `.githooks/glob.mjs` 196 → 193 ; `.githooks/engine.test.mjs` 140 → 138 ;
+  `.githooks/contract-tests.mjs` 295 → 295 (le lanceur est cité par tous) ; `packages/drwil/src/evidence.ts` 191 et
+  `packages/drwil/CHANGELOG.md` 108 : inchangés. **Limite hors cadre** : gagner davantage demande de couper la dépendance
+  elle-même (tests qui copient tout `.githooks`, `dist` qui tire tout le paquet), pas de mieux lire les imports ; chemin
+  d'intention : une fiche d'intention (`docs/intentions/`) sur des tests à dépendances déclarées, fichiers touchés : les tests
+  de `.githooks/` et de `packages/drwil/test/`. Chemin ajouté au `scope` : `outils/resserrer-paths-lecture.mjs` (découpe imposée
+  par le plafond de 200 lignes, admis d'office par la barrière).
+
 - **Lot 12 fait (2026-11-23)** : le garde des commandes (`.claude/hooks/bash-guard.mjs`, gabarit et copie) refuse (`deny`) une boucle
   `while` ou `until` dont la condition lance `pgrep` (forme simple, `until !`, `$(…)`, accent grave, `bash -c`) et renvoie à
   `node .githooks/wait-command.mjs` en appel de fond ; une boucle citée dans un texte (`while` seul entre accents graves),
