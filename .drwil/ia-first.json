@@ -209,6 +209,7 @@
     },
     {
       "id": "couverture-tests",
+      "readsChecks": true,
       "runAt": [
         "ci"
       ],
@@ -228,6 +229,7 @@
     },
     {
       "id": "couverture-claude",
+      "readsChecks": true,
       "runAt": [
         "ci"
       ],
@@ -253,6 +255,7 @@
     },
     {
       "id": "couverture-hooks",
+      "readsChecks": true,
       "runAt": [
         "ci"
       ],
@@ -725,6 +728,7 @@
     },
     {
       "id": "tests-qua-047",
+      "readsChecks": true,
       "name": "tests de QUA-047, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-047 packages/drwil/test/kit-mise-a-jour.test.mjs outils/installer-depot.test.mjs",
       "ciJob": "checks",
@@ -1352,6 +1356,7 @@
     },
     {
       "id": "tests-qua-001",
+      "readsChecks": true,
       "name": "tests de QUA-001, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-001 .githooks/check-file-size.test.mjs",
       "ciJob": "checks",
@@ -2291,7 +2296,7 @@
     {
       "id": "tests-qua-141",
       "name": "tests de QUA-141, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node .githooks/contract-tests.mjs QUA-141 .githooks/engine.test.mjs .githooks/run-checks.test.mjs packages/drwil/test/kit-verify-reprise.test.mjs",
+      "run": "node .githooks/contract-tests.mjs QUA-141 .githooks/engine.test.mjs .githooks/run-checks.test.mjs packages/drwil/test/kit-verify-reprise.test.mjs packages/drwil/test/mise-a-jour-empreinte.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/contract-tests.mjs",
@@ -2990,6 +2995,7 @@
     },
     {
       "id": "tests-qua-185",
+      "readsChecks": true,
       "name": "tests de QUA-185, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-185 packages/drwil/test/kit-attestation.test.mjs",
       "ciJob": "checks",
@@ -3111,6 +3117,7 @@
     },
     {
       "id": "tests-qua-194",
+      "readsChecks": true,
       "name": "tests de QUA-194, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-194 packages/drwil/test/kit-consignes.test.mjs",
       "ciJob": "checks",
@@ -3858,6 +3865,7 @@
     },
     {
       "id": "tests-qua-208",
+      "readsChecks": true,
       "name": "tests de QUA-208, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-208 .githooks/engine.test.mjs .githooks/run-checks.test.mjs",
       "ciJob": "checks",
@@ -4684,6 +4692,7 @@
     },
     {
       "id": "couverture-diff",
+      "readsChecks": true,
       "runAt": [
         "ci"
       ],

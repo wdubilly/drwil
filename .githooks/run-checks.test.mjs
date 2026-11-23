@@ -638,6 +638,25 @@ test("QUA-141 : hors hook et hors CI, un contrôle « ok » dont les fichiers du
   assert.doesNotMatch(passe(racine, { env: { DRWIL_HOOK: "pre-commit" } }).stdout, /repris/);
 });
 
+test("QUA-141 : un contrat ajouté (son contrôle déclaré dans .drwil/ia-first.json) ne rejoue plus les autres contrôles ; un réglage changé les rejoue", () => {
+  const compteur = {
+    id: "compteur",
+    run: `node -e "require('fs').appendFileSync('compteur.log','x')"`,
+    paths: [".drwil/ia-first.json", "src/**"],
+  };
+  const config = (autres = [], lang = "fr") => JSON.stringify({ lang, checks: [compteur, ...autres] }, null, 2);
+  const { racine } = lancer({ ".drwil/ia-first.json": config(), ".gitignore": "compteur.log\n", "src/a.txt": "a\n" }, { valider: true });
+  assert.equal(compte(racine), 1);
+  writeFileSync(join(racine, ".drwil/ia-first.json"), config([{ id: "tests-nouveau", run: "node -e 0", paths: ["src/**"] }]));
+  const ajoute = passe(racine);
+  assert.equal(ajoute.status, 0, ajoute.stdout + ajoute.stderr);
+  assert.equal(compte(racine), 1, "le contrôle déjà vert n'est pas rejoué");
+  assert.match(ajoute.detail, /: repris \(fichiers du contrôle inchangés, run-checks du \d{4}-/);
+  writeFileSync(join(racine, ".drwil/ia-first.json"), config([{ id: "tests-nouveau", run: "node -e 0", paths: ["src/**"] }], "en"));
+  passe(racine);
+  assert.equal(compte(racine), 2, "un réglage qu'il lit a changé : rejoué");
+});
+
 test('QUA-141 : un contrôle en échec, sans paths, ou déclaré reuse: false ou reuse: "tree" est rejoué à chaque passe', () => {
   const joue = (sortie) => `node -e "require('fs').appendFileSync('compteur.log','x');process.exit(${sortie})"`;
   const r = lancer(

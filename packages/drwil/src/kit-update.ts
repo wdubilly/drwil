@@ -1,13 +1,14 @@
 // Mise à jour du kit d'un projet équipé (QUA-206, QUA-237) : `init` coupe une branche dédiée depuis la branche
 // principale, applique la mise à jour et la commite lui-même, pour que la barrière de périmètre ne bloque pas le projet.
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fill, projectLang, type MessageLang } from "./i18n.js";
 import { hooksPath } from "./essentials.js";
 import { readInstall, readManifest } from "./manifest.js";
 import { readConfig } from "./config.js";
 import { shardsPoints } from "./doctor-shards.js";
+import { templatesDir } from "./render.js";
 
 export const UPDATE_BRANCH = "workstream/kit-update";
 /** Trailer et variable que la barrière de périmètre reconnaît (scope-gate-kit.mjs, livré par le gabarit). */
@@ -23,6 +24,8 @@ export interface UpdatePlan {
   /** Branche sur laquelle l'utilisateur se trouvait, où revenir si rien ne change. */
   from: string;
   previousVersion: string | null;
+  /** QUA-141: the installed engine predates this kit's per-check fingerprint: the first pass after the update replays every check. */
+  firstFullPass?: boolean;
   texts: Record<MessageLang, KitTexts>;
   subject: (lang: MessageLang, version: string) => string;
 }
@@ -137,6 +140,16 @@ export function cutBranch(dir: string, branch: string, T: KitTexts): Pick<Update
   return { branch, main, from };
 }
 
+/** QUA-141: an update only (the installation has no verdicts recorded yet), hence not in KitTexts. */
+const FIRST_FULL_PASS: Record<MessageLang, string> = {
+  fr: "Première passe complète, puis reprise des verdicts : l'empreinte de chaque contrôle a changé de calcul, la prochaine passe rejoue donc tous les contrôles une fois — ce n'est pas une régression.",
+  en: "First full pass, then reuse of verdicts: each check's fingerprint is computed differently, so the next pass replays every check once — not a regression.",
+};
+
+/** QUA-141: scheme of the per-check fingerprint in a `fingerprints.mjs` (0: none, or no such file). */
+const fingerprintScheme = (f: string): number =>
+  existsSync(f) ? Number(/FINGERPRINT_SCHEME = (\d+)/.exec(readFileSync(f, "utf8"))?.[1] ?? 0) : 0;
+
 /** An update of an equipped project (a manifest) in a git repository; a first install is prepared by kit-install.ts. */
 export function prepareUpdate(dir: string): UpdatePlan | null {
   if (!existsSync(join(dir, ".git")) || !Object.keys(readManifest(dir)).length) return null;
@@ -144,7 +157,10 @@ export function prepareUpdate(dir: string): UpdatePlan | null {
   const previousVersion = readInstall(dir)?.version ?? null;
   const subject = (lang: MessageLang, version: string) =>
     `${lang === "fr" ? "Mise à jour du kit drwil" : "Update the drwil kit"}: ${previousVersion ?? "?"} → ${version}`;
-  return cut && { ...cut, previousVersion, texts: TEXTS, subject };
+  const firstFullPass =
+    fingerprintScheme(join(dir, ".githooks", "fingerprints.mjs")) <
+    fingerprintScheme(join(templatesDir, "common", "base", ".githooks", "fingerprints.mjs"));
+  return cut && { ...cut, previousVersion, firstFullPass, texts: TEXTS, subject };
 }
 
 /** Commits the kit on its branch (hooks included, the scope gate recognises it by its manifest), then says what was done. */
@@ -175,6 +191,7 @@ export function finishUpdate(dir: string, lang: MessageLang, plan: UpdatePlan, v
   const hooks = hooksPath(dir);
   if (hooks && hooks !== ".githooks") console.log(fill(T.hooks, hooks));
   if (drifted) console.log(fill(T.drift, drifted));
+  if (plan.firstFullPass) console.log(FIRST_FULL_PASS[lang]);
   console.log(T.decide);
   console.log(fill(T.next, plan.branch, plan.main));
 }

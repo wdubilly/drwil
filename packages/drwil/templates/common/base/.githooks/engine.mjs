@@ -9,7 +9,7 @@ import { availableParallelism, homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { globToRegex } from "./glob.mjs";
-import { controlFingerprints, treeFingerprint } from "./fingerprints.mjs";
+import { controlFingerprints, stagedConfig, treeFingerprint } from "./fingerprints.mjs";
 import { mainBranchVerdict } from "./engine-branch.mjs";
 import { createLaunchers } from "./engine-launch.mjs";
 import { createPass } from "./engine-pass.mjs";
@@ -105,6 +105,8 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
   // `runAt` (engine-runat.mjs) reserves a check to some contexts; it is judged before `paths`. `withCiChecks` (option
   // `--with-ci-checks`, QUA-261) also plays the checks left to CI (`runAt: ["ci"]`, QUA-208).
   const runAtOptions = { lang: cfg.lang, ciFiles: cfg.ciFiles, withCi: withCiChecks };
+  // QUA-141: a staged `.drwil/ia-first.json` counts for a check only if it changes what that check reads of it.
+  const touches = staged ? stagedConfig(root) : null;
   for (const c of Array.isArray(cfg.checks) ? cfg.checks : []) {
     const name = c.name ?? c.run;
     const reserved = runAtVerdict(c, name, runContext(staged, env), runAtOptions);
@@ -117,7 +119,7 @@ export function checks(root, { cfg = {}, env = process.env, staged = null, whole
       if (sh?.skip) return sh.skip();
       if (staged && Array.isArray(c.paths) && c.paths.length) {
         const patterns = c.paths.map(globToRegex);
-        if (!staged.some((f) => patterns.some((p) => p.test(f)))) return { status: "not-run", detail: T.deferred };
+        if (!staged.some((f) => touches(f, c) && patterns.some((p) => p.test(f)))) return { status: "not-run", detail: T.deferred };
       }
       return null;
     };

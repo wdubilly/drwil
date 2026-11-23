@@ -293,7 +293,18 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-23) : lots 1 et 2 faits. Lot 2 : contrat `QUA-327` créé (passe ciblée pendant un lot,
+- **Dernier état** (2026-11-23) : lots 1, 2 et 3 faits. Lot 3 (D3) : l'empreinte d'un contrôle ne prend de
+  `.drwil/ia-first.json` que ses réglages hors `checks` (`configView` de `.githooks/fingerprints.mjs`, gabarit et copie) ;
+  un contrôle qui lit les déclarations des autres porte `readsChecks: true` et garde le fichier entier, comme
+  `checks-self-test` (déclaration non objet) et une configuration illisible. Au commit, `stagedConfig` (même module,
+  branché en deux lignes dans `.githooks/engine.mjs`, 191 lignes) reporte un contrôle quand le `.drwil/ia-first.json`
+  indexé ne change, depuis HEAD, ni un réglage ni sa propre déclaration. Marqueur `FINGERPRINT_SCHEME = 2` : la mise à
+  jour (`packages/drwil/src/kit-update.ts`, 197 lignes) compare celui du projet à celui du gabarit et écrit, avant
+  « Reste à décider : relire… », « Première passe complète, puis reprise des verdicts… » (constante hors `KitTexts`,
+  que `packages/drwil/src/kit-install.ts`, hors scope, partage). `QUA-141` mis à jour (règle, périmètre, preuve, tests) ;
+  `tests-qua-141` lance aussi `packages/drwil/test/mise-a-jour-empreinte.test.mjs`. Dans le dépôt, `readsChecks: true`
+  posé sur `tests-qua-001`, `tests-qua-047`, `tests-qua-185`, `tests-qua-194`, `tests-qua-208` (leurs tests lisent les
+  contrôles déclarés du dépôt) et sur les quatre couvertures. Lot 2 : contrat `QUA-327` créé (passe ciblée pendant un lot,
   contrôle `tests-qua-327`, test dans `.githooks/run-checks.test.mjs` : un test ajouté à un fichier `kit-*.test.mjs` casse `QUA-315`, l'inventaire figé des tests du kit) ; règle « During a lot, a
   targeted pass » dans la section 8 livrée (`packages/drwil/templates/common/base/docs/ia-first/8-conduct-rules.md`),
   reprise en une ligne par `AGENTS.md` (gabarit et dépôt), le skill de lancement, le sous-agent `drwil-checks` et la
@@ -338,8 +349,25 @@ Aucun.
   `packages/drwil/test/kit-mise-a-jour.test.mjs` sont des fichiers `kit-*.test.mjs` dont `QUA-315` (la découpe des tests du
   kit ne perd ni ne change aucun test) fige la liste des tests (`packages/drwil/test/decoupe-kit.inventaire.json`, hors
   scope) : y ajouter ou renommer un test fait échouer le commit. Modifier le corps d'un test existant reste permis.
-- **Ce que le lot 2 transmet au lot 3** : pendant le lot, pas de passe complète ; le commit fait foi, et après un échec
+- **Mesure du lot 3 (2026-11-23)** — contrôles dont l'empreinte propre change, sur 300 à 301 déclarés avec `paths`,
+  ancien puis nouveau calcul (script de mesure hors dépôt, clone du dépôt, avant les `readsChecks` ci-dessus qui
+  ajoutent 9 contrôles au second chiffre d'un contrat ajouté) : **contrat ajouté** (un contrôle de plus déclaré) 290 →
+  1 ; **même lot, le lot 2** (`318e42b6`, sur son parent) 291 → 273 ; `.githooks/contract-tests.mjs` 285 → 285 ;
+  `.githooks/state.mjs` 192 → 192 ; `packages/drwil/templates/common/base/AGENTS.md` 195 → 195 ;
+  `packages/drwil/src/evidence.ts` 185 → 185 ; un fichier de test (`packages/drwil/test/serve.test.mjs`) 185 → 185 ;
+  `AGENTS.md` 8 → 8 ; `docs/contracts.md` 3 → 3. Ce qui reste : les globs larges `.githooks/**` (192 contrôles) et
+  `packages/drwil/**` (175) ; un test touché rejoue tous les contrôles qui les citent. Les resserrer demande d'exclure les
+  fichiers de test des autres contrats, ce que les `paths` ne savent pas dire (pas de négation), et un audit par
+  contrôle (des tests lisent d'autres tests : `.githooks/engine.test.mjs` les `kit-*.test.mjs`, `.githooks/state.test.mjs`
+  lance `.githooks/scope-gate.test.mjs`) : non fait au lot 3 (`QUA-013`), signalé comme limite.
+- **Ce que le lot 3 transmet au lot 4** : le commit du lot 3 a touché `.githooks/fingerprints.mjs` et
+  `.githooks/engine.mjs` : tous les verdicts enregistrés sont à rejouer une fois. Le lot 4 touchera
+  `.githooks/pre-commit` et créera `.githooks/format-staged.mjs` (à créer) : un module `.githooks/*.mjs` neuf entre dans
+  `.githooks/**` (192 contrôles au commit) ; commiter par `node .githooks/wait-command.mjs git commit …` en appel de
+  fond. La clé `readsChecks` n'est pas encore décrite dans la page des contrôles livrée
+  (`packages/drwil/templates/common/base/docs/ia-first/4-checks-in-git.md`, hors scope) : limite à soumettre.
+- **Ce que le lot 2 transmettait au lot 3** : pendant le lot, pas de passe complète ; le commit fait foi, et après un échec
   le contrôle en échec seul ou `npx drwil verify --failed` (`QUA-327`). Le commit du lot 2 ne touche aucun module
   `.githooks/*.mjs` ; le lot 3 touchera `.githooks/fingerprints.mjs`, qui invalide tous les contrôles au commit
   (mesure du lot 1 : 476 s) : prévoir un appel de fond par `node .githooks/wait-command.mjs git commit …`.
-- **Prochaine étape** : [IA] lot 3 — Empreinte par contrôle.
+- **Prochaine étape** : [IA] lot 4 — Formatage vérifié avant commit.

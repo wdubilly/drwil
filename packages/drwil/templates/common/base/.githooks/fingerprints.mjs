@@ -6,6 +6,40 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { globToRegex } from "./glob.mjs";
 
+/** QUA-141: scheme of the per-check fingerprint; an update from a kit without this marker says its first pass replays every check. */
+export const FINGERPRINT_SCHEME = 2;
+const CONFIG = ".drwil/ia-first.json";
+
+/** QUA-141: what a check reads of the configuration: every setting but the checks' declarations (its own is in its declaration); null if unreadable. */
+export function configView(text) {
+  try {
+    const settings = JSON.parse(text);
+    delete settings.checks;
+    return JSON.stringify(settings);
+  } catch {
+    return null;
+  }
+}
+
+/** A check that reads the other checks' declarations (`readsChecks: true`), or the engine's own one, judges the whole configuration. */
+const readsChecks = (c) => {
+  const d = JSON.parse(c.declaration)[0];
+  return typeof d !== "object" || d.readsChecks === true;
+};
+
+/**
+ * QUA-141, at pre-commit: (staged file, check declaration) → whether that file changes what the check reads. The staged configuration
+ * does only if a setting, the check's own declaration, or (`readsChecks`) any byte changed since HEAD; without HEAD, always.
+ */
+export function stagedConfig(root) {
+  const show = (rev) => spawnSync("git", ["show", `${rev}:${CONFIG}`], { cwd: root, encoding: "utf8", maxBuffer: 1 << 30 });
+  const [before, after] = [show("HEAD"), show("")];
+  const view = before.status === 0 && after.status === 0 && configView(before.stdout);
+  const kept = typeof view === "string" && view === configView(after.stdout);
+  const declared = new Set(kept ? [].concat(JSON.parse(before.stdout).checks).map((d) => JSON.stringify(d)) : []);
+  return (f, c) => f !== CONFIG || c.readsChecks === true || !declared.has(JSON.stringify(c));
+}
+
 /**
  * QUA-140: fingerprint of what a check judges (commit, branch, uncommitted changes incl. untracked files not ignored, local state,
  * configuration; not the evidence files of the pass itself): one byte of difference changes it. `null` if git does not answer: nothing is then reusable.
@@ -34,7 +68,8 @@ export function treeFingerprint(root) {
 
 /**
  * QUA-141: fingerprint of what ONE check judges — its declaration, this engine and the content of the files its `paths` match
- * (tracked, and untracked not ignored; not the evidence of the pass): one byte of difference changes it. A Map id → fingerprint of the
+ * (tracked, and untracked not ignored; not the evidence of the pass), `.drwil/ia-first.json` through `configView` unless the check
+ * reads the other checks' declarations: one byte of difference changes it, a check added to the configuration does not. A Map id → fingerprint of the
  * `list` entries that declare `paths` (and are not `reuse: false` or `reuse: "tree"`); `null` for every other one, for a check whose
  * `paths` match no file and for one a file of which is unreadable: nothing is then reusable for it. A check that reads a file its `paths`
  * omit would be reused wrongly: the project declares it `reuse: "tree"` (fingerprint of the whole tree only) or completes its `paths`.
@@ -58,20 +93,22 @@ export function controlFingerprints(root, list) {
   for (const n of engineFiles) engineHash.update(readFileSync(join(dir, n)));
   const engine = engineHash.digest("hex");
   const hashes = new Map();
-  const hashOf = (f) => {
-    if (!hashes.has(f)) {
+  const hashOf = (f, whole) => {
+    const key = whole ? f : `${f}\0settings`;
+    if (!hashes.has(key)) {
       try {
+        const bytes = readFileSync(join(root, f));
         hashes.set(
-          f,
+          key,
           createHash("sha256")
-            .update(readFileSync(join(root, f)))
+            .update(whole ? bytes : (configView(bytes.toString()) ?? bytes))
             .digest("hex"),
         );
       } catch (e) {
-        hashes.set(f, e.code === "ENOENT" ? "-" : null);
+        hashes.set(key, e.code === "ENOENT" ? "-" : null);
       }
     }
-    return hashes.get(f);
+    return hashes.get(key);
   };
   for (const c of wanted) {
     const patterns = c.paths.map(globToRegex);
@@ -79,7 +116,7 @@ export function controlFingerprints(root, list) {
     let judged = 0;
     for (const f of files) {
       if (!patterns.some((p) => p.test(f))) continue;
-      const hash = hashOf(f);
+      const hash = hashOf(f, f !== CONFIG || readsChecks(c));
       if (hash === null) {
         judged = 0;
         break;
