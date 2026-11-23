@@ -73,6 +73,7 @@ files:
   - packages/drwil/templates/common/base/.githooks/check-control-coverage.mjs
   - packages/drwil/src/fingerprint.ts
   - outils/resserrer-paths.mjs
+  - outils/resserrer-paths-lecture.mjs
   - outils/resserrer-paths.test.mjs
 -->
 
@@ -249,7 +250,8 @@ compte rendu de la mise à jour (`npx drwil init`) le lui dit.
   demandeur le 2026-11-23, sondage des limites).
 - `packages/drwil/src/doctor.ts` — racine transmise aux points des contrôles (validé par le demandeur le 2026-11-23,
   sondage des limites).
-- l'outil resserrer-paths (dossier outils/) et son test — outil qui suit les imports pour resserrer les `paths` des contrôles de
+- l'outil resserrer-paths (dossier outils/), son module de lecture des sources (`outils/resserrer-paths-lecture.mjs`, ajouté au lot 13 :
+  le plafond de 200 lignes par fichier impose de couper l'outil en deux) et son test — outil qui suit les imports pour resserrer les `paths` des contrôles de
   tests (validé par le demandeur le 2026-11-23, sondage des limites ; contrat modifié : `QUA-141`, déjà déclaré).
 
 ## 2. Hors périmètre

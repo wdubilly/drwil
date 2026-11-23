@@ -3273,11 +3273,11 @@
       "paths": [
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
-        ".githooks/**",
+        ".githooks/check-diff-coverage.mjs",
+        ".githooks/glob.mjs",
         "package.json",
         "package-lock.json",
         ".drwil/ia-first.json",
-        "!.githooks/*.test.mjs",
         ".githooks/check-diff-coverage.test.mjs"
       ],
       "degradable": false
@@ -3290,11 +3290,11 @@
       "paths": [
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
-        ".githooks/**",
+        ".githooks/check-diff-coverage.mjs",
+        ".githooks/glob.mjs",
         "package.json",
         "package-lock.json",
         ".drwil/ia-first.json",
-        "!.githooks/*.test.mjs",
         ".githooks/check-diff-coverage.test.mjs"
       ],
       "degradable": false
@@ -3307,11 +3307,11 @@
       "paths": [
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
-        ".githooks/**",
+        ".githooks/check-diff-coverage.mjs",
+        ".githooks/glob.mjs",
         "package.json",
         "package-lock.json",
         ".drwil/ia-first.json",
-        "!.githooks/*.test.mjs",
         ".githooks/check-diff-coverage.test.mjs"
       ],
       "degradable": false
@@ -3413,11 +3413,12 @@
       "paths": [
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
-        ".githooks/**",
+        ".githooks/dashboard-read.mjs",
+        ".githooks/dashboard-texts.mjs",
+        ".githooks/dashboard.mjs",
         "packages/drwil/templates/common/optional/dashboard/**",
         "package.json",
         ".drwil/ia-first.json",
-        "!.githooks/*.test.mjs",
         ".githooks/dashboard.test.mjs"
       ],
       "degradable": false
@@ -5073,7 +5074,7 @@
       "paths": [
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
-        ".githooks/**",
+        ".githooks/contract-tests.test.mjs",
         ".drwil/ia-first.json"
       ],
       "degradable": false
@@ -5086,7 +5087,7 @@
       "paths": [
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
-        ".githooks/**",
+        ".githooks/contract-tests.test.mjs",
         ".drwil/ia-first.json"
       ],
       "degradable": false
@@ -5370,6 +5371,14 @@
         "package.json",
         ".drwil/ia-first.json"
       ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-338",
+      "name": "tests de QUA-338, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-338 outils/resserrer-paths.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/glob.mjs", "outils/resserrer-paths.mjs", "outils/resserrer-paths-lecture.mjs", "outils/resserrer-paths.test.mjs", "package.json", ".drwil/ia-first.json"],
       "degradable": false
     }
   ],
