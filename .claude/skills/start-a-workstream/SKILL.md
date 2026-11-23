@@ -133,6 +133,10 @@ Starting is the human's decision: it is **their answer to the poll**, read by a 
      failure, the failing check alone or `verify --failed`. Between two lots, `verify --failed` only after a
      failure: the full pass is the closing's (before VERIFY and at the closing; the CI stays complete).
      A brief with a single lot, or none, runs as before.
+   - **A brief that changes what users install or update** (package, installer, migration): a real
+     acceptance run from the first increment — what users receive, installed as an update on a copy
+     of a real project, never the original — replayed at each increment that touches it; recommended,
+     never a refusal.
    - Sequential queue or single workstream: the subagent works in the repository folder — never `isolation: "worktree"`:
      `.drwil/state.json` (if present) is ignored by Git, absent from an isolated copy, and the subagent would
      believe it is in SCOPING. It receives no state reminder at start: its instructions start by

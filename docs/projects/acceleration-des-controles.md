@@ -293,6 +293,32 @@ Aucun.
 
 ## 7. Reprise
 
+- **Lot 5 fait (2026-11-23, D7 et D8)** : recommandation d'une recette réelle dès le lot 1 dans le modèle de fiche
+  livré (`packages/drwil/templates/common/base/docs/projects/model-brief.md`, section des lots ; copie du dépôt
+  `docs/projects/model-brief.md`, en français, écart déclaré) et dans le skill de lancement (gabarit et copie, puce « A brief
+  that changes what users install or update ») ; textes livrés sans outil ni contrat propres au dépôt. Dans le dépôt :
+  `outils/recette-adoptant.mjs` (tarball de la branche par `npm pack`, installé à part ; chaque adoptant cloné depuis sa
+  branche principale dans un dossier temporaire, remote et autres branches retirés, hooks actifs, `npm ci`, puis
+  `drwil init` de la CLI installée ; jugé : code 0, commit sur `workstream/kit-update` avec le trailer, arbre propre,
+  pas de clé `format` ; `--garder` laisse les copies pour inspection) et `outils/verifier-recette-reelle.mjs` (ligne
+  `[ia-first-warning]`, code 0 toujours). Contrats créés : `QUA-330` (recommandation livrée et rappel non bloquant,
+  contrôles `recette-reelle` et `tests-qua-330`) et `QUA-331` (outil de recette, `tests-qua-331` ; l'outil lui-même
+  n'est rejoué par aucun contrôle : il lit des dépôts hors du clone et le registre npm). Carte `docs/architecture.md`
+  complétée (section `outils/`).
+- **Recette rejouée (lot 5, 2026-11-23)** — `node outils/recette-adoptant.mjs --garder`, tarball `drwil-0.11.1.tgz`
+  de la branche (lots 1 à 5) : **marinade-poulet** (kit 0.11.1, branche principale `main`) ✓ mise à jour commitée sur
+  `workstream/kit-update` en 6,8 s, arbre propre, sans clé `format`, première passe complète annoncée (130 fichiers) ;
+  **drwil_walk** (kit 0.10.0, `master`) ✓ même verdict en 5,2 s (136 fichiers). Dépôts d'origine vérifiés intacts
+  après coup (branche, état de la copie de travail, aucune branche `workstream/kit-update`) ; copies supprimées.
+  Le rappel signale cette fiche-ci (scope sur `packages/drwil/src/kit-update.ts`, lot 1 « Mesure de départ » sans
+  recette réelle) : attendu, non bloquant ; le texte des lots n'a pas été retouché.
+- **Ce que le lot 5 transmet au lot 6** : rejouer `node outils/recette-adoptant.mjs` après le lot 6 (il touche
+  `packages/drwil/src/kit-update.ts`) : la réécriture des `paths: ["**"]` doit apparaître dans le compte rendu
+  de `drwil init` et le commit rester propre. La recette s'arrête au commit de mise à jour : le second commit du lot 8
+  (reprise des verdicts) reste humain ; chez `drwil_walk`, `npm ci` à la racine n'installe que drwil (les couches ont
+  leurs propres dépendances), à installer à la main avant ce second commit. Le tarball porte la version du paquet
+  (0.11.1) : le sujet du commit de mise à jour de marinade dit « 0.11.1 → 0.11.1 ». `QUA-330` et `QUA-331` sont à citer
+  dans les critères au lot 7, avec `QUA-327`, `QUA-328` et `QUA-329`.
 - **Lot 4 fait (2026-11-23, D4 à D6)** : `.githooks/format-staged.mjs` (gabarit `packages/drwil/templates/common/base/.githooks/format-staged.mjs`
   et copie), lancé par `.githooks/pre-commit` avant `run-checks`. Clé `format` de `.drwil/ia-first.json` :
   `{ "stdin": "<commande qui écrit {file} formaté depuis l'entrée standard>", "write": "<commande qui formate>",
@@ -318,7 +344,7 @@ Aucun.
   Limites hors cadre à soumettre (fin de BUILD) : la clé `format` n'est pas décrite dans la page des réglages livrée
   `packages/drwil/templates/common/base/docs/ia-first/4-checks-in-git.md` (hors scope) ; un formateur lancé par
   `npx` coûte environ 0,2 s par fichier au commit (un appel groupé par lot de fichiers le réduirait).
-- **Dernier état** (2026-11-23) : lots 1, 2, 3 et 4 faits. Lot 3 (D3) : l'empreinte d'un contrôle ne prend de
+- **Dernier état** (2026-11-23) : lots 1, 2, 3, 4 et 5 faits (lot 5 : voir plus haut). Lot 3 (D3) : l'empreinte d'un contrôle ne prend de
   `.drwil/ia-first.json` que ses réglages hors `checks` (`configView` de `.githooks/fingerprints.mjs`, gabarit et copie) ;
   un contrôle qui lit les déclarations des autres porte `readsChecks: true` et garde le fichier entier, comme
   `checks-self-test` (déclaration non objet) et une configuration illisible. Au commit, `stagedConfig` (même module,
@@ -395,4 +421,4 @@ Aucun.
   le contrôle en échec seul ou `npx drwil verify --failed` (`QUA-327`). Le commit du lot 2 ne touche aucun module
   `.githooks/*.mjs` ; le lot 3 touchera `.githooks/fingerprints.mjs`, qui invalide tous les contrôles au commit
   (mesure du lot 1 : 476 s) : prévoir un appel de fond par `node .githooks/wait-command.mjs git commit …`.
-- **Prochaine étape** : [IA] lot 5 — Recette réelle dès le premier lot.
+- **Prochaine étape** : [IA] lot 6 — Chemins des contrôles générés.

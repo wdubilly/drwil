@@ -4709,6 +4709,30 @@
       "needsBuild": true
     },
     {
+      "id": "recette-reelle",
+      "name": "rappel non bloquant : fiche qui touche l'installation ou la mise à jour sans recette réelle au lot 1 (QUA-330)",
+      "run": "node outils/verifier-recette-reelle.mjs",
+      "ciJob": "checks",
+      "paths": ["outils/verifier-recette-reelle.mjs", ".githooks/briefs*.mjs", ".githooks/scope.mjs", "docs/projects/**"],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-330",
+      "name": "tests de QUA-330, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-330 outils/verifier-recette-reelle.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", "outils/verifier-recette-reelle.mjs", "outils/verifier-recette-reelle.test.mjs", ".githooks/briefs*.mjs", ".githooks/scope.mjs", "packages/drwil/templates/common/base/docs/projects/model-brief.md", "docs/projects/model-brief.md", "packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md", ".claude/skills/start-a-workstream/SKILL.md", "package.json", ".drwil/ia-first.json"],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-331",
+      "name": "tests de QUA-331, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-331 outils/recette-adoptant.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", "outils/recette-adoptant.mjs", "outils/recette-adoptant.test.mjs", "package.json", ".drwil/ia-first.json"],
+      "degradable": false
+    },
+    {
       "id": "couverture-diff",
       "readsChecks": true,
       "runAt": [

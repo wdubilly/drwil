@@ -94,6 +94,13 @@ its own)
 
 ## 6. Increments
 
+(a workstream that changes what users install or update — a package, an
+installer, a migration, the files a tool lays down: plan a real acceptance
+run from increment 1 — build what users receive, install it as an update on
+a copy of a real project or environment that uses it, never the original,
+and replay it at each increment that touches it — rather than discovering
+installation defects at the end.)
+
 - **Increment 1 — title** [AI|human]: content. Exit criterion: what proves the
   increment is done (green tests, a passing check...).
 
