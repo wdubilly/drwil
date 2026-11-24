@@ -138,9 +138,6 @@ d'un outil) la dit dans son statut.
 
 ### Vitesse chez l'adoptant (en tête, demande du 2026-11-22)
 
-- [ ] [IA] [P0] (0.11.2) Le script du pipeline GitLab livré s'exécute sous bash 3.2 (macOS) : `case` non parenthésé dans un
-  `$( )`, CI de `master` rouge sous macOS, release refusée ; prêt (cadré le 2026-11-24) —
-  `docs/projects/bash-3-2-du-pipeline-gitlab-livre.md`.
 - [ ] [IA] [P1] (0.11.2) Version 0.11.2 : montée de version, changelog et mise à jour de marinade-poulet avec tout ce
   qui est fusionné depuis la 0.11.1 ; publication et mise à jour de marinade-poulet : gestes humains ; prêt (cadré le
   2026-11-24) — `docs/projects/version-0-11-2.md`.

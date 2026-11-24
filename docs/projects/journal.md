@@ -4811,3 +4811,7 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 - **Ce qui est livré** : le motif est parenthésé, `(*" $sha "*)`, dans `packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml` ; un test statique côté Linux (`packages/drwil/test/ci-parite-bash.test.mjs`) refuse un `case` aux motifs non parenthésés dans un `$( )` de tout script du pipeline livré et vérifie qu'il voit le défaut sur un exemple fautif ; contre l'ancien gabarit il échoue. Contrat étendu : `QUA-296`. La CI GitHub livrée n'a aucun `case`.
 - **Limite traitée sur le champ** (sondage `drwil-limite`, « Traiter maintenant ») : `packages/drwil/test/ci-parite.test.mjs` passait à 203 lignes ; le test neuf est dans un fichier à part et l'ancien repasse à 186 lignes. Cadrage élargi par un commit séparé.
 - **Limites connues** : seule la syntaxe du script est vérifiée sous bash 3.2 (`bash -n`), pas son exécution complète (il lui faut `node` et `git`) ; le garde statique lit à partir du premier `$(` d'une ligne et refuserait à tort un `case` non parenthésé placé plus loin hors substitution sur la même ligne, sans effet sur le script actuel ; le vert des trois systèmes se prouve par le workflow lancé sur `master` après la fusion (geste humain).
+
+## bash-3-2-du-pipeline-gitlab-livre
+
+- **Preuve de clôture** : `docs/preuves/bash-3-2-du-pipeline-gitlab-livre.md`.
