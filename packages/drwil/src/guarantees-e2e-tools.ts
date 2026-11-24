@@ -153,16 +153,27 @@ const REPATHED = {
   fr: {
     rewritten:
       'Chemins posés par le kit sur {0} : ils étaient sur `paths: ["**"]`, rejoués par tout fichier modifié ; ils couvrent désormais le code et sa configuration (sources, tests, configuration de l\'outil, manifeste et verrou du paquet).',
+    held: "Reste à décider : {0} reste sur `paths: [\"**\"]` — le garde de la branche principale (celui d'avant cette mise à jour) n'admettrait pas leur resserrement dans ce commit ; lancer `npx drwil doctor --fix` une fois cette mise à jour fusionnée.",
     left: 'Reste à décider : {0} retouché à la main reste sur `paths: ["**"]` — y poser les chemins de ce qu\'il lit (sources, tests, configuration, manifeste et verrou du paquet).',
   },
   en: {
     rewritten:
       'Paths set by the kit on {0}: they were on `paths: ["**"]`, replayed by any changed file; they now cover the code and its configuration (sources, tests, tool configuration, package manifest and lock).',
+    held: 'Left to decide: {0} stays on `paths: ["**"]` — the main branch\'s guard (the one from before this update) would not admit narrowing them in this commit; run `npx drwil doctor --fix` once this update is merged.',
     left: 'Left to decide: {0}, modified by hand, stays on `paths: ["**"]` — set the paths of what it reads (sources, tests, configuration, package manifest and lock).',
   },
 };
 
-/** The update (QUA-141): rewrites the kit's `["**"]` checks of `.drwil/ia-first.json` and says which; the file is written only then. */
+/** QUA-238: the guard the project had before the update (HEAD, never the announced version) exports `kitPathsOf`; CI replays that one. */
+function guardAdmits(root: string): boolean {
+  const shown = spawnSync("git", ["show", "HEAD:.githooks/scope-gate-kit.mjs"], { cwd: root, encoding: "utf8" });
+  return shown.status === 0 && /export\s+(const|function)\s+kitPathsOf\b|export\s*\{[^}]*\bkitPathsOf\b/.test(shown.stdout);
+}
+
+/**
+ * The update (QUA-141): rewrites the kit's `["**"]` checks of `.drwil/ia-first.json` and says which; the file is written only then,
+ * and only if the project's guard from before the update admits it (QUA-238), else the report points to `doctor --fix`.
+ */
 export function repathConfig(root: string, lang: MessageLang): void {
   const file = join(root, ".drwil", "ia-first.json");
   let raw: { checks?: unknown };
@@ -174,6 +185,11 @@ export function repathConfig(root: string, lang: MessageLang): void {
   if (!Array.isArray(raw?.checks)) return;
   const { rewritten, left } = rewriteKitPaths(raw.checks, root);
   const named = (ids: string[]) => ids.map((id) => `\`${id}\``).join(", ");
+  if (!guardAdmits(root)) {
+    if (rewritten.length) console.log(fill(REPATHED[lang].held, named(rewritten)));
+    if (left.length) console.log(fill(REPATHED[lang].left, named(left)));
+    return;
+  }
   if (rewritten.length) writeFileSync(file, `${JSON.stringify(raw, null, 2)}\n`);
   if (rewritten.length) console.log(fill(REPATHED[lang].rewritten, named(rewritten)));
   if (left.length) console.log(fill(REPATHED[lang].left, named(left)));

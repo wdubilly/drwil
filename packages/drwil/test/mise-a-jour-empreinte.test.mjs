@@ -12,9 +12,13 @@ import { tmp, capture, git, read, config, contrat, projetReprise } from "./kit-c
 
 const IDENTITE = { GIT_AUTHOR_NAME: "t", GIT_AUTHOR_EMAIL: "t@t", GIT_COMMITTER_NAME: "t", GIT_COMMITTER_EMAIL: "t@t" };
 
+// Sous `CI=true`, `init` ne commite pas dans le dépôt temporaire : un test qui relit `HEAD` verrait l'ancien garde (vu en CI le 2026-11-24).
+const VARIABLES_DE_CI = ["CI", "GITHUB_ACTIONS", "GITLAB_CI"];
+
 async function avecIdentite(fn) {
-  const avant = Object.fromEntries(Object.keys(IDENTITE).map((k) => [k, process.env[k]]));
+  const avant = Object.fromEntries([...Object.keys(IDENTITE), ...VARIABLES_DE_CI].map((k) => [k, process.env[k]]));
   Object.assign(process.env, IDENTITE);
+  for (const k of VARIABLES_DE_CI) delete process.env[k];
   try {
     return await fn();
   } finally {
@@ -158,6 +162,54 @@ test("QUA-238 : le commit d'une mise à jour qui réécrit les chemins des contr
     const e2e = JSON.parse(git(dir, "show", "HEAD:.drwil/ia-first.json").stdout).checks.find((c) => c.id === "e2e");
     assert.deepEqual(e2e.paths, CALCULES, "les chemins réécrits sont dans le commit admis");
     assert.equal(git(dir, "status", "--porcelain").stdout, "", "arbre propre");
+  });
+});
+
+/** Le garde du projet d'avant la mise à jour : celui d'un kit sans `kitPathsOf` (0.11.1), noté au manifeste comme livré. */
+const gardeAncien = (e2e) => (dir) => {
+  surToutLeDepot(e2e)(dir);
+  const f = ".githooks/scope-gate-kit.mjs";
+  writeFileSync(join(dir, f), read(dir, f).replace(/^export const kitPathsOf\b.*$/m, "const kitPathsOfAncien = 0;"));
+  assert.doesNotMatch(read(dir, f), /export const kitPathsOf/);
+  const manifeste = JSON.parse(read(dir, ".drwil/installed-files.json"));
+  manifeste[f] = createHash("sha256").update(read(dir, f)).digest("hex");
+  writeFileSync(join(dir, ".drwil/installed-files.json"), `${JSON.stringify(manifeste, null, 2)}\n`);
+};
+
+test('QUA-238 : un garde d\'avant la mise à jour sans `kitPathsOf` : les `paths` restent sur ["**"], le compte rendu renvoie à `doctor --fix`, qui les resserre une fois le garde de la 0.11.2 fusionné', async () => {
+  await avecIdentite(async () => {
+    for (const [lang, motif] of [
+      ["fr", /Reste à décider : `coverage-root`, `coverage-diff-root`, `e2e` reste sur `paths: \["\*\*"\]`[^\n]*`npx drwil doctor --fix`/],
+      ["en", /Left to decide: `coverage-root`, `coverage-diff-root`, `e2e` stays on `paths: \["\*\*"\]`[^\n]*`npx drwil doctor --fix`/],
+    ]) {
+      const dir = await projetInstalle(lang, undefined, gardeAncien({ ...KIT_E2E }));
+      const sortie = (await capture(() => init({ lang, targetDir: dir, name: "demo" }))).join("\n");
+      assert.match(sortie, motif, sortie);
+      assert.doesNotMatch(sortie, /Chemins posés par le kit|Paths set by the kit/);
+      const commite = JSON.parse(git(dir, "show", "HEAD:.drwil/ia-first.json").stdout).checks;
+      for (const id of ["coverage-root", "coverage-diff-root", "e2e"]) assert.deepEqual(commite.find((c) => c.id === id).paths, ["**"], id);
+      assert.match(
+        git(dir, "show", "HEAD:.githooks/scope-gate-kit.mjs").stdout,
+        /export const kitPathsOf/,
+        "le garde de la 0.11.2 est installé",
+      );
+    }
+    // Le garde de la 0.11.2 est dans la branche principale : `doctor --fix` resserre comme avant.
+    const dir = await projetInstalle("fr", undefined, gardeAncien({ ...KIT_E2E }));
+    await capture(() => init({ lang: "fr", targetDir: dir, name: "demo" }));
+    const branche = git(dir, "branch", "--show-current").stdout.trim();
+    git(dir, "checkout", "-q", "master");
+    assert.equal(git(dir, "merge", "-q", "--ff-only", branche).status, 0);
+    const { fixConfig } = await import("../dist/doctor-fix.js");
+    const fixes = await fixConfig(dir);
+    assert.deepEqual(
+      fixes
+        .filter((f) => f.kind === "paths")
+        .map((f) => f.id)
+        .sort(),
+      ["coverage-diff-root", "coverage-root", "e2e"],
+    );
+    for (const id of ["coverage-diff-root", "e2e"]) assert.deepEqual(config(dir).checks.find((c) => c.id === id).paths, CALCULES, id);
   });
 });
 
