@@ -15,6 +15,9 @@ async function projet(lang = "fr") {
   const dir = tmp();
   git(dir, "init", "-q", "-b", "master");
   git(dir, "config", "core.autocrlf", "false");
+  // Sans identité (une CI n'en a pas), la mise à jour refuse de commiter : le test ne dépend pas de celle de la machine.
+  git(dir, "config", "user.name", "Essai");
+  git(dir, "config", "user.email", "essai@example.test");
   await quiet(() => init({ lang, targetDir: dir, name: "demo", git: false }));
   return dir;
 }
