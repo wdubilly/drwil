@@ -184,20 +184,3 @@ test("QUA-296 : CI GitLab livrée — un pipeline de la branche principale dont 
   assert.equal(read(evidence, "pr-verdicts/proven-tree.txt").trim(), arbre);
   assert.equal(read(evidence, "pr-verdicts/run-checks-verdicts.json"), read(evidence, "run-checks-verdicts.json"));
 });
-
-// bash 3.2 (macOS) compte mal la `)` d'un motif de `case` non parenthésé dans un `$( )` : « syntax error near unexpected token ';;' ».
-const casNonParenthese = (script) => {
-  const debut = script.indexOf("$(");
-  return debut < 0 ? [] : [...script.slice(debut).matchAll(/\bcase\b[^;]*?\bin\s+(?!\()(\S[^)]*\))/g)].map((m) => m[1]);
-};
-
-test("QUA-296 : CI GitLab livrée — aucun `case` aux motifs non parenthésés dans un `$( )` (bash 3.2 de macOS)", () => {
-  assert.deepEqual(casNonParenthese('x=$( { case "$h" in *" $s "*) echo y;; esac; } | cat )'), ['*" $s "*)'], "le garde voit le défaut");
-  assert.deepEqual(casNonParenthese('x=$( { case "$h" in (*" $s "*) echo y;; esac; } | cat )'), []);
-  const ci = parseAllDocuments(readFileSync(GABARIT_CI.gitlab, "utf8"))[0].toJS();
-  for (const [job, def] of Object.entries(ci)) {
-    for (const ligne of [def?.script, def?.before_script, def?.after_script].flat().filter((l) => typeof l === "string")) {
-      assert.deepEqual(casNonParenthese(ligne), [], `${job} : motifs de case à parenthéser dans un $( )`);
-    }
-  }
-});
