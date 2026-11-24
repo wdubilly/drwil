@@ -3,10 +3,11 @@
 import { afterEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { checkStaged, formatSetting, stagedToFormat } from "./format-staged.mjs";
 
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 const ENV = { ...process.env };
@@ -187,4 +188,163 @@ test("QUA-328 : une clé `check` qui n'est pas une chaîne rend la clé format i
   writeFileSync(join(dir, "src/a.js"), "const a = 1;\n");
   git(dir, "add", "-A");
   assert.match(git(dir, "commit", "-m", "essai").stderr, /incomplète/);
+});
+
+// ---- Le module du dépôt lui-même, en processus (les tests ci-dessus lancent une copie dans un dépôt temporaire :
+// ils prouvent le vrai hook, mais la couverture ne voit que ce module-ci). Importer le module n'exécute pas son point
+// d'entrée : il ne se lance que si le script lancé s'appelle format-staged.mjs.
+
+/** Joue `fn` avec le dépôt temporaire pour dossier courant, puis rétablit le dossier courant. */
+async function dans(dir, fn) {
+  const avant = process.cwd();
+  process.chdir(dir);
+  try {
+    return await fn();
+  } finally {
+    process.chdir(avant);
+  }
+}
+const indexer = (dir, fichiers) => {
+  for (const [nom, contenu] of Object.entries(fichiers)) {
+    mkdirSync(join(dir, nom, ".."), { recursive: true });
+    writeFileSync(join(dir, nom), contenu);
+  }
+  git(dir, "add", "-A");
+};
+
+test("QUA-329 : formatSetting rend null sans clé, false si elle est incomplète ou si check n'est pas une chaîne, la clé sinon", () => {
+  assert.equal(formatSetting({}), null);
+  assert.equal(formatSetting(undefined), null);
+  assert.equal(formatSetting({ format: null }), false);
+  assert.equal(formatSetting({ format: { stdin: "a", write: "b", paths: [] } }), false);
+  assert.equal(formatSetting({ format: { stdin: "a", write: "b" } }), false);
+  assert.equal(formatSetting({ format: { ...FORMAT, check: 3 } }), false);
+  assert.equal(formatSetting({ format: FORMAT }), FORMAT);
+  const avecCheck = { ...FORMAT, check: "node chk.cjs" };
+  assert.equal(formatSetting({ format: avecCheck }), avecCheck);
+});
+
+test("QUA-328 : checkStaged (module du dépôt) sans clé, clé incomplète (en français et en anglais) et index illisible", async () => {
+  const dir = depot();
+  assert.deepEqual(await dans(dir, () => checkStaged({})), { code: 0, lines: [] });
+  assert.deepEqual(await dans(dir, () => checkStaged(undefined)), { code: 0, lines: [] });
+  const fr = await dans(dir, () => checkStaged({ format: { stdin: "x" } }));
+  assert.equal(fr.code, 1);
+  assert.match(fr.lines[0], /incomplète/);
+  const en = await dans(dir, () => checkStaged({ lang: "en", format: { stdin: "x" } }));
+  assert.match(en.lines[0], /Incomplete "format" key/);
+  const horsDepot = mkdtempSync(join(tmpdir(), "drwil-format-hors-"));
+  dossiers.push(horsDepot);
+  assert.equal(await dans(horsDepot, () => stagedToFormat(["src/**"])), null);
+  const illisible = await dans(horsDepot, () => checkStaged({ format: FORMAT }));
+  assert.equal(illisible.code, 1);
+  assert.match(illisible.lines[0], /Index illisible/);
+});
+
+test("QUA-328 : checkStaged (module du dépôt) nomme le fichier non formaté, accepte les formatés, ignore ceux hors chemins", async () => {
+  const dir = depot();
+  indexer(dir, { "src/a.js": "const a = 1;   \n", "src/b.js": "const b = 2;\n", "notes.txt": "fin   \n" });
+  const cfg = { format: FORMAT };
+  assert.deepEqual(await dans(dir, () => stagedToFormat(FORMAT.paths)), ["src/a.js", "src/b.js"]);
+  const r = await dans(dir, () => checkStaged(cfg));
+  assert.equal(r.code, 1);
+  assert.match(r.lines.join("\n"), /1 fichier\(s\) indexé\(s\) non formaté\(s\)/);
+  assert.deepEqual(r.lines.slice(1, 2), ["  - src/a.js"]);
+  assert.equal(r.lines.at(-1), '  npx fmt --write "src/a.js" && git add "src/a.js"');
+  indexer(dir, { "src/a.js": "const a = 1;\n" });
+  assert.deepEqual(await dans(dir, () => checkStaged(cfg)), { code: 0, lines: [] });
+  git(dir, "reset", "-q");
+  git(dir, "rm", "-q", "--cached", "-r", "src");
+  assert.deepEqual(await dans(dir, () => checkStaged(cfg)), { code: 0, lines: [] }, "aucun fichier concerné");
+});
+
+test("QUA-328 : checkStaged (module du dépôt) : formateur absent, formateur qui sort sans rien écrire (avec et sans message d'erreur)", async () => {
+  const dir = depot();
+  indexer(dir, { "src/a.js": "const a = 1;\n" });
+  const absent = await dans(dir, () => checkStaged({ format: { ...FORMAT, stdin: "formateur-inexistant-drwil {file}" } }));
+  assert.equal(absent.code, 1);
+  assert.match(absent.lines[0], /Formateur absent ou en échec.*formateur-inexistant-drwil/s);
+  const muet = await dans(dir, () => checkStaged({ format: { ...FORMAT, stdin: "node -e 0 {file}" } }));
+  assert.match(muet.lines[0], /stdout vide/);
+  const bavard = await dans(dir, () => checkStaged({ format: { ...FORMAT, stdin: "node -e \"console.error('boum')\" {file}" } }));
+  assert.match(bavard.lines[0], /boum/);
+  assert.doesNotMatch(bavard.lines[0], /stdout vide/);
+});
+
+test("QUA-328 : checkStaged (module du dépôt) avec `check` : un appel, muet, copie différente de l'index, lots de fichiers", async () => {
+  const dir = depot();
+  writeFileSync(join(dir, "chk.cjs"), VERIFICATEUR);
+  const cfg = { format: { ...FORMAT, stdin: "formateur-inexistant-drwil {file}", check: "node chk.cjs" } };
+  indexer(dir, { "src/a.js": "const a = 1;\n", "src/b.js": "const b = 1;\n" });
+  assert.deepEqual(await dans(dir, () => checkStaged(cfg)), { code: 0, lines: [] });
+  assert.deepEqual(appels(dir), ["src/a.js src/b.js"]);
+  // check muet : pas d'accord, chaque fichier est jugé par « stdin » (ici absent : échec)
+  const muet = await dans(dir, () => checkStaged({ format: { ...cfg.format, check: "node -e 0" } }));
+  assert.match(muet.lines[0], /Formateur absent ou en échec/);
+  // copie de travail différente de l'index : jugée dans l'index, jamais par check
+  rmSync(join(dir, ".git/appels"));
+  writeFileSync(join(dir, "src/a.js"), "const a = 2;\n");
+  const diff = await dans(dir, () => checkStaged(cfg));
+  assert.match(diff.lines[0], /src\/a\.js/);
+  assert.deepEqual(appels(dir), ["src/b.js"]);
+  // lot dépassant la longueur d'une ligne de commande : plusieurs appels de check
+  const long = "n".repeat(200);
+  const noms = Array.from({ length: 40 }, (_, i) => `src/${long}${i}.js`);
+  indexer(dir, Object.fromEntries(noms.map((n) => [n, "const x = 1;\n"])));
+  rmSync(join(dir, ".git/appels"));
+  git(dir, "reset", "-q");
+  git(dir, "add", "-A");
+  const lots = await dans(dir, () => checkStaged({ format: { ...cfg.format } }));
+  assert.equal(lots.code, 0, lots.lines.join("\n"));
+  const lignes = appels(dir);
+  assert.ok(lignes.length >= 2, `plusieurs appels attendus : ${lignes.length}`);
+  assert.equal(lignes.join(" ").split(" ").length, 42, "a.js, b.js et les 40 fichiers longs");
+});
+
+/** Un `git` factice en tête du PATH : refuse les commandes dont le texte contient `motif`, passe le reste au vrai git. */
+function gitQuiEchoue(motif) {
+  const reel = spawnSync("sh", ["-c", "command -v git"], { encoding: "utf8" }).stdout.trim();
+  const bin = mkdtempSync(join(tmpdir(), "drwil-faux-git-"));
+  dossiers.push(bin);
+  writeFileSync(join(bin, "git"), `#!/bin/sh\ncase "$*" in *"${motif}"*) echo "git factice" >&2; exit 3;; esac\nexec "${reel}" "$@"\n`);
+  chmodSync(join(bin, "git"), 0o755);
+  return bin;
+}
+async function avecPath(bin, fn) {
+  const avant = process.env.PATH;
+  process.env.PATH = `${bin}:${avant}`;
+  try {
+    return await fn();
+  } finally {
+    process.env.PATH = avant;
+  }
+}
+
+test("QUA-328 : git qui échoue à comparer la copie à l'index : tout est jugé fichier par fichier ; qui échoue à lire l'index : échec nommé", async () => {
+  const dir = depot();
+  writeFileSync(join(dir, "chk.cjs"), VERIFICATEUR);
+  indexer(dir, { "src/a.js": "const a = 1;\n" });
+  const cfg = { format: { ...FORMAT, check: "node chk.cjs" } };
+  const sansDiff = await avecPath(gitQuiEchoue("diff --name-only"), () => dans(dir, () => checkStaged(cfg)));
+  assert.deepEqual(sansDiff, { code: 0, lines: [] });
+  const sansBlob = await avecPath(gitQuiEchoue("show :src"), () =>
+    dans(dir, () => checkStaged({ format: { ...FORMAT, check: "node -e 0" } })),
+  );
+  assert.equal(sansBlob.code, 1);
+  assert.match(sansBlob.lines[0], /Formateur absent ou en échec sur src\/a\.js.*code 3.*git factice/s);
+});
+
+test("QUA-329 : lancé comme script (point d'entrée), le module du dépôt lit .drwil/ia-first.json, imprime sur l'erreur et sort avec le code", () => {
+  const dir = depot({ format: FORMAT });
+  const lancer = () => spawnSync(process.execPath, [join(ICI, "format-staged.mjs")], { cwd: dir, encoding: "utf8", env: ENV });
+  indexer(dir, { "src/a.js": "const a = 1;   \n" });
+  const refus = lancer();
+  assert.equal(refus.status, 1);
+  assert.match(refus.stderr, /src\/a\.js/);
+  indexer(dir, { "src/a.js": "const a = 1;\n" });
+  const ok = lancer();
+  assert.equal(ok.status, 0);
+  assert.equal(ok.stderr, "");
+  rmSync(join(dir, ".drwil/ia-first.json"));
+  assert.equal(lancer().status, 0, "configuration illisible : formatage inactif");
 });

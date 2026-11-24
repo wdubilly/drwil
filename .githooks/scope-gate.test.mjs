@@ -10,6 +10,7 @@ import { allow, contractsAddedOnly } from "./detour.mjs";
 import { readState } from "./state.mjs";
 import { addTrailer, checkScope, outsideBriefFiles, checkIndex } from "./scope-gate.mjs";
 import { TEXTS } from "./scope-gate-texts.mjs";
+import { kitPaths, nonKitFiles } from "./scope-gate-kit.mjs";
 import { derivation, derivedInWorktree } from "./scope-derived.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
@@ -1266,4 +1267,39 @@ test("QUA-311 : derivation, pure : chemin depuis la racine, test illisible, crit
   const declares = [[FICHE, `${fiche(["src/a.js"])}\n## Contrats modifiés\n\n- \`QUA-900\` — raison\n`]];
   assert.equal(derivedInWorktree(racine, ["lib/p.js"], declares, { dirs: { contracts: "regles.md" } }).get("lib/p.js").kind, 2);
   assert.equal(derivedInWorktree(racine, ["lib/p.js"], declares, {}).size, 0);
+});
+
+test("QUA-238 : kitPaths donne ses chemins à un contrôle du kit : couche, dossiers de code, extensions, fichiers sans extension ; jamais ceux du kit ni la documentation", () => {
+  assert.deepEqual(kitPaths("app", ["app/a.ts"]), ["app/**"]);
+  assert.deepEqual(kitPaths("", ["src/a.ts", "x.js"]).sort(), ["*.js", "src/**"]);
+  const fichiers = [
+    "src/a.ts",
+    "src/b.ts",
+    "docs/guide.md",
+    ".githooks/pre-commit",
+    "node_modules/x/y.js",
+    "README.md",
+    ".gitignore",
+    "vite.config.js",
+    "main.js",
+    "Makefile",
+    ".env",
+  ];
+  assert.deepEqual(kitPaths(".", fichiers), ["*.js", ".env", "Makefile", "src/**"]);
+  assert.deepEqual(kitPaths(".", ["docs/a.md", "README.md", ".gitignore"]), ["**"], "rien que le kit ou la doc : tout");
+  assert.deepEqual(kitPaths(".", []), ["**"]);
+});
+
+test("QUA-238 : nonKitFiles juge la configuration d'une mise à jour même quand git ne peut pas lister l'arbre (liste vide)", () => {
+  const avant = { scopeGate: "blocking", checks: [{ id: "coverage-app", cwd: "app", paths: ["**"] }] };
+  const racine = projetEquipe(avant);
+  ecrire(racine, ".drwil/ia-first.json", JSON.stringify({ ...avant, checks: [{ id: "coverage-app", cwd: "app", paths: ["app/**"] }] }));
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "chemins recalculés");
+  const complet = nonKitFiles(racine, "HEAD~1", "HEAD", [".drwil/ia-first.json"]);
+  assert.deepEqual(complet, [], "arbre listable : chemins de la couche");
+  // Un sous-arbre manquant fait échouer `ls-tree -r` : la liste des fichiers est alors vide, jugée sans planter.
+  const arbre = git(racine, "rev-parse", "HEAD:docs");
+  rmSync(join(racine, ".git/objects", arbre.slice(0, 2), arbre.slice(2)), { force: true });
+  assert.deepEqual(nonKitFiles(racine, "HEAD~1", "HEAD", [".drwil/ia-first.json"]), []);
 });
