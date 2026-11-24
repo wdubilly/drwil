@@ -34,7 +34,7 @@ plan:
     - |
       if [ -z "$CI_COMMIT_TAG" ] && [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
         tree=$(git rev-parse 'HEAD^{tree}'); heads=" $CI_COMMIT_SHA $(git rev-parse -q --verify 'HEAD^2' || true) "; p=$(mktemp -d)
-        branches=$( { git ls-remote --heads origin | while read -r sha ref; do case "$heads" in *" $sha "*) echo "${ref#refs/heads/}";; esac; done; git log -1 --format=%s | sed -n "s/^Merge branch '\(.*\)' into .*/\1/p"; } | grep -vx "$CI_DEFAULT_BRANCH" | sort -u || true)
+        branches=$( { git ls-remote --heads origin | while read -r sha ref; do case "$heads" in (*" $sha "*) echo "${ref#refs/heads/}";; esac; done; git log -1 --format=%s | sed -n "s/^Merge branch '\(.*\)' into .*/\1/p"; } | grep -vx "$CI_DEFAULT_BRANCH" | sort -u || true)
         for branch in $branches; do
           url="$CI_API_V4_URL/projects/$CI_PROJECT_ID/jobs/artifacts/$(printf %s "$branch" | sed 's|/|%2F|g')/raw/.drwil/evidence/pr-verdicts"
           curl -sSfL --header "JOB-TOKEN: $CI_JOB_TOKEN" -o "$p/tree" "$url/proven-tree.txt?job=checks" 2>/dev/null && [ "$(cat "$p/tree")" = "$tree" ] || continue
