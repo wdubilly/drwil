@@ -226,9 +226,16 @@ compte rendu de la mise à jour (`npx drwil init`) le lui dit.
   recalculés par `init` et des contrôles ajoutés ; tout contrôle existant modifié le fait juger comme un commit ordinaire
   (refusé en SCOPING) — raison : la mise à jour réécrit les `paths: ["**"]` ; la barrière admet un contrôle existant dont
   seuls les `paths` passent de `["**"]` aux chemins calculés par le kit (validé par le demandeur le 2026-11-23).
-- `packages/drwil/templates/common/base/.githooks/scope-gate-kit.mjs`, `.githooks/scope-gate-kit.mjs`,
-  `.githooks/scope-gate.test.mjs` — la barrière admet la réécriture des `paths` d'un contrôle par la mise à jour, et son
-  test (validé par le demandeur le 2026-11-23).
+- `packages/drwil/templates/common/base/.githooks/scope-gate-kit.mjs` — la barrière admet la réécriture des `paths` d'un
+  contrôle par la mise à jour (validé par le demandeur le 2026-11-23).
+- `.githooks/scope-gate-kit.mjs` — copie du dépôt de la barrière ci-dessus (validé par le demandeur le 2026-11-23).
+- `.githooks/scope-gate.test.mjs` — test de cette barrière (validé par le demandeur le 2026-11-23).
+- `.githooks/glob.mjs` — motif `!` d'exclusion dans les `paths`, `matchPaths` (validé par le demandeur le 2026-11-23,
+  sondage des limites : chemins du dépôt resserrés).
+- `.githooks/glob.test.mjs` — tests du motif `!` (validé par le demandeur le 2026-11-23, sondage des limites).
+- `.githooks/check-control-coverage.mjs` — saute les motifs `!` des `paths` : sans cela, le contrôle de couverture CI
+  échoue sur les contrôles à `ciJob` (validé par le demandeur le 2026-11-24).
+- `.githooks/check-control-coverage.test.mjs` — test de ce saut (validé par le demandeur le 2026-11-24).
 - `packages/drwil/src/guarantees-layers.ts`, `packages/drwil/src/guarantees-e2e-tools.ts` — chemins du code et de sa configuration au lieu
   de `**` (validé par le demandeur le 2026-11-22).
 - `packages/drwil/src/doctor-fix.ts`, `packages/drwil/src/doctor-checks.ts` — signalement et réécriture d'un `["**"]` intact du kit
