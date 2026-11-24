@@ -118,7 +118,7 @@ export function lireSource(texte) {
     const textes = [args];
     let inconnu = false;
     for (const id of args.match(/(?<![.\w$"§])[A-Za-z_$][\w$]*(?![\w$]*\s*[(:])/g) ?? []) {
-      const def = code.match(new RegExp(`\\b(?:const|let|var)\\s+${id.replace(/\$/g, "\\$")}\\s*=\\s*([^;]{0,300})`));
+      const def = code.match(new RegExp(`\\b(?:const|let|var)\\s+${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*=\\s*([^;]{0,300})`));
       if (def) textes.push(def[1]);
       else if (!/^(?:true|false|null|undefined|withFileTypes|recursive|encoding|utf8)$/.test(id)) inconnu = true;
     }
