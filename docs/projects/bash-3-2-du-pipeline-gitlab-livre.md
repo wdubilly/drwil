@@ -8,6 +8,7 @@
 files:
   - packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml
   - packages/drwil/test/ci-parite.test.mjs
+  - packages/drwil/test/ci-parite-bash.test.mjs
   - packages/drwil/CHANGELOG.md
   - docs/contracts.md
   - docs/projects/pending.md
