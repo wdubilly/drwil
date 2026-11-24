@@ -153,7 +153,7 @@ compte rendu de la mise à jour (`npx drwil init`) le lui dit.
   modifié, avec la commande exacte qui le formate et les fichiers en cause — `QUA-328`
 - Sans clé `format`, le commit est inchangé ; l'adoption la propose, une mise à jour ne l'active jamais — `QUA-329`
 - Le temps ajouté au commit par la vérification du formatage est mesuré sur un projet temporaire et rapporté au journal de
-  clôture, sans seuil — [humain] `QUA-013`
+  clôture, sans seuil — `QUA-013`
 - Le modèle de fiche livré recommande une recette réelle dès le premier lot d'un chantier qui touche ce que l'utilisateur
   installe ; dans le dépôt seul, un avertissement non bloquant le rappelle quand le bloc `scope` touche l'installation ou
   la mise à jour et que le lot 1 ne cite pas de recette réelle ; jamais de refus — `QUA-330`
