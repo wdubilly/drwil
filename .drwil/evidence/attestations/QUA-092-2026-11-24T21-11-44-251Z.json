@@ -1,0 +1,49 @@
+{
+  "version": 4,
+  "contract": "QUA-092",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-24T21:11:44.251Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Tarball du chantier. Dossier vide + init --tools claude, pile Node (package.json, c8, un test) : guarantees cable coverage-root (c8 a 100 %), le controle passe a 100 % ; test retire : echec (lignes 50 %). Pile Rust (Cargo.toml) : guarantees ecrit les fiches bloquantes, verify en GOVERNANCE: FAIL. Non verifie : que /drwil-start ne propose qu'elles (fiches non commitees dans l'essai).",
+  "fingerprint": "6aed27920f2b58e4aad2665f905a0898f9c41b300ae5f120ac4d08d38e545784",
+  "proof": {
+    "tests-qua-087": "61e20750a93a9b801da61411489c678ee2b1076d6ae22f35e2251a590de306ee",
+    "tests-qua-088": "445181b60ad421f65afee9a75973c1254cabebd35a345409d5e2c030bc969b78"
+  },
+  "covers": [
+    "packages/drwil/src/guarantees*.ts"
+  ],
+  "coverage": {
+    "packages/drwil/src/guarantees-briefs.ts": "9b4cfff942a333073dd3dcaa09789b8183ddc5896fda4f7e064c5e3324530418",
+    "packages/drwil/src/guarantees-e2e-tools.ts": "68f8fd5de1ce6d79698a897a2203e50887eef6a7320a44eca0ce43c291165076",
+    "packages/drwil/src/guarantees-forge-texts.ts": "f901d49353236a828bace2f083b9aa12e83634d9705000ea31edb9ed9b70e072",
+    "packages/drwil/src/guarantees-forge.ts": "3740b23007dcbb722070ff7a8eda874a4bfe609104f0cb1e7766f05a9b09b6b3",
+    "packages/drwil/src/guarantees-layers.ts": "0d9481e8dfbfb3f1e569149219e8a9b2300ad00a38860f75ca276fca74aa9c54",
+    "packages/drwil/src/guarantees-merge.ts": "5ebad05d46b02f65cfaa8adc3edc8d3aa409429a1cb914e8995b0ef2c06a415d",
+    "packages/drwil/src/guarantees-table.ts": "f6f666ec13529c14bdd87a9f7d8d0d2eb79fc52c0a91a93272ed690558e8ae48",
+    "packages/drwil/src/guarantees-texts.ts": "aea3fe7e34075815cc3fdc51521035130a3613e583b8c6bb63a372e324fc99f7",
+    "packages/drwil/src/guarantees-tools.ts": "f6175430714b3492c3c358c45031f3d489ca0d79bec4117e63c6e8b6f7caa3bf",
+    "packages/drwil/src/guarantees-verify.ts": "e254665fe6edfa129c22cb05288fb74b3bbc531f58593cb95f2afce5bf638eab",
+    "packages/drwil/src/guarantees.ts": "49f42c88569251c53e60e54dcb2dea600e7002fb886b1bd10851291e630a2081"
+  },
+  "commit": "8e7e641f98420987aeba25b9fa62e451ae7436b7",
+  "automated": [
+    {
+      "id": "tests-qua-087",
+      "status": "ok"
+    },
+    {
+      "id": "tests-qua-088",
+      "status": "ok"
+    }
+  ],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "1c2779b7-864a-4899-a8cf-709a5a8624b6",
+    "toolUseId": "toolu_01KQBnFK3Vvdwgv6Uqj3HqUF",
+    "askedAt": "2026-11-24T21:11:40.345Z"
+  }
+}
