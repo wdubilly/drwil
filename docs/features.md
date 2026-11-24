@@ -141,6 +141,15 @@ que le verdict. L'`AGENTS.md` installé est un aiguillage court : il renvoie
 vers le détail (contrats, recettes, fichier de la couche touchée) au lieu de
 le recopier, pour que l'agent ne relise que ce dont il a besoin.
 
+## Ce qu'apporte la 0.11.2
+
+Tout geste humain se fait aussi depuis le chat par un sondage préparé ; le
+cadrage reste permis pendant un chantier ; `drwil init` s'installe et se met à
+jour dans un dépôt existant sans commit refusé ni CI perdue ; le verdict d'un
+contrôle est repris tant que ses fichiers et sa configuration ne changent pas ;
+les contrôles lents sont découpés en tranches dès le départ. La première mise
+à jour d'un adoptant rejoue tous ses contrôles une fois.
+
 ## Outils d'IA pris en charge
 
 Claude Code, Copilot CLI, Gemini CLI et Codex : consignes, hooks et

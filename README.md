@@ -1149,6 +1149,12 @@ by lot, makes the queue wait for the merge scheduled by
 or `team`) and installs the scope gate as blocking. 0.11.1 makes updating a
 project safer and lets a slow check be split into `shards: N` parallel slices
 in CI, with the verdict of a pull request resumed from one push to the next.
+0.11.2 makes a workstream faster and more usable for an adopter: every
+human gesture can be made from the chat by a prepared poll, scoping is allowed
+during a build, `drwil init` installs and updates inside an existing
+repository, each check's verdict is reused when only unrelated files change,
+and slow checks are split into slices from the start; the first update replays
+all checks once.
 Next: trying it on real projects (V1).
 
 V0.2 covered:

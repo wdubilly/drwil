@@ -6,6 +6,8 @@ Each workstream that changes what a user sees adds its line here, in the
 last increment of its build (the closing scope gate refuses this file); the
 release renames this section to its version.
 
+## 0.11.2 (2026-11-24)
+
 ### Added
 
 - Formatting checked before commit, opt-in: with a `format` key in
@@ -324,6 +326,23 @@ release renames this section to its version.
   and runs a command of several words as is, without a shell: a `-m` with
   quotes or parentheses no longer breaks; a missing program is a failure
   with its reason in the log.
+
+### Updating to 0.11.2
+
+- The first update of an adopting project to 0.11.2 replays all its checks
+  once, because the fingerprint of a check is now computed per check; the
+  report of `npx drwil init` says so (« first full pass, then reuse of the
+  verdicts »). Later passes reuse the verdicts.
+
+### Known limits
+
+- The gain of `"parallel": true` is not demonstrated on a real adopting
+  project: on a copy of marinade-poulet, 442 s with 2 failures (a shared
+  `coverage/` directory), then 639 s with 1 failure, against 574 s in series.
+  On the drwil repository itself the speed-up is small. This is why an update
+  never turns it on.
+- A `stdin` format command fed more than 128 KB crashes the formatter with a
+  raw trace instead of a message; the commit is refused all the same.
 
 ## 0.11.1 (2026-11-10)
 
