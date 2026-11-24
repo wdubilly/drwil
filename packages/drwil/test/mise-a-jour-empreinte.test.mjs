@@ -12,9 +12,13 @@ import { tmp, capture, git, read, config, contrat, projetReprise } from "./kit-c
 
 const IDENTITE = { GIT_AUTHOR_NAME: "t", GIT_AUTHOR_EMAIL: "t@t", GIT_COMMITTER_NAME: "t", GIT_COMMITTER_EMAIL: "t@t" };
 
+// Sous `CI=true`, `init` ne commite pas dans le dépôt temporaire : un test qui relit `HEAD` verrait l'ancien garde (vu en CI le 2026-11-24).
+const VARIABLES_DE_CI = ["CI", "GITHUB_ACTIONS", "GITLAB_CI"];
+
 async function avecIdentite(fn) {
-  const avant = Object.fromEntries(Object.keys(IDENTITE).map((k) => [k, process.env[k]]));
+  const avant = Object.fromEntries([...Object.keys(IDENTITE), ...VARIABLES_DE_CI].map((k) => [k, process.env[k]]));
   Object.assign(process.env, IDENTITE);
+  for (const k of VARIABLES_DE_CI) delete process.env[k];
   try {
     return await fn();
   } finally {
