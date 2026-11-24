@@ -138,9 +138,6 @@ d'un outil) la dit dans son statut.
 
 ### Vitesse chez l'adoptant (en tête, demande du 2026-11-22)
 
-- [ ] [IA] [P0] Des chantiers plus rapides chez l'adoptant : contrôles ciblés pendant un lot et une seule passe complète
-  à la clôture, formatage avant commit, recette réelle dès le premier lot ; prêt, D1 à D9 tranchés (cadré le
-  2026-11-22) — `docs/projects/acceleration-des-controles.md`.
 - [ ] [IA] Cadrer en parallèle du chantier dans un worktree depuis la branche principale, avec sa propre PR : une
   commande crée le worktree sans dépendances puis commite, pousse, ouvre la PR et la programme ; un push de
   documentation seule ne joue que ses contrôles concernés ; prêt, P1 à P8 tranchés (cadré le 2026-11-22) —
