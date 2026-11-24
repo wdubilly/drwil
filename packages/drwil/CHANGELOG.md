@@ -6,6 +6,16 @@ Each workstream that changes what a user sees adds its line here, in the
 last increment of its build (the closing scope gate refuses this file); the
 release renames this section to its version.
 
+### Fixed
+
+- The first update to this version no longer fails the adopter's CI: the
+  update narrows the `paths` of the kit's `coverage-<layer>`,
+  `coverage-diff-<layer>` and `e2e` checks only if the project's own scope
+  guard, from before the update, already admits it (it exports
+  `kitPathsOf`). Otherwise they stay on `["**"]`, the report says so under
+  "Left to decide", and `drwil doctor --fix` (or the next update) narrows
+  them once the new guard is on the main branch.
+
 ## 0.11.2 (2026-11-24)
 
 ### Added
