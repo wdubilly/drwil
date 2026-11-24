@@ -1,7 +1,7 @@
 # Preuve de clôture — maj-0-11-2-passe-la-ci-de-l-adoptant
 
 **Clos le** : 2026-11-24
-**Commit vérifié** : `7733f570e9` — verdict `drwil verify` : PASS
+**Commit vérifié** : `f2066bf6f9` — verdict `drwil verify` : PASS
 **Critères acceptés** : empreinte `sha256:39d1d76bc6502b67`, acceptés par l'humain au lancement le 2026-11-24
 
 critères de ce chantier, et ce qui les prouve aujourd'hui encore (rejoués par `drwil verify` après la clôture) :
