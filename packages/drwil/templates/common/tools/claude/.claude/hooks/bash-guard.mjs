@@ -18,6 +18,9 @@ import { skipsHooks, split } from "./shell-split.mjs";
 // git config core.hooksPath …, GIT_CONFIG_*), also inside a compound command or a `sh -c "…"`.
 // A blocking check is fixed, never bypassed (QUA-019); reading the setting stays allowed.
 //
+// Also refused (QUA-337): a `while` or `until` loop whose condition runs `pgrep`, the wait that never ends (the
+// loop sees itself); the reply points to `node .githooks/wait-command.mjs`, which waits within a bound.
+//
 // Also refused: `cat`, `less` or `more` of the contract registry or the journal, read whole (QUA-132,
 // the shell side of .claude/hooks/read-guard.mjs). Judged on the text of the command, like the rest:
 // `sed -n`, `grep`, `head` stay allowed, and a reading hidden behind a variable is not seen.
@@ -41,6 +44,31 @@ const RISKS = [
   [new RegExp(`${BEFORE}\\.(?:netrc|pgpass)(?![\\w.])`), "credentials"],
   [/\|\s*(?:sudo\s+)?(?:ba|z|da)?sh(?:\s|$)/, "pipe"],
 ];
+
+/**
+ * Whether a shell command holds a `while` or `until` loop whose condition (up to `do`) runs `pgrep`
+ * (QUA-337): any command of the text, quoted strings included (`bash -c "…"`).
+ */
+export function waitsOnPgrep(command, depth = 0) {
+  if (depth > 3) return false;
+  const { commands, quoted } = split(String(command));
+  const runs = (w) => /(?:^|[\s/$(`])pgrep(?:\s|$)/.test(w);
+  let after = false;
+  for (const words of commands) {
+    // The command right after a `$(…)` or backtick cut of a loop head (`while test -n $(pgrep x)`).
+    if (after && /(?:^|\/)pgrep$/.test(words[0])) return true;
+    after = false;
+    let i = 0;
+    while (i < words.length && /^\w+=/.test(words[i])) i++;
+    const head = words[i];
+    // A lone `while` is a word cited in a text (`while`/`until`), not a loop head.
+    if ((head !== "while" && head !== "until") || words.length - i < 2) continue;
+    const stop = words.indexOf("do", i);
+    if (words.slice(i + 1, stop < 0 ? undefined : stop).some(runs)) return true;
+    after = true;
+  }
+  return quoted.some((q) => waitsOnPgrep(q, depth + 1));
+}
 
 const WHOLE_READERS = new Set(["cat", "less", "more"]);
 
@@ -81,6 +109,8 @@ const TEXTS = {
     reason: (r) => `garde-fou : accord demandé — ${r}`,
     refused:
       "garde-fou : refusé (QUA-114) — saut des hooks git ou écriture de core.hooksPath (--no-verify, commit -n, -c core.hooksPath=, git config core.hooksPath, GIT_CONFIG_*). Un contrôle qui bloque se corrige, il ne se contourne pas (QUA-019) ; lire le réglage reste permis.",
+    waiting:
+      "garde-fou : refusé (QUA-337) — boucle while/until sur pgrep : elle se voit elle-même et ne finit jamais. Lancer la commande par `node .githooks/wait-command.mjs <commande>`, en appel de fond (run_in_background), qui attend au plus 100 s et rend le verdict.",
   },
   en: {
     env: ".env file (secrets): use .env.example, versioned and secret-free",
@@ -91,6 +121,8 @@ const TEXTS = {
     reason: (r) => `guard: approval requested — ${r}`,
     refused:
       "guard: refused (QUA-114) — skipping the git hooks or writing core.hooksPath (--no-verify, commit -n, -c core.hooksPath=, git config core.hooksPath, GIT_CONFIG_*). A blocking check is fixed, never bypassed (QUA-019); reading the setting stays allowed.",
+    waiting:
+      "guard: refused (QUA-337) — while/until loop on pgrep: it sees itself and never ends. Run the command through `node .githooks/wait-command.mjs <command>`, as a background call (run_in_background), which waits at most 100 s and returns the verdict.",
   },
 };
 
@@ -122,6 +154,10 @@ function main(input) {
   if (skipsHooks(command))
     return JSON.stringify({
       hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: T.refused },
+    });
+  if (waitsOnPgrep(command))
+    return JSON.stringify({
+      hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: T.waiting },
     });
   let whole = null;
   try {

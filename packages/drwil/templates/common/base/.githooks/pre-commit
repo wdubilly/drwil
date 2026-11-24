@@ -4,5 +4,7 @@ if ! command -v node >/dev/null 2>&1; then
   echo "[ia-first] node introuvable / not found : contrôles non exécutés, commit refusé / checks not run, commit refused." >&2
   exit 1
 fi
+# QUA-328, QUA-329: the staged files are checked against the declared formatter first (nothing without a "format" key).
+node "$(dirname "$0")/format-staged.mjs" || exit 1
 # DRWIL_HOOK: only the commit may defer a project check outside its `paths` (see run-checks.mjs).
 DRWIL_HOOK=pre-commit exec node "$(dirname "$0")/run-checks.mjs"

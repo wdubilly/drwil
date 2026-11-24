@@ -1,0 +1,34 @@
+{
+  "version": 4,
+  "contract": "QUA-276",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-24T08:32:09.134Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Fichiers couverts inchangés sur la branche (serve/page.html, briefs.mjs). Anciennes attestations tombées car la preuve du contrôle (paths larges packages/drwil/**) a changé avec ce chantier. QUA-015 : lu les critères et les sections des lots et de la reprise de la fiche du chantier, pas la fiche entière. QUA-276 : rien essayé sur téléphone, je ne peux pas. La lisibilité à 360 px reste votre jugement.",
+  "fingerprint": "82cffdb2d940476dbef17fc63bae5860d183e6473b8efd296163681a15ccabae",
+  "proof": {
+    "tests-qua-276": "3ef2ea99cb9a7d675807c67b0c8201b5c9d8536446b98a611be3e475cd9e6d79"
+  },
+  "covers": [
+    "packages/drwil/serve/page.html"
+  ],
+  "coverage": {
+    "packages/drwil/serve/page.html": "8c1014110bf41e48c593736ae86ad7809c5391bf1d91b3f33be76fae4d8e6e4d"
+  },
+  "commit": "cf3ab9fa7d8a18a507e71ff6a9804a9dae0ef07b",
+  "automated": [
+    {
+      "id": "tests-qua-276",
+      "status": "ok"
+    }
+  ],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "eb4e0e20-b44e-4bea-b51e-471ff1572e40",
+    "toolUseId": "toolu_01641K5onbeNWacaAnYcGXu4",
+    "askedAt": "2026-11-24T08:29:32.344Z"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "version": 4,
+  "contract": "QUA-150",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-24T08:24:49.247Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "QUA-150 : lu les 3 tests ajoutés à engine.test.mjs : aucune mesure de durée. QUA-019 : diff de .githooks/pre-commit (+2 lignes, appelle format-staged.mjs avant run-checks, rien désactivé). Aveu : en essayant QUA-092 dans un dépôt jetable (hors dépôt drwil), j'ai tenté un commit avec l'option de saut des hooks ; le garde QUA-114 l'a refusé, je n'ai pas insisté. Non essayé : relecture de tout engine.test.mjs.",
+  "fingerprint": "be1f48eb5f9e36f5762e77149d720dcabe6cb008d6335dbd084f5bcbc86f1b65",
+  "proof": {},
+  "covers": [
+    ".githooks/engine.test.mjs",
+    "outils/banc.test.mjs",
+    "outils/banc-agents.test.mjs"
+  ],
+  "coverage": {
+    ".githooks/engine.test.mjs": "c6f5a37e2ddb3e73baa55292cbac681d535b11d5a5f846dd4d44468334a241d0",
+    "outils/banc-agents.test.mjs": "83d2b3466e6ae064d196ee55a864ec7523d01eddc1114c2a7844b1991c8accaf",
+    "outils/banc.test.mjs": "aaa279f3774427225ecf086adfd867bf3d3d310716c1173a24ba99ae9f6099d6"
+  },
+  "commit": "cf3ab9fa7d8a18a507e71ff6a9804a9dae0ef07b",
+  "automated": [],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "eb4e0e20-b44e-4bea-b51e-471ff1572e40",
+    "toolUseId": "toolu_017uozrXJAL97U5c4XeeANLJ",
+    "askedAt": "2026-11-24T08:24:30.740Z"
+  }
+}

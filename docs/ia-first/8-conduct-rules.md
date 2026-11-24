@@ -181,6 +181,16 @@ read at every request. The full text of each rule is here, read by section
   to-attest contracts copied word for word; the main session says
   « verified » only on that copied line. Another tool: the same if it
   allows a subagent without write access, otherwise run them directly.
+- **During a lot, a targeted pass**: while a lot is being built, neither
+  `run-checks` in full nor `drwil verify --agent` is run, and the
+  `drwil-checks` subagent is not called. The commit is the check: its hook
+  picks the checks whose `paths` match the staged files, those of the
+  brief's contracts included as soon as the lot touches their files or
+  tests; the tool judges, never a list chosen by the agent. After a failure:
+  the failing check alone (its `run` command in `.drwil/ia-first.json`) or
+  `npx drwil verify --failed`, which replays only the contracts not PASS.
+  The full pass stays required before VERIFY and at the closing, and the CI
+  stays complete: a targeted pass never replaces them (QUA-019).
 - **Long commands**: a command that can outlast the 120 s of a tool call
   (`run-checks`, `drwil verify`, a commit with hooks) is run through `node
   .githooks/wait-command.mjs <command>` in a Bash call launched with

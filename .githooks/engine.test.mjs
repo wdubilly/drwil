@@ -301,6 +301,24 @@ test("contrôles du projet : identifiant, name: nom, report au commit hors chemi
   assert.equal(checks(racine).length, 8);
 });
 
+test("QUA-141 : un motif `!` des paths retire un fichier du report au commit et de l'empreinte du contrôle", () => {
+  const racine = depot();
+  ecrire(racine, "src/a.txt", "a\n");
+  ecrire(racine, "src/a.test.txt", "t\n");
+  git(racine, "add", "-A");
+  git(racine, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "x");
+  const cfg = { checks: [{ id: "c", run: "node -e 0", paths: ["src/**", "!src/*.test.txt"] }] };
+  const report = parId(checks(racine, { cfg, staged: ["src/a.test.txt"] })).c.run();
+  assert.equal(report.status, "not-run", "seul un fichier exclu est indexé : reporté");
+  assert.equal(parId(checks(racine, { cfg, staged: ["src/a.txt"] })).c.run({ stdio: "pipe" }).status, "ok");
+  const empreinte = () => controlFingerprints(racine, checks(racine, { cfg })).get("c");
+  const base = empreinte();
+  ecrire(racine, "src/a.test.txt", "autre\n");
+  assert.equal(empreinte(), base, "un octet d'un fichier exclu ne change pas l'empreinte");
+  ecrire(racine, "src/a.txt", "autre\n");
+  assert.notEqual(empreinte(), base);
+});
+
 test("QUA-035 : commit de documentation seule : tests des contrôles et contrôles du projet non exécutés, signalés ; avec du code, rejoués", () => {
   const racine = depot();
   ecrire(racine, ".githooks/x.test.mjs", "import { test } from 'node:test'; test('t', () => {});\n");
@@ -692,6 +710,64 @@ test("QUA-141 : sans paths, avec reuse: false ou reuse: \"tree\", sans fichier s
   assert.equal(controlFingerprints(horsGit, checks(horsGit, { cfg })).get("avec"), null, "sans dépôt git : rien n'est repris");
   symlinkSync(".", join(racine, "src", "boucle"));
   assert.equal(controlFingerprints(racine, liste).get("avec"), null, "un fichier qui ne se lit pas : rien n'est repris");
+});
+
+test("QUA-141 : un contrôle ajouté à .drwil/ia-first.json ne change pas l'empreinte des autres ; un réglage la change ; readsChecks et les tests des hooks gardent le fichier entier", () => {
+  const racine = depot();
+  ecrire(racine, ".githooks/a.test.mjs", "import { test } from 'node:test'; test('t', () => {});\n");
+  ecrire(racine, "src/a.txt", "a\n");
+  const base = {
+    lang: "fr",
+    checks: [
+      { id: "lit", run: "node -e 0", paths: [".drwil/ia-first.json", "src/**"] },
+      { id: "liste", run: "node -e 0", paths: [".drwil/ia-first.json"], readsChecks: true },
+    ],
+  };
+  const empreintes = (cfg) => {
+    ecrire(racine, ".drwil/ia-first.json", JSON.stringify(cfg, null, 2));
+    return controlFingerprints(racine, checks(racine, { cfg }));
+  };
+  const avant = empreintes(base);
+  for (const id of ["lit", "liste", "checks-self-test"]) assert.match(avant.get(id), /^[0-9a-f]{64}$/, id);
+  const ajoute = empreintes({ ...base, checks: [...base.checks, { id: "nouveau", run: "node -e 1", paths: ["src/**"] }] });
+  assert.equal(ajoute.get("lit"), avant.get("lit"), "un contrôle ajouté ne rejoue pas les autres");
+  assert.notEqual(ajoute.get("liste"), avant.get("liste"), "readsChecks : le fichier entier compte");
+  assert.notEqual(ajoute.get("checks-self-test"), avant.get("checks-self-test"), "les tests des hooks lisent toute la configuration");
+  const reecrit = empreintes(base);
+  assert.equal(reecrit.get("lit"), avant.get("lit"), "stable");
+  assert.notEqual(empreintes({ ...base, lang: "en" }).get("lit"), avant.get("lit"), "un réglage que le contrôle lit la change");
+  ecrire(racine, ".drwil/ia-first.json", "{ pas du json");
+  const illisible = controlFingerprints(racine, checks(racine, { cfg: base })).get("lit");
+  assert.match(illisible, /^[0-9a-f]{64}$/);
+  assert.notEqual(illisible, avant.get("lit"), "une configuration illisible compte octet par octet");
+});
+
+test("QUA-141 : au commit, une configuration indexée dont seuls les autres contrôles changent reporte le contrôle ; un réglage, sa déclaration ou readsChecks le jouent", () => {
+  const racine = depot();
+  const declare = (cfg) => {
+    ecrire(racine, ".drwil/ia-first.json", JSON.stringify(cfg, null, 2));
+    git(racine, "add", "-A");
+    return cfg;
+  };
+  const base = {
+    lang: "fr",
+    checks: [
+      { id: "lit", run: "node -e 0", paths: [".drwil/ia-first.json"] },
+      { id: "liste", run: "node -e 0", paths: [".drwil/ia-first.json"], readsChecks: true },
+    ],
+  };
+  const statut = (cfg, id) => parId(checks(racine, { cfg, staged: [".drwil/ia-first.json"] }))[id].run({ stdio: "pipe" }).status;
+  assert.equal(statut(declare(base), "lit"), "ok", "sans commit précédent : joué");
+  git(racine, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "x");
+  const ajoute = declare({ ...base, checks: [...base.checks, { id: "nouveau", run: "node -e 1" }] });
+  assert.deepEqual(parId(checks(racine, { cfg: ajoute, staged: [".drwil/ia-first.json"] })).lit.run(), {
+    status: "not-run",
+    detail: "aucun fichier indexé sous ses chemins : rejoué au push et en CI",
+  });
+  assert.equal(statut(ajoute, "liste"), "ok", "readsChecks : joué");
+  assert.equal(statut(declare({ ...ajoute, lang: "en" }), "lit"), "ok", "réglage changé : joué");
+  const propre = { ...base, checks: [{ ...base.checks[0], name: "renommé" }, base.checks[1]] };
+  assert.equal(statut(declare(propre), "lit"), "ok", "sa déclaration changée : joué");
 });
 
 test("QUA-295 : checks-self-test a une empreinte propre — inchangée par une fiche de projet, changée par un fichier qu'il lit", () => {

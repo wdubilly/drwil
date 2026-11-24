@@ -72,7 +72,8 @@ for (const file of ciFiles) {
       errors.push(T.noPath(c.id));
       continue;
     }
-    for (const glob of c.paths) {
+    // `!` : exclusion du moteur, pas un déclencheur ; le job du CI, plus large, la dépasse.
+    for (const glob of c.paths.filter((g) => !g.startsWith("!"))) {
       if (!covers(jobs[c.ciJob], sample(glob))) {
         const triggers = jobs[c.ciJob].changes.join(", ") || T.none;
         errors.push(T.notTriggered(c.id, c.ciJob, glob, file, triggers) + (c.degradable ? T.neverCaught : ""));

@@ -209,6 +209,7 @@
     },
     {
       "id": "couverture-tests",
+      "readsChecks": true,
       "runAt": [
         "ci"
       ],
@@ -228,6 +229,7 @@
     },
     {
       "id": "couverture-claude",
+      "readsChecks": true,
       "runAt": [
         "ci"
       ],
@@ -253,6 +255,7 @@
     },
     {
       "id": "couverture-hooks",
+      "readsChecks": true,
       "runAt": [
         "ci"
       ],
@@ -299,7 +302,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "packages/drwil/test/kit-fiches.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -331,7 +339,13 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/ci-parite.test.mjs",
+        "packages/drwil/test/kit-ci.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -397,7 +411,11 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -421,7 +439,7 @@
     {
       "id": "tests-qua-026",
       "name": "tests de QUA-026, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node .githooks/contract-tests.mjs QUA-026 packages/drwil/test/kit-mise-a-jour.test.mjs",
+      "run": "node .githooks/contract-tests.mjs QUA-026 packages/drwil/test/kit-mise-a-jour.test.mjs packages/drwil/test/doctor-checks.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/contract-tests.mjs",
@@ -459,7 +477,11 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/check-docs.test.mjs",
+        ".githooks/contracts.test.mjs",
+        ".githooks/scope-gate.test.mjs"
       ],
       "degradable": false
     },
@@ -725,6 +747,7 @@
     },
     {
       "id": "tests-qua-047",
+      "readsChecks": true,
       "name": "tests de QUA-047, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-047 packages/drwil/test/kit-mise-a-jour.test.mjs outils/installer-depot.test.mjs",
       "ciJob": "checks",
@@ -779,7 +802,10 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/check-code-rules.test.mjs",
+        ".githooks/scope-gate.test.mjs"
       ],
       "degradable": false
     },
@@ -826,7 +852,10 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/acceptance-sheet.test.mjs",
+        ".githooks/scope-gate.test.mjs"
       ],
       "degradable": false
     },
@@ -839,7 +868,9 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/release-verdict.test.mjs"
       ],
       "degradable": false
     },
@@ -852,7 +883,10 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/promote-release.test.mjs",
+        ".githooks/scope-gate.test.mjs"
       ],
       "degradable": false
     },
@@ -868,7 +902,11 @@
         "README.md",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -949,7 +987,11 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -967,7 +1009,13 @@
         ".claude/skills/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/skill-headers.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -1095,7 +1143,13 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/criteria.test.mjs",
+        "!packages/drwil/templates/**",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -1109,7 +1163,9 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/note.test.mjs"
       ],
       "degradable": false
     },
@@ -1125,7 +1181,11 @@
         ".claude/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -1204,7 +1264,11 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/promote-release.test.mjs",
+        ".githooks/recette-note.test.mjs",
+        ".githooks/scope-gate.test.mjs"
       ],
       "degradable": false
     },
@@ -1217,7 +1281,11 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/create-release.test.mjs",
+        ".githooks/recette-note.test.mjs",
+        ".githooks/scope-gate.test.mjs"
       ],
       "degradable": false
     },
@@ -1230,7 +1298,12 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/create-release.test.mjs",
+        ".githooks/promote-release.test.mjs",
+        ".githooks/recette-note.test.mjs",
+        ".githooks/scope-gate.test.mjs"
       ],
       "degradable": false
     },
@@ -1352,6 +1425,7 @@
     },
     {
       "id": "tests-qua-001",
+      "readsChecks": true,
       "name": "tests de QUA-001, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-001 .githooks/check-file-size.test.mjs",
       "ciJob": "checks",
@@ -1360,7 +1434,9 @@
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
         "packages/drwil/templates/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/check-file-size.test.mjs"
       ],
       "degradable": false
     },
@@ -1495,7 +1571,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -1528,7 +1609,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -1544,7 +1630,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -1560,7 +1651,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -1576,7 +1672,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -1592,7 +1693,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -1608,7 +1714,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -1624,7 +1735,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -1640,7 +1756,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -1654,7 +1775,11 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/create-release.test.mjs",
+        ".githooks/release-review.test.mjs",
+        ".githooks/scope-gate.test.mjs"
       ],
       "degradable": false
     },
@@ -1669,7 +1794,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -1686,7 +1816,14 @@
         ".githooks/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/pr-watch.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -1844,7 +1981,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/existing-code.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -1981,7 +2123,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -2049,7 +2196,9 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/glossary.test.mjs"
       ],
       "degradable": false
     },
@@ -2062,7 +2211,9 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/glossary.test.mjs"
       ],
       "degradable": false
     },
@@ -2117,7 +2268,11 @@
         ".claude/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -2134,7 +2289,11 @@
         ".claude/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -2266,7 +2425,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-verify-reprise.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -2291,7 +2455,7 @@
     {
       "id": "tests-qua-141",
       "name": "tests de QUA-141, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node .githooks/contract-tests.mjs QUA-141 .githooks/engine.test.mjs .githooks/run-checks.test.mjs packages/drwil/test/kit-verify-reprise.test.mjs",
+      "run": "node .githooks/contract-tests.mjs QUA-141 .githooks/engine.test.mjs .githooks/run-checks.test.mjs packages/drwil/test/kit-verify-reprise.test.mjs packages/drwil/test/mise-a-jour-empreinte.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/contract-tests.mjs",
@@ -2451,7 +2615,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false
     },
@@ -2467,7 +2636,13 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-fiches.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false
     },
@@ -2483,7 +2658,13 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/protection.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false
     },
@@ -2499,7 +2680,13 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false
     },
@@ -2545,7 +2732,15 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/check-docs.test.mjs",
+        ".githooks/scope-gate.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "!packages/drwil/templates/**",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -2990,6 +3185,7 @@
     },
     {
       "id": "tests-qua-185",
+      "readsChecks": true,
       "name": "tests de QUA-185, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-185 packages/drwil/test/kit-attestation.test.mjs",
       "ciJob": "checks",
@@ -3059,7 +3255,12 @@
         "docs/projects/routine-maintenance.md",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -3072,10 +3273,12 @@
       "paths": [
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
-        ".githooks/**",
+        ".githooks/check-diff-coverage.mjs",
+        ".githooks/glob.mjs",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        ".githooks/check-diff-coverage.test.mjs"
       ],
       "degradable": false
     },
@@ -3087,10 +3290,12 @@
       "paths": [
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
-        ".githooks/**",
+        ".githooks/check-diff-coverage.mjs",
+        ".githooks/glob.mjs",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        ".githooks/check-diff-coverage.test.mjs"
       ],
       "degradable": false
     },
@@ -3102,15 +3307,18 @@
       "paths": [
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
-        ".githooks/**",
+        ".githooks/check-diff-coverage.mjs",
+        ".githooks/glob.mjs",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        ".githooks/check-diff-coverage.test.mjs"
       ],
       "degradable": false
     },
     {
       "id": "tests-qua-194",
+      "readsChecks": true,
       "name": "tests de QUA-194, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-194 packages/drwil/test/kit-consignes.test.mjs",
       "ciJob": "checks",
@@ -3121,7 +3329,12 @@
         ".githooks/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -3138,7 +3351,12 @@
         ".githooks/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -3155,7 +3373,12 @@
         ".githooks/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -3172,7 +3395,12 @@
         ".githooks/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -3185,10 +3413,13 @@
       "paths": [
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
-        ".githooks/**",
+        ".githooks/dashboard-read.mjs",
+        ".githooks/dashboard-texts.mjs",
+        ".githooks/dashboard.mjs",
         "packages/drwil/templates/common/optional/dashboard/**",
         "package.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        ".githooks/dashboard.test.mjs"
       ],
       "degradable": false
     },
@@ -3204,7 +3435,15 @@
         ".githooks/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/create-release.test.mjs",
+        ".githooks/scope-gate.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/config-write.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -3218,7 +3457,10 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/create-release.test.mjs",
+        ".githooks/scope-gate.test.mjs"
       ],
       "degradable": false
     },
@@ -3231,7 +3473,10 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/create-release.test.mjs",
+        ".githooks/scope-gate.test.mjs"
       ],
       "degradable": false
     },
@@ -3246,7 +3491,13 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "packages/drwil/test/protection.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "needsBuild": true,
       "degradable": false
@@ -3262,7 +3513,11 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "needsBuild": true,
       "degradable": false
@@ -3278,7 +3533,11 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "needsBuild": true,
       "degradable": false
@@ -3337,7 +3596,7 @@
     {
       "id": "tests-qua-238",
       "name": "tests de QUA-238, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node .githooks/contract-tests.mjs QUA-238 .githooks/scope-gate.test.mjs packages/drwil/test/kit-mise-a-jour.test.mjs",
+      "run": "node .githooks/contract-tests.mjs QUA-238 .githooks/scope-gate.test.mjs packages/drwil/test/kit-mise-a-jour.test.mjs packages/drwil/test/mise-a-jour-empreinte.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/contract-tests.mjs",
@@ -3600,7 +3859,23 @@
       "name": "tests de QUA-263, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-263 packages/drwil/test/kit-ci.test.mjs",
       "ciJob": "checks",
-      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/**", "packages/drwil/**", "package.json", "package-lock.json", ".drwil/ia-first.json"],
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        ".githooks/**",
+        "packages/drwil/**",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/run-checks.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/ci-parite.test.mjs",
+        "packages/drwil/test/kit-ci.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
+      ],
       "degradable": false,
       "needsBuild": true
     },
@@ -3609,7 +3884,15 @@
       "name": "tests de QUA-264, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-264 .githooks/close-limits.test.mjs",
       "ciJob": "checks",
-      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/**", ".drwil/ia-first.json"],
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        ".githooks/**",
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/close-limits.test.mjs",
+        ".githooks/scope-gate.test.mjs"
+      ],
       "degradable": false
     },
     {
@@ -3618,7 +3901,17 @@
       "run": "node .githooks/contract-tests.mjs QUA-266 packages/drwil/test/portable-polls.test.mjs",
       "needsBuild": true,
       "ciJob": "checks",
-      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/**", ".claude/**", "packages/drwil/templates/**", "packages/drwil/src/cli-cursor.ts", "packages/drwil/test/portable-polls.test.mjs", ".drwil/ia-first.json"],
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        ".githooks/**",
+        ".claude/**",
+        "packages/drwil/templates/**",
+        "packages/drwil/src/cli-cursor.ts",
+        "packages/drwil/test/portable-polls.test.mjs",
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs"
+      ],
       "degradable": false
     },
     {
@@ -3627,7 +3920,18 @@
       "run": "node .githooks/contract-tests.mjs QUA-267 packages/drwil/test/attest-guidance.test.mjs",
       "needsBuild": true,
       "ciJob": "checks",
-      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/**", ".claude/**", "packages/drwil/templates/**", "packages/drwil/src/agent.ts", "packages/drwil/src/verdict-texts.ts", "packages/drwil/test/attest-guidance.test.mjs", ".drwil/ia-first.json"],
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        ".githooks/**",
+        ".claude/**",
+        "packages/drwil/templates/**",
+        "packages/drwil/src/agent.ts",
+        "packages/drwil/src/verdict-texts.ts",
+        "packages/drwil/test/attest-guidance.test.mjs",
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs"
+      ],
       "degradable": false
     },
     {
@@ -3643,7 +3947,17 @@
         ".githooks/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/acceptance-sheet.test.mjs",
+        ".githooks/create-release.test.mjs",
+        ".githooks/promote-release.test.mjs",
+        ".githooks/scope-gate.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/config-write.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false
     },
@@ -3657,7 +3971,11 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/serve.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md"
       ],
       "degradable": false
     },
@@ -3671,7 +3989,11 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/serve.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md"
       ],
       "degradable": false
     },
@@ -3685,7 +4007,11 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/serve.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md"
       ],
       "degradable": false
     },
@@ -3699,7 +4025,11 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/serve.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md"
       ],
       "degradable": false
     },
@@ -3713,7 +4043,11 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/serve.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md"
       ],
       "degradable": false
     },
@@ -3727,7 +4061,11 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/serve.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md"
       ],
       "degradable": false
     },
@@ -3741,7 +4079,11 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/serve.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md"
       ],
       "degradable": false
     },
@@ -3755,7 +4097,11 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/serve.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md"
       ],
       "degradable": false
     },
@@ -3769,7 +4115,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/claude-hooks.test.mjs",
+        "packages/drwil/test/serve.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md"
       ],
       "degradable": false
     },
@@ -3783,7 +4134,11 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/serve.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md"
       ],
       "degradable": false
     },
@@ -3797,7 +4152,11 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/serve.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md"
       ],
       "degradable": false
     },
@@ -3817,7 +4176,12 @@
         ".github/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false
     },
@@ -3835,7 +4199,16 @@
         ".github/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/run-checks.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/ci-parite.test.mjs",
+        "packages/drwil/test/ci-shards.test.mjs",
+        "packages/drwil/test/kit-ci.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false
     },
@@ -3851,13 +4224,18 @@
         "INSTALL.md",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-consignes.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/serve/**"
       ],
       "needsBuild": true,
       "degradable": false
     },
     {
       "id": "tests-qua-208",
+      "readsChecks": true,
       "name": "tests de QUA-208, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-208 .githooks/engine.test.mjs .githooks/run-checks.test.mjs",
       "ciJob": "checks",
@@ -4015,7 +4393,9 @@
         ".githooks/**",
         ".claude/**",
         "packages/drwil/templates/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/wait-command.test.mjs"
       ],
       "degradable": false
     },
@@ -4030,7 +4410,9 @@
         ".githooks/**",
         ".claude/**",
         "packages/drwil/templates/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/wait-command.test.mjs"
       ],
       "degradable": false
     },
@@ -4045,7 +4427,9 @@
         ".githooks/**",
         ".claude/**",
         "packages/drwil/templates/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/wait-command.test.mjs"
       ],
       "degradable": false
     },
@@ -4086,7 +4470,17 @@
       "name": "tests de QUA-224, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-224 packages/drwil/test/guarantees.test.mjs",
       "ciJob": "checks",
-      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", "packages/drwil/**", ".drwil/ia-first.json"],
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        "packages/drwil/**",
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
+      ],
       "degradable": false,
       "needsBuild": true
     },
@@ -4095,7 +4489,17 @@
       "name": "tests de QUA-225, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-225 packages/drwil/test/guarantees.test.mjs",
       "ciJob": "checks",
-      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", "packages/drwil/**", ".drwil/ia-first.json"],
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        "packages/drwil/**",
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
+      ],
       "degradable": false,
       "needsBuild": true
     },
@@ -4104,7 +4508,17 @@
       "name": "tests de QUA-226, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-226 packages/drwil/test/guarantees.test.mjs",
       "ciJob": "checks",
-      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", "packages/drwil/**", ".drwil/ia-first.json"],
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        "packages/drwil/**",
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
+      ],
       "degradable": false,
       "needsBuild": true
     },
@@ -4113,7 +4527,17 @@
       "name": "tests de QUA-227, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-227 packages/drwil/test/guarantees.test.mjs",
       "ciJob": "checks",
-      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", "packages/drwil/**", ".drwil/ia-first.json"],
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        "packages/drwil/**",
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
+      ],
       "degradable": false,
       "needsBuild": true
     },
@@ -4131,7 +4555,21 @@
       "name": "tests de QUA-229, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-229 .githooks/check-docs.test.mjs",
       "ciJob": "checks",
-      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/**", "packages/drwil/**", ".drwil/ia-first.json"],
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        ".githooks/**",
+        "packages/drwil/**",
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/check-docs.test.mjs",
+        ".githooks/scope-gate.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "!packages/drwil/templates/**",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
+      ],
       "degradable": false,
       "needsBuild": true
     },
@@ -4149,7 +4587,19 @@
       "name": "tests de QUA-282, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-282 packages/drwil/test/montee-de-version.test.mjs",
       "ciJob": "checks",
-      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/**", "packages/drwil/**", ".drwil/ia-first.json"],
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        ".githooks/**",
+        "packages/drwil/**",
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/montee-de-version.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
+      ],
       "degradable": false,
       "needsBuild": true
     },
@@ -4158,7 +4608,19 @@
       "name": "tests de QUA-283, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-283 packages/drwil/test/montee-de-version.test.mjs",
       "ciJob": "checks",
-      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/**", "packages/drwil/**", ".drwil/ia-first.json"],
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        ".githooks/**",
+        "packages/drwil/**",
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/montee-de-version.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
+      ],
       "degradable": false,
       "needsBuild": true
     },
@@ -4167,7 +4629,19 @@
       "name": "tests de QUA-284, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-284 packages/drwil/test/montee-de-version.test.mjs",
       "ciJob": "checks",
-      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/**", "packages/drwil/**", ".drwil/ia-first.json"],
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        ".githooks/**",
+        "packages/drwil/**",
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/montee-de-version.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
+      ],
       "degradable": false,
       "needsBuild": true
     },
@@ -4176,7 +4650,19 @@
       "name": "tests de QUA-285, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-285 packages/drwil/test/montee-de-version.test.mjs",
       "ciJob": "checks",
-      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/**", "packages/drwil/**", ".drwil/ia-first.json"],
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        ".githooks/**",
+        "packages/drwil/**",
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/montee-de-version.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
+      ],
       "degradable": false,
       "needsBuild": true
     },
@@ -4185,7 +4671,19 @@
       "name": "tests de QUA-286, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-286 packages/drwil/test/montee-de-version.test.mjs",
       "ciJob": "checks",
-      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/**", "packages/drwil/**", ".drwil/ia-first.json"],
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        ".githooks/**",
+        "packages/drwil/**",
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/montee-de-version.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
+      ],
       "degradable": false,
       "needsBuild": true
     },
@@ -4194,7 +4692,19 @@
       "name": "tests de QUA-287, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
       "run": "node .githooks/contract-tests.mjs QUA-287 packages/drwil/test/montee-de-version.test.mjs",
       "ciJob": "checks",
-      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/**", "packages/drwil/**", ".drwil/ia-first.json"],
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        ".githooks/**",
+        "packages/drwil/**",
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/montee-de-version.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
+      ],
       "degradable": false,
       "needsBuild": true
     },
@@ -4298,7 +4808,10 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/detour-resume.test.mjs",
+        ".githooks/scope-gate.test.mjs"
       ],
       "degradable": false
     },
@@ -4313,7 +4826,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -4329,7 +4847,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/coverage-merge.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -4344,14 +4867,18 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/serve.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md"
       ],
       "degradable": false
     },
     {
       "id": "tests-qua-303",
       "name": "tests de QUA-303, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
-      "run": "node .githooks/contract-tests.mjs QUA-303 packages/drwil/test/coverage-merge.test.mjs packages/drwil/test/coverage-vitest.test.mjs packages/drwil/test/doctor-fix.test.mjs",
+      "run": "node .githooks/contract-tests.mjs QUA-303 packages/drwil/test/coverage-merge.test.mjs packages/drwil/test/coverage-vitest.test.mjs packages/drwil/test/doctor-fix.test.mjs packages/drwil/test/doctor-checks.test.mjs",
       "ciJob": "checks",
       "paths": [
         ".githooks/contract-tests.mjs",
@@ -4359,7 +4886,15 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/coverage-merge.test.mjs",
+        "packages/drwil/test/coverage-vitest.test.mjs",
+        "packages/drwil/test/doctor-checks.test.mjs",
+        "packages/drwil/test/doctor-fix.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -4386,7 +4921,9 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/consumption.test.mjs"
       ],
       "degradable": false
     },
@@ -4399,7 +4936,10 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/consumption.test.mjs",
+        ".githooks/dashboard.test.mjs"
       ],
       "degradable": false
     },
@@ -4413,7 +4953,11 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/serve.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md"
       ],
       "degradable": false
     },
@@ -4426,7 +4970,9 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/consumption.test.mjs"
       ],
       "degradable": false
     },
@@ -4439,7 +4985,9 @@
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
         ".githooks/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/consumption.test.mjs"
       ],
       "degradable": false
     },
@@ -4499,7 +5047,9 @@
         ".githooks/**",
         ".claude/**",
         "packages/drwil/templates/**",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!.githooks/*.test.mjs",
+        ".githooks/pr-watch.test.mjs"
       ],
       "degradable": false
     },
@@ -4524,7 +5074,7 @@
       "paths": [
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
-        ".githooks/**",
+        ".githooks/contract-tests.test.mjs",
         ".drwil/ia-first.json"
       ],
       "degradable": false
@@ -4537,7 +5087,7 @@
       "paths": [
         ".githooks/contract-tests.mjs",
         ".githooks/contract-tests-reporters.mjs",
-        ".githooks/**",
+        ".githooks/contract-tests.test.mjs",
         ".drwil/ia-first.json"
       ],
       "degradable": false
@@ -4553,7 +5103,13 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/doctor-checks.test.mjs",
+        "packages/drwil/test/doctor-fix.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -4585,7 +5141,12 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -4610,7 +5171,14 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/guarantees.test.mjs",
+        "packages/drwil/test/kit-mise-a-jour.test.mjs",
+        "packages/drwil/test/shards-proposal.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -4626,7 +5194,13 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-mise-a-jour.test.mjs",
+        "packages/drwil/test/shards-proposal.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -4642,7 +5216,13 @@
         "packages/drwil/**",
         "package.json",
         "package-lock.json",
-        ".drwil/ia-first.json"
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/kit-mise-a-jour.test.mjs",
+        "packages/drwil/test/shards-proposal.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
       ],
       "degradable": false,
       "needsBuild": true
@@ -4664,7 +5244,122 @@
       "degradable": false
     },
     {
+      "id": "tests-qua-327",
+      "name": "tests de QUA-327, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-327 .githooks/run-checks.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        ".githooks/run-checks.test.mjs",
+        "AGENTS.md",
+        "docs/ia-first/8-conduct-rules.md",
+        "docs/recipes/working-with-branches.md",
+        ".claude/skills/start-a-workstream/SKILL.md",
+        ".claude/agents/drwil-checks.md",
+        "packages/drwil/templates/common/**",
+        ".drwil/ia-first.json"
+      ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-328",
+      "name": "tests de QUA-328, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-328 .githooks/format-staged.test.mjs packages/drwil/test/format-avant-commit.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/format-staged.mjs", ".githooks/format-staged.test.mjs", ".githooks/glob.mjs", ".githooks/pre-commit", ".claude/skills/adopt-the-kit/SKILL.md", "packages/drwil/**", "package.json", "package-lock.json", ".drwil/ia-first.json"],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "tests-qua-329",
+      "name": "tests de QUA-329, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-329 .githooks/format-staged.test.mjs packages/drwil/test/format-avant-commit.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/format-staged.mjs", ".githooks/format-staged.test.mjs", ".githooks/glob.mjs", ".githooks/pre-commit", ".claude/skills/adopt-the-kit/SKILL.md", "packages/drwil/**", "package.json", "package-lock.json", ".drwil/ia-first.json"],
+      "degradable": false,
+      "needsBuild": true
+    },
+    {
+      "id": "recette-reelle",
+      "name": "rappel non bloquant : fiche qui touche l'installation ou la mise à jour sans recette réelle au lot 1 (QUA-330)",
+      "run": "node outils/verifier-recette-reelle.mjs",
+      "ciJob": "checks",
+      "paths": ["outils/verifier-recette-reelle.mjs", ".githooks/briefs*.mjs", ".githooks/scope.mjs", "docs/projects/**"],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-330",
+      "name": "tests de QUA-330, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-330 outils/verifier-recette-reelle.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", "outils/verifier-recette-reelle.mjs", "outils/verifier-recette-reelle.test.mjs", ".githooks/briefs*.mjs", ".githooks/scope.mjs", "packages/drwil/templates/common/base/docs/projects/model-brief.md", "docs/projects/model-brief.md", "packages/drwil/templates/common/tools/claude/.claude/skills/start-a-workstream/SKILL.md", ".claude/skills/start-a-workstream/SKILL.md", "package.json", ".drwil/ia-first.json"],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-331",
+      "name": "tests de QUA-331, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-331 outils/recette-adoptant.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", "outils/recette-adoptant.mjs", "outils/recette-adoptant.test.mjs", "package.json", ".drwil/ia-first.json"],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-334",
+      "name": "tests de QUA-334, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-334 packages/drwil/test/doctor-checks.test.mjs packages/drwil/test/mise-a-jour-empreinte.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", "packages/drwil/**", ".claude/skills/adopt-the-kit/SKILL.md", "package.json", "package-lock.json", ".drwil/ia-first.json"],
+      "needsBuild": true,
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-333",
+      "name": "tests de QUA-333, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-333 packages/drwil/test/doctor-checks.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        "packages/drwil/**",
+        "docs/ia-first/4-checks-in-git.md",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/doctor-checks.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
+      ],
+      "needsBuild": true,
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-337",
+      "name": "tests de QUA-337, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-337 packages/drwil/test/claude-hooks.test.mjs",
+      "ciJob": "checks",
+      "paths": [
+        ".githooks/contract-tests.mjs",
+        ".githooks/contract-tests-reporters.mjs",
+        "packages/drwil/**",
+        ".claude/hooks/bash-guard.mjs",
+        "package.json",
+        "package-lock.json",
+        ".drwil/ia-first.json",
+        "!packages/drwil/test/*.test.mjs",
+        "packages/drwil/test/claude-hooks.test.mjs",
+        "!packages/drwil/CHANGELOG.md",
+        "!packages/drwil/README.md",
+        "!packages/drwil/serve/**"
+      ],
+      "needsBuild": true,
+      "degradable": false
+    },
+    {
       "id": "couverture-diff",
+      "readsChecks": true,
       "runAt": [
         "ci"
       ],
@@ -4676,6 +5371,14 @@
         "package.json",
         ".drwil/ia-first.json"
       ],
+      "degradable": false
+    },
+    {
+      "id": "tests-qua-338",
+      "name": "tests de QUA-338, verdict par ID lu dans une exécution par fichier (un contrôle par règle, QUA-033)",
+      "run": "node .githooks/contract-tests.mjs QUA-338 outils/resserrer-paths.test.mjs",
+      "ciJob": "checks",
+      "paths": [".githooks/contract-tests.mjs", ".githooks/contract-tests-reporters.mjs", ".githooks/glob.mjs", "outils/resserrer-paths.mjs", "outils/resserrer-paths-lecture.mjs", "outils/resserrer-paths.test.mjs", "package.json", ".drwil/ia-first.json"],
       "degradable": false
     }
   ],

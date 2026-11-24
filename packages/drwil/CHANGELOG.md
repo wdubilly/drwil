@@ -8,6 +8,31 @@ release renames this section to its version.
 
 ### Added
 
+- Formatting checked before commit, opt-in: with a `format` key in
+  `.drwil/ia-first.json` (`stdin`, `write`, `paths`), the pre-commit hook
+  pipes each staged file of `paths`, read from the index, to the formatter
+  and refuses the commit on a difference, naming the files and the exact
+  command that formats them; nothing is rewritten. Without the key, the
+  commit is unchanged; the adoption skill proposes it, an update never
+  adds it.
+- Faster checks at the adopter: the adoption skill proposes `"parallel": true`
+  on a project with several checks (a check that cannot share the machine
+  keeps `"parallel": false`) and `drwil doctor` reports its absence; an
+  update never turns it on. `drwil doctor` also reports a kit older than the
+  per-check fingerprint, and the shipped checks page now describes the
+  `format`, `readsChecks` and `parallel` keys. The formatter is called once
+  for all staged files.
+- A `paths` entry of a check can start with `!` to exclude files, as in
+  `.gitignore`: the last matching entry decides, and without a positive
+  entry nothing matches.
+- Claude Code's shell guard refuses a `while` or `until` loop that waits on
+  `pgrep` (it sees itself and never ends) and points to
+  `node .githooks/wait-command.mjs`, which waits within a bound.
+- The brief model and the launch skill recommend a real acceptance run from
+  the first increment of a workstream that changes what users install or
+  update: the update installed on a copy of a real project, never the
+  original, replayed at each increment that touches it.
+
 - Every human gesture can now be made from the chat, by a prepared poll
   that only the hook reads, with the terminal still available: attestation
   by batch (`drwil attest-poll ID1 ID2 …`, one multiple-choice poll under
@@ -118,6 +143,22 @@ release renames this section to its version.
   report invites you to run `npx drwil doctor --fix`.
 
 ### Changed
+
+- During an increment, the shipped conduct (`AGENTS.md`, conduct rules,
+  launch skill, `drwil-checks` agent, branches recipe) runs only the commit
+  and, after a failure, the failed check or `drwil verify --failed`; the
+  full pass stays required before VERIFY and at closing, and CI stays full.
+- A check's fingerprint now covers its own declaration and the settings
+  outside `checks`, not the whole `.drwil/ia-first.json`: an added contract
+  no longer replays the other checks (a check that reads the others' sets
+  `readsChecks: true`). The first update from an earlier version says so in
+  its report: first full pass, then reuse of the verdicts.
+- The checks the kit generates (coverage pair, `e2e`) get the paths of the
+  code and its configuration instead of `paths: ["**"]`, so they can reuse
+  their verdict. An update rewrites the ones still on `["**"]` (the coverage
+  pair even when edited, `e2e` only as the kit declared it) and names each
+  one in its report; `drwil doctor` reports a kit check still on `["**"]`
+  and `--fix` applies the same rule.
 
 - `drwil init` on an existing git repository (commits present, no kit) now
   commits the kit itself on a `workstream/kit-installation` branch cut from

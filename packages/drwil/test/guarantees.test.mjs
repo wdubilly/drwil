@@ -231,7 +231,8 @@ test("QUA-087 câblage : une couche de pile connue reçoit son contrôle à 100 
     controle.run,
     /--check-coverage --lines 100 --branches 100 --functions 100 --statements 100 --all --exclude="\.githooks\/\*\*".* npm test/,
   );
-  assert.deepEqual(controle.paths, ["**"]);
+  assert.ok(controle.paths.includes("src/**") && controle.paths.includes("*.json"), controle.paths.join());
+  assert.ok(!controle.paths.includes("**"), "jamais tout le dépôt quand le code se délimite");
   assert.equal(config(dir).guarantees.enforced, true);
   assert.equal(config(dir).guarantees.layers.root, "new");
   assert.match(formatGuarantees(r).join("\n"), /contrôle `coverage-root` câblé à 100 % \(lines, branches, functions, statements\) avec c8/);
@@ -365,9 +366,10 @@ test("QUA-093 projet existant en dette : cliquet au niveau mesuré, diff à 100 
 });
 
 /** Projet Node existant en dette (72 % de lignes), câblé par `guarantees` ; `regles` précèdent les règles par défaut. */
-async function enDette(regles = [], appels = []) {
+async function enDette(regles = [], appels = [], avant = () => {}) {
   const dir = await projet({ existant: true });
   ecrire(dir, "src/a.js", "export const a = 1;\n");
+  avant(dir);
   const mesure = (_cmd, cwd) => {
     ecrire(
       cwd,
@@ -410,6 +412,31 @@ test("QUA-301 couche Node en dette : un seul contrôle coverage-diff joue les te
     ["coverage-diff-root"],
   );
   assert.ok(!guaranteeFailures(dir, config(dir), [{ checks: ["coverage-diff-root"] }]).some((e) => /coverage-/.test(e)));
+});
+
+test("QUA-087, QUA-089 couche à la racine : couverture, couverture du diff et e2e reçoivent les chemins du code et de sa configuration, jamais `**`", async () => {
+  const { dir } = await enDette([], [], (d) => {
+    spawnSync("git", ["init", "-q"], { cwd: d });
+    ecrire(d, "test/a.test.js", "test\n");
+    ecrire(d, "package-lock.json", "{}\n");
+    ecrire(d, "vite.config.js", "export default {};\n");
+    ecrire(d, "playwright.config.ts", "export default {};\n");
+    ecrire(d, "e2e/visite.spec.ts", "test\n");
+    ecrire(d, ".env", "X=1\n");
+    ecrire(d, "build/sortie.js", "ignoré\n");
+    ecrire(d, ".gitignore", "build/\nnode_modules/\n");
+    ecrire(d, "node_modules/x/index.js", "dépendance\n");
+  });
+  const attendu = ["*.example", "*.js", "*.json", "*.ts", ".env", "e2e/**", "src/**", "test/**"];
+  const checks = config(dir).checks.filter((c) => /^(coverage-|e2e$)/.test(c.id));
+  assert.deepEqual(checks.map((c) => c.id).sort(), ["coverage-diff-root", "e2e"]);
+  for (const c of checks) assert.deepEqual(c.paths, attendu, c.id);
+  // Le contrôle de seuil séparé (outil sans run unique) reçoit les mêmes chemins.
+  const seul = await projet();
+  ecrire(seul, "src/b.ts", "export const b = 1;\n");
+  guarantees({ targetDir: seul, exec: faux([[/c8 --version/, OK], ...FORGE_OK]) });
+  const racine = config(seul).checks.find((c) => c.id === "coverage-root");
+  for (const kit of [".drwil/**", ".githooks/**", ".claude/**", "docs/**", "*.md"]) assert.ok(!racine.paths.includes(kit), kit);
 });
 
 test("QUA-301 déjà déclaré, outil de diff absent : gardé tel quel, ou bloqué sans contrôle câblé", async () => {
@@ -962,7 +989,7 @@ test("QUA-320 outil e2e de la table : guarantees déclare `e2e` en tranches « a
     const r = guarantees({ targetDir: dir, exec: E2E_EXEC() });
     const e2e = config(dir).checks.find((c) => c.id === "e2e");
     const ligne = E2E_TOOLS.find((t) => t.tool === outil);
-    assert.deepEqual(e2e, e2eDeclaration(ligne, fichier, "."), fichier);
+    assert.deepEqual(e2e, e2eDeclaration(ligne, fichier, ".", e2e.paths), fichier);
     assert.equal(e2e.shards, "auto");
     assert.match(e2e.run, /DRWIL_SHARD_INDEX\/\$DRWIL_SHARD_TOTAL/);
     assert.match(e2e.run, /npm ci/, "setup dans la commande : le job de tranche n'a que Node");
@@ -990,7 +1017,8 @@ test("QUA-320 outil e2e d'une couche : la déclaration porte son cwd ; la racine
   ecrireConfig(dir, cfg);
   guarantees({ targetDir: dir, exec: E2E_EXEC() });
   const e2e = config(dir).checks.find((c) => c.id === "e2e");
-  assert.deepEqual(e2e, e2eDeclaration(E2E_TOOLS[0], "playwright.config.js", "front"));
+  assert.deepEqual(e2e, e2eDeclaration(E2E_TOOLS[0], "playwright.config.js", "front", e2e.paths));
+  assert.ok(e2e.paths.includes("front/**") && !e2e.paths.includes("**"), "l'e2e couvre tout le code qu'il traverse");
   assert.equal(e2e.cwd, "front");
   assert.equal(shardProblem(e2e, "e2e", moteurTextes("fr")), null);
 

@@ -1,0 +1,33 @@
+{
+  "version": 4,
+  "contract": "QUA-326",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-24T08:23:51.838Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Tarball du chantier (0.11.1) sur marinade-poulet : à neuf (clone à un commit sans fichier drwil, branche master) : init coupe workstream/kit-installation, commit en 5,8 s, arbre propre, sans refus ; .gitlab-ci.yml +199/-0, les 2 clés d'origine gardées, 5 jobs du kit ajoutés. En mise à jour : commit passé, arbre propre. Non essayé : push, CI réelle sur la forge. Deux essais invalides par ma faute (tarball installé dans le projet ; HEAD détaché).",
+  "fingerprint": "04f32a9630436c33e0c10218918cf2b3053638f3bf4d0eaf36846eb327d6a960",
+  "proof": {},
+  "covers": [
+    "packages/drwil/src/kit-install.ts",
+    "packages/drwil/src/kit-update.ts",
+    "packages/drwil/src/ci-zone-move.ts",
+    ".githooks/run-checks-kit.mjs"
+  ],
+  "coverage": {
+    ".githooks/run-checks-kit.mjs": "64d1c43e364ce8d9efd921aa528da9c9f36e755b65c5c68878d5246a9d40f7ae",
+    "packages/drwil/src/ci-zone-move.ts": "63d87bcc3766f08f90e7d50a5da4c6fd2b52f7a26ca27f6c7c78bd92c93259e1",
+    "packages/drwil/src/kit-install.ts": "c2b24a3ed456ae2db1241f283d2d9235b2f55c06b0d7a67af8c1aa211e56162f",
+    "packages/drwil/src/kit-update.ts": "417bb99b7c0a6d34766d7f4e385d704d8e8b4e322e2ea2372a162f8e6c2e8fff"
+  },
+  "commit": "cf3ab9fa7d8a18a507e71ff6a9804a9dae0ef07b",
+  "automated": [],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "eb4e0e20-b44e-4bea-b51e-471ff1572e40",
+    "toolUseId": "toolu_01XSvAaiAh87ax8AfrzvGPkU",
+    "askedAt": "2026-11-24T08:20:05.324Z"
+  }
+}

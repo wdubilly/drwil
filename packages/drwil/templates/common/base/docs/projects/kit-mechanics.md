@@ -15,6 +15,7 @@ files:
   - .githooks/consumption.mjs
   - .githooks/check-control-coverage.mjs
   - .githooks/glob.mjs
+  - .githooks/format-staged.mjs
   - .githooks/engine.mjs
   - .githooks/fingerprints.mjs
   - .githooks/contracts.mjs
@@ -144,6 +145,16 @@ The project's own application code: each piece of work carries its own
 `scope` block in its brief. A small task that does not deserve its own
 brief attaches to the project's running-chores brief
 (`docs/projects/routine-maintenance.md`).
+
+## 3. Per-check fingerprint, generated paths and formatting
+
+For a check's fingerprint, `.githooks/fingerprints.mjs` takes from `.drwil/ia-first.json` only that check's own
+declaration and the settings outside `checks`: an added contract no longer replays the other checks. A check that
+reads the other checks' declarations sets `readsChecks: true` and keeps the whole file; the closing proof keeps the
+fingerprint of the whole tree. `kitPaths` (`.githooks/scope-gate-kit.mjs`) computes the paths of the checks the kit
+generates (coverage pair, `e2e`) instead of `["**"]`, shared by the kit update, `drwil doctor --fix` and the scope
+gate. `.githooks/format-staged.mjs`, run by `.githooks/pre-commit` before the checks, judges the formatting of the
+staged files when the `format` key is declared, and rewrites nothing.
 
 ## Hand-off
 

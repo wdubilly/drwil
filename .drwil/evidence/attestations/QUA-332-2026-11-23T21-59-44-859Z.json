@@ -1,0 +1,35 @@
+{
+  "version": 4,
+  "contract": "QUA-332",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-23T21:59:44.859Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Tarball du chantier installé en mise à jour sur des clones de marinade-poulet et drwil_walk : commit passé, arbre propre, sans clé format, première passe complète annoncée. Copie marinade : passe 1 en 6 min 37 s ; passe 3 après avoir touché README.md en 33 s, 29 repris, 10 rejoués. Échecs dus à la copie (public/recipes ignoré par git absent, diff-cover sans branche). Non essayé : passe de drwil_walk, vrai commit avec hooks.",
+  "fingerprint": "79c7312f8f25f3f105fa187e283c2f8f979be4c766e356a8984daddae54048b7",
+  "proof": {},
+  "covers": [
+    "packages/drwil/src/kit-update.ts",
+    "packages/drwil/src/guarantees-e2e-tools.ts",
+    "packages/drwil/templates/common/base/.githooks/fingerprints.mjs",
+    "packages/drwil/templates/common/base/.githooks/scope-gate-kit.mjs",
+    "packages/drwil/templates/common/base/.githooks/format-staged.mjs"
+  ],
+  "coverage": {
+    "packages/drwil/src/guarantees-e2e-tools.ts": "870eb9689a86b6a964f52d6b87e6ae9998d9d8925c727bd41c469d4e4362b460",
+    "packages/drwil/src/kit-update.ts": "417bb99b7c0a6d34766d7f4e385d704d8e8b4e322e2ea2372a162f8e6c2e8fff",
+    "packages/drwil/templates/common/base/.githooks/fingerprints.mjs": "40ac98e548755494110a3a02abb999dcd83594a108571bee52bcc3f37e0c27d0",
+    "packages/drwil/templates/common/base/.githooks/format-staged.mjs": "f3138430241a866443c049e7b28460eeb4db6d21ce53e089f31ced5875de9639",
+    "packages/drwil/templates/common/base/.githooks/scope-gate-kit.mjs": "a4f68c57528f7858c9cc881162205164b5b850a37ea6a79843dc241b8a22e52b"
+  },
+  "commit": "b14b4ee89d6c6e46a09da69c68aa68868c7a0115",
+  "automated": [],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "eb4e0e20-b44e-4bea-b51e-471ff1572e40",
+    "toolUseId": "toolu_018r1HzXeETf4f8y43ytyGGk",
+    "askedAt": "2026-11-23T21:59:40.648Z"
+  }
+}

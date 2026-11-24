@@ -10,6 +10,7 @@ import { allow, contractsAddedOnly } from "./detour.mjs";
 import { readState } from "./state.mjs";
 import { addTrailer, checkScope, outsideBriefFiles, checkIndex } from "./scope-gate.mjs";
 import { TEXTS } from "./scope-gate-texts.mjs";
+import { kitPaths, nonKitFiles } from "./scope-gate-kit.mjs";
 import { derivation, derivedInWorktree } from "./scope-derived.mjs";
 
 // Un hook lancé par `git commit -a` ou depuis un worktree reçoit GIT_INDEX_FILE, GIT_DIR… :
@@ -965,6 +966,55 @@ test("QUA-238 : des contrôles absents avant la mise à jour ne se reconnaissent
   assert.equal(checkScope(racine, { ...blocage, staged: fichiers, env: MAJ }).status, "fail");
 });
 
+test('QUA-238 : la mise à jour qui fait passer les `paths` d\'un contrôle du kit de `["**"]` aux chemins calculés passe ; tout autre changement de contrôle reste jugé', () => {
+  const avant = [
+    { id: "a", run: "x" },
+    { id: "coverage-root", run: "npx vitest run --coverage", paths: ["**"] },
+    { id: "coverage-diff-api", run: "diff-cover x", cwd: "api", paths: ["**"] },
+    { id: "e2e", run: "npx playwright test", paths: ["**"] },
+    { id: "lint", run: "npx biome check", paths: ["**"] },
+  ];
+  const equipe = () => {
+    const racine = projetEquipe({ scopeGate: "blocking", layers: [], checks: avant });
+    // Le code du projet est sur la branche principale, avant la branche de mise à jour.
+    git(racine, "checkout", "-q", "main");
+    for (const f of ["src/a.js", "api/b.js", "package.json", "README.md"]) ecrire(racine, f, "x\n");
+    git(racine, "add", "-A");
+    git(racine, "commit", "-q", "-m", "code du projet");
+    git(racine, "checkout", "-q", "-B", "workstream/kit-update");
+    return racine;
+  };
+  const calcules = ["*.json", "api/**", "src/**"];
+  const repathe = (changer) => {
+    const checks = avant.map((c) => ({ ...c }));
+    changer(checks);
+    return { scopeGate: "blocking", layers: [], checks };
+  };
+  const admis = repathe((c) => {
+    c[1].paths = calcules;
+    c[2].paths = ["api/**"];
+    c[3].paths = calcules;
+  });
+  const racine = equipe();
+  const fichiers = appliquerMiseAJour(racine, { config: admis });
+  assert.deepEqual(checkScope(racine, { ...blocage, staged: fichiers, env: MAJ }).problems, []);
+  commiterMaj(racine, true);
+  assert.equal(checkScope(racine, { ...blocage, env: { DRWIL_BASE: "main" } }).status, "ok", "au rejeu de la branche aussi");
+  const refus = [
+    ["chemins autres que ceux du kit", (c) => (c[1].paths = ["src/**"])],
+    ["chemins et commande changés", (c) => Object.assign(c[1], { paths: calcules, run: "npx vitest run" })],
+    ["contrôle du projet resserré", (c) => (c[4].paths = calcules)],
+    ["chemins du kit plus tout le dépôt", (c) => Object.assign(c[3], { paths: ["**", ...calcules] })],
+  ];
+  for (const [nom, changer] of refus) {
+    const r = equipe();
+    const f = appliquerMiseAJour(r, { config: repathe(changer) });
+    assert.equal(checkScope(r, { ...blocage, staged: f, env: MAJ }).status, "fail", nom);
+    commiterMaj(r, true);
+    assert.equal(checkScope(r, { ...blocage, env: { DRWIL_BASE: "main" } }).status, "fail", `${nom} (rejeu)`);
+  }
+});
+
 /** Commit d'installation dans un dépôt existant : parent sans manifeste, kit, manifeste et configuration créés. */
 function appliquerInstallation({ extra = {}, config = { scopeGate: "blocking", layers: [], checks: [{ id: "a" }] } } = {}) {
   const racine = depot();
@@ -1217,4 +1267,39 @@ test("QUA-311 : derivation, pure : chemin depuis la racine, test illisible, crit
   const declares = [[FICHE, `${fiche(["src/a.js"])}\n## Contrats modifiés\n\n- \`QUA-900\` — raison\n`]];
   assert.equal(derivedInWorktree(racine, ["lib/p.js"], declares, { dirs: { contracts: "regles.md" } }).get("lib/p.js").kind, 2);
   assert.equal(derivedInWorktree(racine, ["lib/p.js"], declares, {}).size, 0);
+});
+
+test("QUA-238 : kitPaths donne ses chemins à un contrôle du kit : couche, dossiers de code, extensions, fichiers sans extension ; jamais ceux du kit ni la documentation", () => {
+  assert.deepEqual(kitPaths("app", ["app/a.ts"]), ["app/**"]);
+  assert.deepEqual(kitPaths("", ["src/a.ts", "x.js"]).sort(), ["*.js", "src/**"]);
+  const fichiers = [
+    "src/a.ts",
+    "src/b.ts",
+    "docs/guide.md",
+    ".githooks/pre-commit",
+    "node_modules/x/y.js",
+    "README.md",
+    ".gitignore",
+    "vite.config.js",
+    "main.js",
+    "Makefile",
+    ".env",
+  ];
+  assert.deepEqual(kitPaths(".", fichiers), ["*.js", ".env", "Makefile", "src/**"]);
+  assert.deepEqual(kitPaths(".", ["docs/a.md", "README.md", ".gitignore"]), ["**"], "rien que le kit ou la doc : tout");
+  assert.deepEqual(kitPaths(".", []), ["**"]);
+});
+
+test("QUA-238 : nonKitFiles juge la configuration d'une mise à jour même quand git ne peut pas lister l'arbre (liste vide)", () => {
+  const avant = { scopeGate: "blocking", checks: [{ id: "coverage-app", cwd: "app", paths: ["**"] }] };
+  const racine = projetEquipe(avant);
+  ecrire(racine, ".drwil/ia-first.json", JSON.stringify({ ...avant, checks: [{ id: "coverage-app", cwd: "app", paths: ["app/**"] }] }));
+  git(racine, "add", "-A");
+  git(racine, "commit", "-q", "-m", "chemins recalculés");
+  const complet = nonKitFiles(racine, "HEAD~1", "HEAD", [".drwil/ia-first.json"]);
+  assert.deepEqual(complet, [], "arbre listable : chemins de la couche");
+  // Un sous-arbre manquant fait échouer `ls-tree -r` : la liste des fichiers est alors vide, jugée sans planter.
+  const arbre = git(racine, "rev-parse", "HEAD:docs");
+  rmSync(join(racine, ".git/objects", arbre.slice(0, 2), arbre.slice(2)), { force: true });
+  assert.deepEqual(nonKitFiles(racine, "HEAD~1", "HEAD", [".drwil/ia-first.json"]), []);
 });

@@ -638,6 +638,25 @@ test("QUA-141 : hors hook et hors CI, un contrôle « ok » dont les fichiers du
   assert.doesNotMatch(passe(racine, { env: { DRWIL_HOOK: "pre-commit" } }).stdout, /repris/);
 });
 
+test("QUA-141 : un contrat ajouté (son contrôle déclaré dans .drwil/ia-first.json) ne rejoue plus les autres contrôles ; un réglage changé les rejoue", () => {
+  const compteur = {
+    id: "compteur",
+    run: `node -e "require('fs').appendFileSync('compteur.log','x')"`,
+    paths: [".drwil/ia-first.json", "src/**"],
+  };
+  const config = (autres = [], lang = "fr") => JSON.stringify({ lang, checks: [compteur, ...autres] }, null, 2);
+  const { racine } = lancer({ ".drwil/ia-first.json": config(), ".gitignore": "compteur.log\n", "src/a.txt": "a\n" }, { valider: true });
+  assert.equal(compte(racine), 1);
+  writeFileSync(join(racine, ".drwil/ia-first.json"), config([{ id: "tests-nouveau", run: "node -e 0", paths: ["src/**"] }]));
+  const ajoute = passe(racine);
+  assert.equal(ajoute.status, 0, ajoute.stdout + ajoute.stderr);
+  assert.equal(compte(racine), 1, "le contrôle déjà vert n'est pas rejoué");
+  assert.match(ajoute.detail, /: repris \(fichiers du contrôle inchangés, run-checks du \d{4}-/);
+  writeFileSync(join(racine, ".drwil/ia-first.json"), config([{ id: "tests-nouveau", run: "node -e 0", paths: ["src/**"] }], "en"));
+  passe(racine);
+  assert.equal(compte(racine), 2, "un réglage qu'il lit a changé : rejoué");
+});
+
 test('QUA-141 : un contrôle en échec, sans paths, ou déclaré reuse: false ou reuse: "tree" est rejoué à chaque passe', () => {
   const joue = (sortie) => `node -e "require('fs').appendFileSync('compteur.log','x');process.exit(${sortie})"`;
   const r = lancer(
@@ -1160,4 +1179,45 @@ test("QUA-325 : en anglais, un contrôle sans nom est nommé par sa commande ; c
   git(racine, "add", "-A");
   git(racine, ...identite, "commit", "-qm", "sans trailer");
   assert.equal(auPush(racine, `${tete(racine)}:${base}`).status, 1, "commit sans trailer : joué");
+});
+
+test("QUA-327 : pendant un lot, la conduite livrée ne lance que le commit puis, après un échec, le contrôle en échec ou verify --failed ; la passe complète reste avant VERIFY et à la clôture", () => {
+  // Gabarit livré et copies du dépôt : les deux disent la même conduite.
+  const racine = fileURLToPath(new URL("..", import.meta.url));
+  const gabarit = "packages/drwil/templates/common/";
+  const plat = (f) => readFileSync(join(racine, f), "utf8").replace(/\s+/g, " ");
+  for (const [base, claude] of [
+    [`${gabarit}base/`, `${gabarit}tools/claude/`],
+    ["", ""],
+  ]) {
+    if (base) {
+      assert.match(
+        plat(`${base}AGENTS.md`),
+        /During a lot, no full pass: the commit is the check \(its hook runs the checks its staged files touch\); after a failure, the failing check alone or `npx drwil verify --failed`; the full pass is before VERIFY and at the closing/,
+      );
+    } else {
+      assert.match(
+        plat("AGENTS.md"),
+        /Pendant un lot, pas de passe complète : le commit fait foi .* après un échec, le contrôle en échec seul ou `npx drwil verify --failed` ; la passe complète, avant VERIFY et à la clôture/,
+      );
+    }
+    const regles = plat(`${base}docs/ia-first/8-conduct-rules.md`);
+    const regle = regles.slice(regles.indexOf("**During a lot, a targeted pass**"), regles.indexOf("**Long commands**"));
+    assert.match(regle, /neither `run-checks` in full nor `drwil verify --agent` is run, and the `drwil-checks` subagent is not called/);
+    assert.match(regle, /its hook picks the checks whose `paths` match the staged files, those of the brief's contracts included/);
+    assert.match(regle, /the tool judges, never a list chosen by the agent/);
+    assert.match(regle, /the failing check alone .* or `npx drwil verify --failed`/);
+    assert.match(regle, /The full pass stays required before VERIFY and at the closing, and the CI stays complete/);
+    const skill = plat(`${claude}.claude/skills/start-a-workstream/SKILL.md`);
+    assert.match(skill, /During a lot, no full pass and no `drwil-checks` subagent: the commit is the check/);
+    assert.match(skill, /the full pass is the closing's \(before VERIFY and at the closing; the CI stays complete\)/);
+    assert.match(
+      plat(`${claude}.claude/agents/drwil-checks.md`),
+      /You are called for the full pass: before VERIFY and at the closing\. During a lot, the main session does not call you/,
+    );
+    assert.match(
+      plat(`${base}docs/recipes/working-with-branches.md`),
+      /During a lot, no full pass: the commit is the check; after a failure, the failing check alone or `npx drwil verify --failed`/,
+    );
+  }
 });

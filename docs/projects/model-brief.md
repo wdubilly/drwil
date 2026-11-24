@@ -97,6 +97,14 @@ régression : `drwil verify` le signale et la clôture est refusée.)
 
 ## 6. Increments
 
+(un chantier qui change ce que l'utilisateur installe ou met à jour — le
+paquet, `drwil init`, la migration, les fichiers du gabarit : prévoir une
+recette réelle dès le lot 1 — le tarball de la branche installé en mise à
+jour sur des copies d'adoptants, jamais leurs dépôts d'origine
+(`outils/recette-adoptant.mjs`), rejouée à chaque lot qui y touche — plutôt
+que découvrir les défauts d'installation à la fin ; `outils/verifier-recette-reelle.mjs`
+le rappelle, sans jamais refuser.)
+
 - **Lot 1 — titre** [IA|humain] : contenu. Critère de sortie : ce qui prouve
   que le lot est fini (tests verts, contrôle qui passe...).
 

@@ -112,9 +112,13 @@ test("QUA-303 fixChecks : la paire de couverture fusionnée en une commande, sau
     diff("py"),
   ];
   liste[6].run = "pytest --cov --cov-fail-under=100";
-  const ctx = { root: tmpdir(), cited: new Set(["coverage-web"]), testScript: undefined };
+  // Un dossier vide : rien ne délimite les chemins, la paire garde les siens (la fusion seule est jugée ici).
+  const ctx = { root: mkdtempSync(join(tmpdir(), "drwil-doctor-fix-")), cited: new Set(["coverage-web"]), testScript: undefined };
   const fixes = fixChecks(liste, ctx);
-  assert.deepEqual(fixes, [{ kind: "merged", id: "coverage-root", into: "coverage-diff-root" }]);
+  assert.deepEqual(fixes, [
+    { kind: "paths", id: "coverage-api", paths: ["api/**"] },
+    { kind: "merged", id: "coverage-root", into: "coverage-diff-root" },
+  ]);
   assert.equal(
     liste.find((c) => c.id === "coverage-root"),
     undefined,
@@ -155,7 +159,8 @@ test("QUA-318 et QUA-303 doctor --fix : écrit la forme sûre, garde le reste si
   const par = (id) => apres.find((c) => c.id === id);
   assert.equal(par("app-001").run, "node .githooks/contract-tests.mjs --runner vitest APP-001");
   assert.equal(par("app-002").run, 'npx vitest run --config x.ts -t "APP-002"');
-  assert.deepEqual(par("e2e").paths, ["**"]);
+  assert.deepEqual(par("e2e").paths, ["*.example", "*.json"], "les chemins que le kit calcule, jamais tout le dépôt");
+  assert.deepEqual(par("coverage-diff-root").paths, ["*.example", "*.json"]);
   assert.equal(par("coverage-root"), undefined);
   assert.match(par("coverage-diff-root").run, /--coverage\.reporter=cobertura/);
   assert.match(point(d.points, "fixed").detail, /`app-001` groupé ; `e2e` .* ; `coverage-root` fusionné dans `coverage-diff-root`/);
@@ -185,7 +190,40 @@ test("QUA-318 et QUA-303 doctor --fix : écrit la forme sûre, garde le reste si
   brut.checks.push({ id: "e2e-bis", run: "npx playwright test", runAt: ["ci"] });
   writeFileSync(fichier, `${JSON.stringify(brut, null, 2)}\n`);
   assert.doesNotMatch(cli().stdout, /Fixed by --fix/, "le projet est passé en anglais : sa configuration a été réécrite plus haut");
-  assert.match(cli("--fix").stdout, /Fixed by --fix +`e2e-bis`: "paths": \["\*\*"\]/);
+  assert.match(cli("--fix").stdout, /Fixed by --fix +`e2e-bis`: "paths": \["\*\.example"\]/, "les chemins calculés, jamais tout le dépôt");
   const ailleurs = mkdtempSync(join(tmpdir(), "drwil-doctor-fix-"));
   assert.equal((await doctor({ targetDir: ailleurs, fix: true })).code, 2, "hors projet drwil : rien écrit");
+});
+
+test('QUA-303 fixChecks : un contrôle du kit sur `["**"]` reçoit les chemins calculés — la paire de couverture même retouchée, l\'e2e intact seulement', async () => {
+  const { e2eDeclaration, E2E_TOOLS } = await import("../dist/guarantees-e2e-tools.js");
+  const dir = mkdtempSync(join(tmpdir(), "drwil-doctor-fix-"));
+  for (const f of ["src/a.js", "package.json", "playwright.config.ts", "README.md", "docs/x.md", ".githooks/h.mjs"]) ecrire(dir, f, "x\n");
+  const kit = e2eDeclaration(E2E_TOOLS[0], "playwright.config.ts", ".");
+  assert.deepEqual(kit.paths, ["**"], "la déclaration des kits précédents");
+  const liste = [
+    { id: "coverage-root", run: "npx vitest run --coverage --coverage.thresholds.lines=100", paths: ["**"] },
+    { id: "coverage-diff-root", run: "npx vitest run --coverage && diff-cover x --fail-under=100", paths: ["**"] },
+    { id: "coverage-web", run: "npx c8 npm test", cwd: "web", paths: ["**"] },
+    { ...kit },
+    { id: "lint", run: "npx biome check", paths: ["**"] },
+  ];
+  const ctx = { root: dir, cited: new Set(["coverage-root"]), testScript: undefined };
+  const fixes = fixChecks(liste, ctx);
+  const attendu = ["*.json", "*.ts", "src/**"];
+  assert.deepEqual(
+    fixes.map((f) => `${f.kind}:${f.id}`),
+    ["paths:coverage-root", "paths:coverage-diff-root", "paths:coverage-web", "paths:e2e"],
+  );
+  assert.deepEqual(liste[0].paths, attendu);
+  assert.deepEqual(liste[1].paths, attendu);
+  assert.deepEqual(liste[2].paths, ["web/**"], "une couche sous la racine : son dossier");
+  assert.deepEqual(liste[3], { ...kit, paths: attendu }, "seuls les paths changent");
+  assert.deepEqual(liste[4].paths, ["**"], "un contrôle du projet n'est jamais réécrit");
+  assert.match(fixedPoints(fixes, "fr")[0].detail, /`coverage-root` : "paths": \["\*\.json","\*\.ts","src\/\*\*"\]/);
+  assert.deepEqual(fixChecks(liste, ctx), [], "idempotent");
+  // Un e2e retouché à la main reste sur tout le dépôt (signalé par doctor).
+  const retouche = [{ ...kit, run: `${kit.run} --project chromium` }];
+  assert.deepEqual(fixChecks(retouche, ctx), []);
+  assert.deepEqual(retouche[0].paths, ["**"]);
 });

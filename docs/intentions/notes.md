@@ -1,6 +1,6 @@
 # Intention : notes en vrac
 
-**Statut** : ouverte en permanence — notes rangées le 2026-11-22 (rangement du backlog).
+**Statut** : ouverte en permanence — notes rangées le 2026-11-24 (rangement du backlog).
 
 ## Besoin
 
@@ -43,3 +43,4 @@ Relevé le 2026-10-21 : les notes sont ci-dessous, une ligne datée chacune, hor
 - 2026-11-22 — Accélérer les lots, dépôt ET livrable (paquet) : pendant un lot, ne jouer que les tests ciblés et le formatage ; une seule passe complète de run-checks à la clôture (constat 2026-11-22 : 2 à 3 passes complètes d'environ 7 min par sous-agent, relancées pour un formatage ou un chemin cité)
 - 2026-11-22 — Formatage automatique avant commit, dépôt ET livrable (paquet) : biome format --write (ou le formateur déclaré du projet) sur les fichiers indexés, pour éviter les relances de run-checks dues au seul formatage (constat 2026-11-22)
 - 2026-11-22 — Recettes réelles dès le cadrage, dépôt ET livrable (paquet) : un chantier qui touche l'installation ou la mise à jour du kit rejoue marinade-poulet et drwil_walk (copies, tarball de la branche) dès le lot 1, pas seulement à la fin (constat 2026-11-22 : défauts Copilot et étapes CI de drwil_walk vus seulement en recette)
+- 2026-11-24 — format-staged.mjs : une commande stdin de plus de 128 Ko (E2BIG) fait planter checkStaged avec une trace brute au lieu d'un message ; le commit est refusé quand même. Correctif : try/catch autour de spawn dans judge, deux copies, avec un test (sinon la couverture à 100 % tombe).
