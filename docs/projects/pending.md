@@ -138,6 +138,9 @@ d'un outil) la dit dans son statut.
 
 ### Vitesse chez l'adoptant (en tête, demande du 2026-11-22)
 
+- [ ] [IA] [P1] (0.11.2) Version 0.11.2 : montée de version, changelog et mise à jour de marinade-poulet avec tout ce
+  qui est fusionné depuis la 0.11.1 ; publication et mise à jour de marinade-poulet : gestes humains ; prêt (cadré le
+  2026-11-24) — `docs/projects/version-0-11-2.md`.
 - [ ] [IA] Cadrer en parallèle du chantier dans un worktree depuis la branche principale, avec sa propre PR : une
   commande crée le worktree sans dépendances puis commite, pousse, ouvre la PR et la programme ; un push de
   documentation seule ne joue que ses contrôles concernés ; prêt, P1 à P8 tranchés (cadré le 2026-11-22) —
