@@ -4803,3 +4803,11 @@ Relevé en écrivant les critères d'acceptation des fiches ouvertes
 ## maj-0-11-2-passe-la-ci-de-l-adoptant
 
 - **Preuve de clôture** : `docs/preuves/maj-0-11-2-passe-la-ci-de-l-adoptant.md`.
+
+## 2026-11-25 — Le script du pipeline GitLab livré s'exécute sous bash 3.2, celui de macOS (bash-3-2-du-pipeline-gitlab-livre)
+
+- **Constat** : le workflow `.github/workflows/ia-first.yml` lancé à la main sur `master` (run 45436393675), qui rejoue tous les tests, était rouge sous macOS : trois tests de `packages/drwil/test/ci-parite.test.mjs` (`QUA-296`, `QUA-288`, `QUA-321`) échouaient sur `syntax error near unexpected token ';;'`. La CI d'une PR ne l'avait pas vu : elle reprend des verdicts et saute ces tests quand l'arbre est prouvé. Sans trois systèmes verts, `.githooks/create-release.mjs` refuse la 0.11.2.
+- **Cause** (reproduite sous `bash:3.2`, Docker) : le script `plan` du gabarit GitLab livré met un `case … ;; esac` aux motifs non parenthésés dans une substitution `$( { … } )` ; bash 3.2 compte mal la parenthèse fermante du motif.
+- **Ce qui est livré** : le motif est parenthésé, `(*" $sha "*)`, dans `packages/drwil/templates/common/ci/gitlab/.gitlab-ci.yml` ; un test statique côté Linux (`packages/drwil/test/ci-parite-bash.test.mjs`) refuse un `case` aux motifs non parenthésés dans un `$( )` de tout script du pipeline livré et vérifie qu'il voit le défaut sur un exemple fautif ; contre l'ancien gabarit il échoue. Contrat étendu : `QUA-296`. La CI GitHub livrée n'a aucun `case`.
+- **Limite traitée sur le champ** (sondage `drwil-limite`, « Traiter maintenant ») : `packages/drwil/test/ci-parite.test.mjs` passait à 203 lignes ; le test neuf est dans un fichier à part et l'ancien repasse à 186 lignes. Cadrage élargi par un commit séparé.
+- **Limites connues** : seule la syntaxe du script est vérifiée sous bash 3.2 (`bash -n`), pas son exécution complète (il lui faut `node` et `git`) ; le garde statique lit à partir du premier `$(` d'une ligne et refuserait à tort un `case` non parenthésé placé plus loin hors substitution sur la même ligne, sans effet sur le script actuel ; le vert des trois systèmes se prouve par le workflow lancé sur `master` après la fusion (geste humain).
