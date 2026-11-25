@@ -8,6 +8,9 @@ release renames this section to its version.
 
 ### Fixed
 
+- The delivered GitLab pipeline's `plan` script runs under bash 3.2 (the one macOS ships): the
+  `case` that finds the merged branch had unparenthesized patterns inside a `$( )`, a syntax error
+  there; a test now refuses that construction.
 - The first update to this version no longer fails the adopter's CI: the
   update narrows the `paths` of the kit's `coverage-<layer>`,
   `coverage-diff-<layer>` and `e2e` checks only if the project's own scope
