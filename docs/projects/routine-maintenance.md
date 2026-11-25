@@ -31,6 +31,8 @@ files:
   - outils/banc.test.mjs
   - outils/verifier-codeowners.mjs
   - docs/architecture.md
+  - packages/drwil/test/guarantees.test.mjs
+  - packages/drwil/test/shards-proposal.test.mjs
 -->
 
 ## Journal
