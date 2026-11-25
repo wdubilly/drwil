@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { doctor, init } from "../dist/index.js";
 import { shardsPoints, shardsProposal } from "../dist/doctor-shards.js";
 import { E2E_TOOLS, e2eDeclaration } from "../dist/guarantees-e2e-tools.js";
@@ -14,8 +14,8 @@ import { capture, config, git, tmp } from "./kit-commun.mjs";
 for (const nom of Object.keys(process.env)) if (nom.startsWith("GIT_")) delete process.env[nom];
 
 const MOTEUR = join(dirname(fileURLToPath(import.meta.url)), "..", "templates", "common", "base", ".githooks");
-const { shardProblem } = await import(join(MOTEUR, "engine-shards.mjs"));
-const { texts } = await import(join(MOTEUR, "engine-texts.mjs"));
+const { shardProblem } = await import(pathToFileURL(join(MOTEUR, "engine-shards.mjs")).href);
+const { texts } = await import(pathToFileURL(join(MOTEUR, "engine-texts.mjs")).href);
 
 const SLICE = "--shard=$DRWIL_SHARD_INDEX/$DRWIL_SHARD_TOTAL";
 
