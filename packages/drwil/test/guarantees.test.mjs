@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   COVERAGE_TOOLS,
   doctor,
@@ -971,9 +971,9 @@ test("QUA-088 marques : le lot et la ligne d'index d'une garantie sont [IA], sau
 // Table des outils e2e : le kit déclare lui-même le contrôle `e2e`, découpé (`shards: "auto"`), jamais par-dessus une déclaration.
 const { E2E_TOOLS, e2eDeclaration } = await import("../dist/guarantees-e2e-tools.js");
 const MOTEUR = join(TEMPLATES, "base", ".githooks");
-const { shardProblem } = await import(join(MOTEUR, "engine-shards.mjs"));
-const { countTests } = await import(join(MOTEUR, "run-checks-shards.mjs"));
-const { texts: moteurTextes } = await import(join(MOTEUR, "engine-texts.mjs"));
+const { shardProblem } = await import(pathToFileURL(join(MOTEUR, "engine-shards.mjs")).href);
+const { countTests } = await import(pathToFileURL(join(MOTEUR, "run-checks-shards.mjs")).href);
+const { texts: moteurTextes } = await import(pathToFileURL(join(MOTEUR, "engine-texts.mjs")).href);
 const E2E_EXEC = () => faux([[/c8 --version/, OK], ...FORGE_OK]);
 
 test("QUA-320 outil e2e de la table : guarantees déclare `e2e` en tranches « auto », que le moteur accepte (QUA-013)", async () => {
