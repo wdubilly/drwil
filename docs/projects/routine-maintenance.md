@@ -33,6 +33,7 @@ files:
   - docs/architecture.md
   - packages/drwil/test/guarantees.test.mjs
   - packages/drwil/test/shards-proposal.test.mjs
+  - packages/drwil/src/guarantees-e2e-tools.ts
 -->
 
 ## Journal
