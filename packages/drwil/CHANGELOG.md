@@ -6,20 +6,7 @@ Each workstream that changes what a user sees adds its line here, in the
 last increment of its build (the closing scope gate refuses this file); the
 release renames this section to its version.
 
-### Fixed
-
-- The delivered GitLab pipeline's `plan` script runs under bash 3.2 (the one macOS ships): the
-  `case` that finds the merged branch had unparenthesized patterns inside a `$( )`, a syntax error
-  there; a test now refuses that construction.
-- The first update to this version no longer fails the adopter's CI: the
-  update narrows the `paths` of the kit's `coverage-<layer>`,
-  `coverage-diff-<layer>` and `e2e` checks only if the project's own scope
-  guard, from before the update, already admits it (it exports
-  `kitPathsOf`). Otherwise they stay on `["**"]`, the report says so under
-  "Left to decide", and `drwil doctor --fix` (or the next update) narrows
-  them once the new guard is on the main branch.
-
-## 0.11.2 (2026-11-24)
+## 0.11.2 (2026-11-25)
 
 ### Added
 
@@ -290,6 +277,18 @@ release renames this section to its version.
 
 ### Fixed
 
+- The delivered GitLab pipeline's `plan` script runs under bash 3.2 (the one macOS ships): the
+  `case` that finds the merged branch had unparenthesized patterns inside a `$( )`, a syntax error
+  there; a test now refuses that construction.
+- The first update to this version no longer fails the adopter's CI: the
+  update narrows the `paths` of the kit's `coverage-<layer>`,
+  `coverage-diff-<layer>` and `e2e` checks only if the project's own scope
+  guard, from before the update, already admits it (it exports
+  `kitPathsOf`). Otherwise they stay on `["**"]`, the report says so under
+  "Left to decide", and `drwil doctor --fix` (or the next update) narrows
+  them once the new guard is on the main branch.
+- On Windows, the e2e brief written by `drwil guarantees` shows a nested
+  configuration path with `/` (`test/jest-e2e.json`), no longer with `\`.
 - Under Copilot CLI, the outcome of the `/drwil-start` poll (started,
   worktree created, or refused with its cause) now reaches the agent: the
   hook also gives it as a top-level `additionalContext`, the only form

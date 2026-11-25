@@ -1081,13 +1081,15 @@ test("QUA-320 comptage des tests de la table (QUA-013) : un nombre en dernière 
       .split(" | ")
       .at(-1);
   for (const outil of ["Vitest", "Jest"]) {
-    const liste = JSON.stringify(Array.from({ length: 23 }, (_, i) => ({ name: `t${i}` })));
-    const ok = countTests({ shardsCount: `echo '${liste}' | ${compteur(outil)}` }, "e2e", T);
+    // Un script Node, pas `echo` : `cmd.exe` garde les apostrophes autour du JSON.
+    const emet = join(mkdtempSync(join(tmpdir(), "drwil-liste-")), "liste.js");
+    writeFileSync(emet, `console.log(JSON.stringify(Array.from({ length: 23 }, (_, i) => ({ name: "t" + i }))));\n`);
+    const ok = countTests({ shardsCount: `node "${emet}" | ${compteur(outil)}` }, "e2e", T);
     assert.deepEqual(ok, { total: 5 }, outil);
-    const vide = countTests({ shardsCount: `true | ${compteur(outil)}` }, "e2e", T);
+    const vide = countTests({ shardsCount: `node -e "0" | ${compteur(outil)}` }, "e2e", T);
     assert.ok(vide.problem, `${outil} : une liste vide de sortie n'est jamais « 0 test »`);
   }
   // Playwright : la dernière ligne de `--list` porte le total.
   assert.match(E2E_TOOLS[0].count("c"), /--list$/);
-  assert.deepEqual(countTests({ shardsCount: "echo 'Total: 12 tests in 3 files'" }, "e2e", T), { total: 3 });
+  assert.deepEqual(countTests({ shardsCount: "echo Total: 12 tests in 3 files" }, "e2e", T), { total: 3 });
 });
