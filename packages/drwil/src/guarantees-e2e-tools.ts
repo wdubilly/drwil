@@ -3,7 +3,7 @@
 // declares from it, `doctor` compares against it. A tool outside the table is never sliced by force.
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, posix } from "node:path";
 import { TEXTS } from "./guarantees-texts.js";
 import type { DeclaredCheck } from "./guarantees-table.js";
 import { fill, type MessageLang } from "./i18n.js";
@@ -114,7 +114,7 @@ export function declareE2e(
     const found = e2eToolOf(root, layer);
     if (!found) continue;
     checks.push(e2eDeclaration(found.tool, found.config, layer, kitPaths(".", projectFiles(root))));
-    return [fill(T.e2eDeclared, found.tool.tool, join(layer, found.config))];
+    return [fill(T.e2eDeclared, found.tool.tool, posix.join(layer, found.config))];
   }
   return [fill(T.e2eOutside, E2E_TOOLS.map((t) => t.tool).join(", "))];
 }
