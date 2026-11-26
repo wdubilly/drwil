@@ -126,7 +126,7 @@ d'un outil) la dit dans son statut.
 - **0.11.1** : publier « Unreleased » tel quel (montée de version sûre, contrôles lents en tranches) pour patcher drwil_walk.
 - **0.11.2, optimisation des tests** (décidée le 2026-11-11 ; chaque sujet est son propre chantier, une session chacun, la release les regroupe). **Ordre** (décidé le 2026-11-14 ; il suit celui de la section « Fiches cadrées » ci-dessous, seule source) : faits le 2026-11-14 — attestations qui ne tombent que pour leur objet (OPT-4), reprise de détour sans réécriture, un seul run de couverture ; doublon des tests des hooks abandonné (gain trop faible : `docs/intentions/suivi-ci-et-contexte.md`). **Réordonné le 2026-11-14 par le demandeur**, un sous-titre par thème dans la section (une nouvelle fiche se range sous le sien) : d'abord ce qui améliore le plus l'expérience au quotidien (périmètre prévu, refus d'attestation lisible, marque `[humain]`, limites, cadrage en BUILD, index par fiche, hook commit-msg, relecture critique), puis la mesure (Copilot CLI, coût par activité), la vitesse (tranches dès le départ, tests du kit, preuves fiables, temps des contrôles), enfin la fiabilité (audit, analyse d'urgence, sans sous-agent). Les chantiers sont lancés l'un après l'autre, le suivant après la fusion du précédent. Contraintes : un seul run de couverture avant les tranches (`doctor` et `guarantees` partagés) ; preuves fiables avant le temps des contrôles journalisé (`run-checks-verdicts`) ; la consommation de Copilot CLI avant le coût par activité ; la fiche sans sous-agent de chantier attend la mesure du coût par activité. La mesure de la durée du job `checks` sur une PR de documentation seule (gain du cache de verdicts, contre 8 min sur la PR #405) se fait sur la PR de ce cadrage (branche `cadrage/priorites-opt4-detour`).
 - **Périmètre de la 0.11.2 resserré** (décidé le 2026-11-19 par le demandeur) : quatre chantiers, dans cet ordre — gestes humains depuis le chat (fait le 2026-11-19, PR #456), cadrage en BUILD, contrôles de contrats groupés (ajouté le 2026-11-19 : CI de marinade-poulet), tranches dès le départ ; puis la release. Le reste des fiches étiquetées 0.11.2 passe en 0.11.3.
-- **0.11.3** (contenu gardé en entier, décidé le 2026-11-26) : en tête, les retours d'un projet adoptant (fiche
+- **0.11.3** (contenu gardé en entier, décidé le 2026-11-26) : en tête, la fusion bloquée jusqu'aux vrais contrôles ; puis les retours d'un projet adoptant (fiche
   permanente gardée à la clôture, raison d'une preuve GitLab non reprise affichée, tranches GitLab à vide) ; puis les fiches reportées de la 0.11.2, dans l'ordre de la section « Fiches cadrées » (limites classées par lien, index par fiche, fusion automatique perdue signalée, relecture critique, preuves fiables, temps des contrôles, journal sans entrée vide, durcissements de l'audit, analyse d'urgence, sans sous-agent).
 - **0.12.0, gouvernance crédible, et la campagne du mini-banc** (critères de décision écrits le 2026-11-09 dans `docs/intentions/campagne-mini-banc.md`, à insérer au protocole ; essai réel, budget et 12 passages : gestes humains) : attestation authentifiée, contrôle sauté dit « non exécuté », contournements
   restants, clôture sans CI verte, pre-push, contrats à aligner, premier commit du kit, garanties ; les trois fiches reportées (hook commit-msg, gitleaks, ordre du sondage) ; petites hygiènes.
@@ -137,7 +137,13 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-### En tête de la 0.11.3 : retours d'un projet adoptant (2026-11-26)
+### En tête de la 0.11.3 : protection de la fusion (2026-11-26)
+
+- [ ] [IA] [P0] (0.11.3) Aucune fusion n'est permise avant un contrôle réellement exécuté et réussi ; à affiner,
+  reproduction d'abord, puis mécanisme à trancher (cadré le 2026-11-26) —
+  `docs/projects/fusion-avant-les-vrais-controles.md`.
+
+### Ensuite : retours d'un projet adoptant (2026-11-26)
 
 - [ ] [IA] [P0] (0.11.3) La clôture ne supprime jamais la fiche permanente d'entretien courant ; prêt,
   P1 à P4 tranchés (cadré le 2026-11-26) — `docs/projects/cloture-fiche-permanente.md`.
