@@ -111,7 +111,7 @@ thème »), décidé le 2026-11-08 après la montée de drwil_walk en 0.11.0 : l
 passe en tête, car elle rétrograde et écrase des fichiers du projet ; elle absorbe les données du
 projet hors prose du kit, le CI que la mise à jour n'écrase pas et l'alerte avant et après
 écrasement. 1 la montée de version sûre (passée en 0.11.1 le 2026-11-09, réalisée et fusionnée), 2 le premier commit du kit, 3 la clôture d'une fiche
-permanente, 4 le `judgeGuarantees` mort, 5 le contrôle du kit qui masque l'alerte, 6 les
+permanente (avancée en tête de la 0.11.3 le 2026-11-26), 4 le `judgeGuarantees` mort, 5 le contrôle du kit qui masque l'alerte, 6 les
 garanties, la suite ; puis les thèmes E (worktree toujours proposé, attestation depuis le chat) et F,
 à cadrer pendant la 0.11.
 
@@ -126,7 +126,8 @@ d'un outil) la dit dans son statut.
 - **0.11.1** : publier « Unreleased » tel quel (montée de version sûre, contrôles lents en tranches) pour patcher drwil_walk.
 - **0.11.2, optimisation des tests** (décidée le 2026-11-11 ; chaque sujet est son propre chantier, une session chacun, la release les regroupe). **Ordre** (décidé le 2026-11-14 ; il suit celui de la section « Fiches cadrées » ci-dessous, seule source) : faits le 2026-11-14 — attestations qui ne tombent que pour leur objet (OPT-4), reprise de détour sans réécriture, un seul run de couverture ; doublon des tests des hooks abandonné (gain trop faible : `docs/intentions/suivi-ci-et-contexte.md`). **Réordonné le 2026-11-14 par le demandeur**, un sous-titre par thème dans la section (une nouvelle fiche se range sous le sien) : d'abord ce qui améliore le plus l'expérience au quotidien (périmètre prévu, refus d'attestation lisible, marque `[humain]`, limites, cadrage en BUILD, index par fiche, hook commit-msg, relecture critique), puis la mesure (Copilot CLI, coût par activité), la vitesse (tranches dès le départ, tests du kit, preuves fiables, temps des contrôles), enfin la fiabilité (audit, analyse d'urgence, sans sous-agent). Les chantiers sont lancés l'un après l'autre, le suivant après la fusion du précédent. Contraintes : un seul run de couverture avant les tranches (`doctor` et `guarantees` partagés) ; preuves fiables avant le temps des contrôles journalisé (`run-checks-verdicts`) ; la consommation de Copilot CLI avant le coût par activité ; la fiche sans sous-agent de chantier attend la mesure du coût par activité. La mesure de la durée du job `checks` sur une PR de documentation seule (gain du cache de verdicts, contre 8 min sur la PR #405) se fait sur la PR de ce cadrage (branche `cadrage/priorites-opt4-detour`).
 - **Périmètre de la 0.11.2 resserré** (décidé le 2026-11-19 par le demandeur) : quatre chantiers, dans cet ordre — gestes humains depuis le chat (fait le 2026-11-19, PR #456), cadrage en BUILD, contrôles de contrats groupés (ajouté le 2026-11-19 : CI de marinade-poulet), tranches dès le départ ; puis la release. Le reste des fiches étiquetées 0.11.2 passe en 0.11.3.
-- **0.11.3** : les fiches reportées de la 0.11.2, dans l'ordre de la section « Fiches cadrées » (limites classées par lien, index par fiche, fusion automatique perdue signalée, relecture critique, preuves fiables, temps des contrôles, journal sans entrée vide, durcissements de l'audit, analyse d'urgence, sans sous-agent).
+- **0.11.3** (contenu gardé en entier, décidé le 2026-11-26) : en tête, les retours d'un projet adoptant (fiche
+  permanente gardée à la clôture, raison d'une preuve GitLab non reprise affichée, tranches GitLab à vide) ; puis les fiches reportées de la 0.11.2, dans l'ordre de la section « Fiches cadrées » (limites classées par lien, index par fiche, fusion automatique perdue signalée, relecture critique, preuves fiables, temps des contrôles, journal sans entrée vide, durcissements de l'audit, analyse d'urgence, sans sous-agent).
 - **0.12.0, gouvernance crédible, et la campagne du mini-banc** (critères de décision écrits le 2026-11-09 dans `docs/intentions/campagne-mini-banc.md`, à insérer au protocole ; essai réel, budget et 12 passages : gestes humains) : attestation authentifiée, contrôle sauté dit « non exécuté », contournements
   restants, clôture sans CI verte, pre-push, contrats à aligner, premier commit du kit, garanties ; les trois fiches reportées (hook commit-msg, gitleaks, ordre du sondage) ; petites hygiènes.
 - **0.13.0, adoption, clôture et parallèle** : `init` sur projet réel, stack élargie, contrat modifiable par commande,
@@ -135,6 +136,17 @@ d'un outil) la dit dans son statut.
 - **Plus tard** : fabrique autonome, banc complet, validation commerciale, Community Ready, autres outils, forge du livrable.
 
 ## Fiches cadrées, dans l'ordre de réalisation
+
+### En tête de la 0.11.3 : retours d'un projet adoptant (2026-11-26)
+
+- [ ] [IA] [P0] (0.11.3) La clôture ne supprime jamais la fiche permanente d'entretien courant ; prêt,
+  P1 à P4 tranchés (cadré le 2026-11-26) — `docs/projects/cloture-fiche-permanente.md`.
+- [ ] [IA] [P0] (0.11.3) La CI GitLab dit pourquoi une preuve ou des verdicts ne sont pas repris ; prêt, cause non
+  établie (cadré le 2026-11-26) — `docs/projects/preuve-gitlab-non-reprise.md`.
+- [ ] [IA] [P1] (0.11.3) La CI GitLab ne démarre pas de job de tranche inutile ; à affiner, mécanisme à essayer
+  (cadré le 2026-11-26) — `docs/projects/tranches-gitlab-a-vide.md`.
+- [ ] [décision] La CI GitLab reprend la preuve de la branche fusionnée : correctif décidé après la mesure sur un vrai
+  pipeline (notée le 2026-11-26) — `docs/intentions/correctif-preuve-gitlab.md`.
 
 ### Vitesse chez l'adoptant (en tête, demande du 2026-11-22)
 
@@ -373,10 +385,6 @@ quatrième (voir « Fiches cadrées », 0.11.0) :
 - [ ] [décision] L'enchaînement des lots (un sous-agent neuf par lot) éprouvé sur
   une vraie fiche à lots, consommation mesurée —
   `docs/intentions/essais-reels-en-attente.md` (partie « ex-essai-reel-lots-en-sous-agents »).
-- [ ] [décision] [P3] La clôture en un geste reconnaît une fiche permanente
-  (reportée le 2026-11-05 : une fiche jetable par montée de version, close par
-  `node .githooks/close.mjs` ; à reprendre si un projet adoptant en a besoin) —
-  `docs/intentions/cloture-et-attestations.md` (partie « ex-cloture-fiche-permanente »).
 - [ ] [décision] (0.12.0) Le commentaire de `merge_cancelled` dans `.githooks/state-validate.mjs` dit encore
   l'ancienne règle de QUA-181 —
   `docs/intentions/commentaire-merge-cancelled-a-jour.md`.
