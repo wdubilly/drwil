@@ -127,6 +127,8 @@ corrigés ou rattachés pendant le chantier n'apparaissent pas corrigés.
 
 ### la clôture en un geste reconnaît une fiche permanente (ex-« cloture-fiche-permanente »)
 
+**Cadrée le 2026-11-26** : `docs/projects/cloture-fiche-permanente.md`.
+
 Statut d'origine : à cadrer — limite constatée le 2026-10-26 à la clôture de
 l'entretien courant pour la montée de version 0.9.0 (PR #258).
 
