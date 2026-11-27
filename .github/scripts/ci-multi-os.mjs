@@ -4,7 +4,8 @@
 // (aucun si la PR ne touche que la documentation). Windows et macOS ne lancent la suite qu'au push d'un
 // tag de release et à un lancement manuel du workflow : c'est là que la release se joue. Un push de
 // branche, master compris, ne rapporte qu'Ubuntu (un check vert sans tests sur le commit d'une PR
-// masquerait son échec).
+// masquerait son échec). Les noms exigés ne sont rapportés que par une PR et par le push de la branche principale : tout
+// autre run les suffixe « (push) » dans le workflow (QUA-121).
 // En CI : lit GITHUB_EVENT_NAME, GITHUB_REF, et pour une PR BASE et TETE, puis écrit `matrice=<json>`
 // dans GITHUB_OUTPUT. Un diff illisible fait échouer le job : jamais de matrice devinée.
 import { execFileSync } from "node:child_process";

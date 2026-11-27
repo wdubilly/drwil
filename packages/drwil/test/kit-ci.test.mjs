@@ -366,7 +366,8 @@ test("QUA-263 : CI GitHub livrée — le push d'une branche à PR ouverte saute 
   assert.doesNotMatch(plan, /^ {4}if:/m, "pas de `if` de job : un job sauté n'est pas rapporté sous son nom");
   assert.equal(/^ {4}if: (.*)$/m.exec(checks)?.[1], "always()");
   assert.match(plan, /permissions:\n\s+contents: read\n\s+pull-requests: read/);
-  assert.match(checks, /permissions:\n\s+contents: read\n\s+pull-requests: read/);
+  assert.match(checks, /permissions: \{ contents: read, pull-requests: read, actions: read \}\n/);
+  jugerNomsRapportes(gh);
   // Chaque étape après la décision est sautée sur un tel push, sauf celles qui ne tournent jamais sur un push de branche.
   const etapes = [...plan.split(/\n {6}- /).slice(2), ...checks.split(/\n {6}- /).slice(2)];
   for (const e of etapes) {
@@ -406,6 +407,43 @@ test("QUA-263 : CI GitHub livrée — le push d'une branche à PR ouverte saute 
   assert.equal(decider({ EVENT: "push", REF: "refs/heads/main", BRANCH: "main" }, 1).skip, "skip=false", "branche principale");
   assert.equal(decider({ EVENT: "push", REF: "refs/tags/v1" }, 1).skip, "skip=false", "tag");
 });
+
+// Le nom qu'un job rapporte se juge évalué, comme la forge l'évalue : `==`, `&&`, `||` et les chaînes ont ici le même sens.
+const nomRapporte = (modele, { evenement, ref }) =>
+  modele.replace(/\$\{\{\s*(.*?)\s*\}\}/g, (_, expression) =>
+    String(
+      new Function("github", "format", `return (${expression});`)(
+        { event_name: evenement, ref, event: { repository: { default_branch: "main" } } },
+        (gabarit, valeur) => gabarit.replace("{0}", valeur),
+      ),
+    ),
+  );
+
+// Un push d'une branche à PR ouverte réussit sans rien jouer, et un push testé avant la PR réussit réellement : sous le
+// nom exigé, l'un comme l'autre permettait la fusion avant le `checks` de la PR (constat du 2026-11-27). Seuls la PR et
+// le push de la branche principale rapportent `checks`.
+function jugerNomsRapportes(gh) {
+  const blocs = gh
+    .slice(gh.indexOf("\njobs:\n"))
+    .split(/^ {2}(?=[\w-]+:$)/m)
+    .slice(1);
+  const identifiant = (b) => b.slice(0, b.indexOf(":"));
+  const modeles = new Map(blocs.map((b) => [identifiant(b), /^ {4}name: (.*)$/m.exec(b)?.[1] ?? identifiant(b)]));
+  for (const [evenement, ref, attendu] of [
+    ["pull_request", "refs/pull/7/merge", "checks"],
+    ["push", "refs/heads/main", "checks"],
+    ["push", "refs/heads/travail", "checks (push)"],
+    ["push", "refs/tags/v1", "checks (push)"],
+    ["workflow_dispatch", "refs/heads/main", "checks (push)"],
+    ["merge_group", "refs/heads/gh-readonly-queue/main/pr-7", "checks (push)"],
+  ]) {
+    assert.equal(nomRapporte(modeles.get("checks"), { evenement, ref }), attendu, `${evenement} ${ref}`);
+    for (const [id, modele] of modeles) if (id !== "checks") assert.notEqual(modele, "checks", `${id} prend le nom exigé`);
+  }
+  // Le job exigé n'est jamais sauté sur une PR (`always()`, vu plus haut) : son nom y est toujours rapporté ; et même
+  // laissé en expression non évaluée, le modèle ne vaut pas le nom exigé.
+  assert.notEqual(modeles.get("checks"), "checks");
+}
 
 test("QUA-263 : CI GitLab livrée — une seule pipeline par push (aucune pipeline de MR), et la CI joue les contrôles confiés à la CI", async () => {
   const dir = tmp();

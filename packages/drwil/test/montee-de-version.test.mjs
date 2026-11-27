@@ -168,6 +168,18 @@ for (const ci of ["github", "gitlab"]) {
   });
 }
 
+test("QUA-283 : la mise à jour d'un CI GitHub d'avant le nom selon l'évènement lui donne ce nom, zones du projet gardées (QUA-263)", async () => {
+  const dir = await projetCi("github");
+  const chemin = join(dir, FICHIER_CI.github);
+  const gabarit = readFileSync(chemin, "utf8");
+  const nom = /^ {4}name: .*'checks \(push\)' \}\}\n/m;
+  assert.match(gabarit, nom, "le gabarit nomme le job checks selon l'évènement");
+  const avecProjet = (texte) => poser(poser(texte, "steps", AJOUTS.github.steps), "jobs", AJOUTS.github.jobs);
+  writeFileSync(chemin, avecProjet(gabarit.replace(nom, "")));
+  await silence(() => init({ lang: "fr", targetDir: dir, name: "demo", git: false, ci: "github", tools: "claude" }));
+  assert.equal(readFileSync(chemin, "utf8"), avecProjet(gabarit));
+});
+
 test("QUA-283 : un CI sans marqueurs modifié : ses jobs du projet sont replacés dans la zone et nommés, sans question", async () => {
   const dir = await projetCi("github");
   const chemin = join(dir, FICHIER_CI.github);

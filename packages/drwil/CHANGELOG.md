@@ -6,6 +6,34 @@ Each workstream that changes what a user sees adds its line here, in the
 last increment of its build (the closing scope gate refuses this file); the
 release renames this section to its version.
 
+### Fixed
+
+- GitHub CI: a pull request could be merged before its own `checks` had run.
+  The branch push on the same commit reported the same required name: skipped
+  in favor of the open pull request it succeeded without playing anything,
+  and a push tested before the pull request was opened succeeded for real.
+  Now only a pull request run and a push to the default branch report
+  `checks`; any other run reports `checks (push)`. Nothing is run twice, and
+  a branch without a pull request is still tested.
+- What the update changes for you (GitHub only; the GitLab pipeline is
+  unchanged):
+  - The required name stays `checks`: your branch rule keeps working.
+  - `drwil init` adds the `name:` line to the `checks` job (the kit part of
+    `.github/workflows/ia-first.yml`; your project zones are kept). When it
+    leaves your CI file as it is because of a conflict, add the line by hand
+    from the kit's template.
+  - A push runs the workflow file of the pushed branch: a branch created
+    before the update keeps reporting `checks` from its pushes until you
+    merge the updated default branch into it. Do so before merging its pull
+    request.
+  - A commit that gets no pull request run no longer gets `checks` from a
+    push: a rule or a tool that expected it from there (for instance a pull
+    request opened by a workflow with `GITHUB_TOKEN`, which starts no pull
+    request run, or a merge queue you added yourself) waits for it.
+  - Required checks of your own jobs are not renamed: if a push run can
+    report one of them before the pull request run does, rename it the same
+    way.
+
 ## 0.11.2 (2026-11-25)
 
 ### Added
