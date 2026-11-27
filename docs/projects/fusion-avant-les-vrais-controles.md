@@ -177,7 +177,7 @@ sans ce cadrage a échoué sur cette seule barrière (non compté).
 | PR | Runs push / PR | Observé |
 |---|---|---|
 | #6, sans fusion demandée | 45961247033 / 45961339764 | `UNSTABLE` de 07:51:20 jusqu'à la création du `checks` de la PR (07:51:39), puis `BLOCKED` en file, en cours et après son échec (07:51:53) ; fusion normale refusée à 07:53:03 |
-| #7, fusion automatique dès l'ouverture | 45969286634 / 45969394631 | `CLEAN` à 08:55:02, `gh pr merge --auto --merge` : **PR fusionnée à 08:55:04** ; le `checks` de la PR, apparu à 08:55:12, **échoue** à 08:55:25 (`essai-echec`) |
+| #7, `--auto` dès l'ouverture | 45969286634 / 45969394631 | `CLEAN` à 08:55:02, `gh pr merge --auto --merge` : **PR fusionnée à 08:55:04**, immédiatement : l'historique de la PR ne porte aucun évènement de fusion automatique (vérifié) ; le `checks` de la PR, apparu à 08:55:12, **échoue** à 08:55:25 (`essai-echec`) |
 
 **Observé, push puis PR aussitôt** (`ECHEC-TOUJOURS`, fusion automatique dès l'ouverture) :
 
@@ -197,7 +197,8 @@ livrée est celle de la PR #7. `strict: true` ne l'a pas empêchée.
 ### Ce qu'on sait des trois temps
 
 - **Avant** la création du `checks` de la PR : fusionnable dès qu'un autre `checks` réussi ou sauté existe sur le
-  commit ; fusions abouties : #3 (dépôt, à la main) et #7 (livrée, fusion automatique).
+  commit ; fusions abouties : #3 (dépôt, à la main) et #7 (livrée, commande `--auto` exécutée en fusion immédiate).
+  **Une fusion par une fusion automatique restée programmée n'a été obtenue dans aucun essai.**
 - **Pendant** : `BLOCKED` observé (#2, #6, #8, #9). **Après** l'échec : `BLOCKED` observé (#2, #6, #8), y compris après
   relance du run push (#2).
 - La fusion automatique tentée trop tard est désactivée par GitHub (#2, #9) alors qu'elle avait été annoncée
