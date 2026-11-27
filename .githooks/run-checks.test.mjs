@@ -311,11 +311,95 @@ test("QUA-121 : le workflow saute le push d'une branche à PR ouverte, jamais ma
   assert.match(calcul, /\|\| ouvertes=0/, "GitHub muet : le push teste");
   assert.match(calcul, /\[ "\$REF" != "refs\/heads\/\$PRINCIPALE" \]/, "master jamais sauté");
   assert.match(calcul, /"tester":false/, "push sauté : kit-tests ne teste pas");
-  assert.match(job("checks"), /needs: \[matrice-os, plan, shards\]\n\s+if: always\(\) && needs\.matrice-os\.outputs\.saute != 'true'/);
+  assert.match(
+    job("checks"),
+    /needs: \[matrice-os, plan, shards\]\n(\s+name: .*\n)?\s+if: always\(\) && needs\.matrice-os\.outputs\.saute != 'true'/,
+  );
   assert.match(job("kit-tests"), /needs: matrice-os/);
-  assert.match(job("kit-tests"), /name: kit-tests \(\$\{\{ matrix\.os \}\}\)/);
   assert.match(job("alert-if-ci-broken"), /needs: \[checks, kit-tests\]/);
   assert.match(job("alert-if-ci-broken"), /github\.event_name == 'push'/);
+});
+
+// Les noms rapportés se jugent évalués, comme la forge les évalue : `==`, `!=`, `&&`, `||` et les chaînes ont ici le même
+// sens en JavaScript. La règle de master est lue dans sa version commitée, jamais recopiée.
+const EXECUTIONS = [
+  { quoi: "pull request", evenement: "pull_request", ref: "refs/pull/7/merge", exige: true },
+  { quoi: "push de la branche principale", evenement: "push", ref: "refs/heads/master", exige: true },
+  { quoi: "push de branche", evenement: "push", ref: "refs/heads/travail", exige: false },
+  { quoi: "push d'un tag", evenement: "push", ref: "refs/tags/v1.0.0", exige: false },
+  { quoi: "lancement manuel sur une branche", evenement: "workflow_dispatch", ref: "refs/heads/travail", exige: false },
+  { quoi: "lancement manuel sur la branche principale", evenement: "workflow_dispatch", ref: "refs/heads/master", exige: false },
+];
+const nomRapporte = (modele, execution, matrix = {}) =>
+  modele.replace(/\$\{\{\s*(.*?)\s*\}\}/g, (_, expression) =>
+    String(
+      new Function("github", "matrix", "format", `return (${expression});`)(
+        { event_name: execution.evenement, ref: execution.ref, event: { repository: { default_branch: "master" } } },
+        matrix,
+        (gabarit, valeur) => gabarit.replace("{0}", valeur),
+      ),
+    ),
+  );
+
+test("QUA-121 : seules la PR et le push de la branche principale rapportent les noms exigés, tout autre run les suffixe « (push) »", () => {
+  const depot = join(dirname(SCRIPT), "..");
+  const wf = readFileSync(join(depot, ".github", "workflows", "ia-first.yml"), "utf8");
+  const regle = JSON.parse(readFileSync(join(depot, ".github", "ruleset-master.json"), "utf8"));
+  const exiges = regle.rules.find((r) => r.type === "required_status_checks").parameters.required_status_checks.map((c) => c.context);
+  const blocs = wf
+    .slice(wf.indexOf("\njobs:\n"))
+    .split(/^ {2}(?=[\w-]+:$)/m)
+    .slice(1);
+  // Nom de chaque job : son `name:`, sinon son identifiant.
+  const modeles = new Map(blocs.map((b) => [b.slice(0, b.indexOf(":")), /^ {4}name: (.*)$/m.exec(b)?.[1] ?? b.slice(0, b.indexOf(":"))]));
+  const systemes = exiges.map((n) => /^kit-tests \((.*)\)$/.exec(n)?.[1]).filter(Boolean);
+  assert.deepEqual(systemes.length, exiges.length - 1, `noms exigés : ${exiges}`);
+  for (const execution of EXECUTIONS) {
+    const attendus = exiges.map((n) => (execution.exige ? n : `${n} (push)`));
+    const rapportes = [
+      nomRapporte(modeles.get("checks"), execution),
+      ...systemes.map((os) => nomRapporte(modeles.get("kit-tests"), execution, { os })),
+    ];
+    assert.deepEqual(rapportes, attendus, execution.quoi);
+    // Aucun autre job ne prend un nom exigé.
+    for (const [id, modele] of modeles)
+      if (id !== "checks" && id !== "kit-tests") assert.ok(!exiges.includes(modele), `${id} rapporte un nom exigé`);
+  }
+  // Un `checks` sauté par sa condition peut garder son nom en expression non évaluée : ce texte ne vaut aucun nom exigé.
+  for (const id of ["checks", "kit-tests"]) assert.ok(!exiges.includes(modeles.get(id)), `${id} : expression non évaluée`);
+});
+
+test("QUA-121 : sur une PR et sur la branche principale, la décision de sauter est toujours « non » : le nom exigé y est rapporté", () => {
+  // Un nom exigé que plus rien ne rapporte bloquerait toute fusion : la condition de job de `checks` ne le saute que sur
+  // la sortie `saute`, que le script de décision, joué ici par bash, ne met à vrai que sur un push d'une autre branche.
+  if (process.platform === "win32") return;
+  const wf = readFileSync(join(dirname(SCRIPT), "..", ".github", "workflows", "ia-first.yml"), "utf8");
+  const script = /- id: pr\n[\s\S]*?run: \|\n([\s\S]*?)\n {6}- /.exec(wf)[1].replace(/^ {10}/gm, "");
+  const outils = mkdtempSync(join(tmpdir(), "drwil-qua121-"));
+  try {
+    writeFileSync(join(outils, "gh"), "#!/bin/sh\necho 1\n");
+    chmodSync(join(outils, "gh"), 0o755);
+    const decider = ({ evenement, ref }) => {
+      const sortie = join(outils, "sortie");
+      rmSync(sortie, { force: true });
+      const r = spawnSync("bash", ["-c", script.replace(/\$\{\{ github\.repository \}\}/g, "o/r")], {
+        encoding: "utf8",
+        env: {
+          PATH: `${outils}:${process.env.PATH}`,
+          GITHUB_OUTPUT: sortie,
+          EVENEMENT: evenement,
+          REF: ref,
+          PRINCIPALE: "master",
+          BRANCHE: ref.split("/").pop(),
+        },
+      });
+      assert.equal(r.status, 0, r.stderr);
+      return readFileSync(sortie, "utf8").trim();
+    };
+    for (const execution of EXECUTIONS) assert.equal(decider(execution), `saute=${execution.quoi === "push de branche"}`, execution.quoi);
+  } finally {
+    rmSync(outils, { recursive: true, force: true });
+  }
 });
 
 test("QUA-123 : le job checks joue la suite une seule fois sur Node 22, sans npm test séparé ; kit-tests garde Node 24", () => {

@@ -395,8 +395,11 @@ for (const fichier of [".github/workflows/ia-first.yml", "packages/drwil/templat
     assert.equal(depot.if, "always()", "une tranche en échec dépose aussi son verdict");
     assert.match(depot.with.name, /^shard-\$\{\{ matrix\.index \}\}-of-\$\{\{ matrix\.total \}\}$/);
     assert.equal(depot.with.path, ".drwil/evidence/shards");
-    // Le job exigé garde son nom (aucun `name:`), dépend du plan et des tranches, et tourne même si elles échouent.
-    assert.equal(checks.name, undefined);
+    // Le job exigé garde son nom là où il est exigé (PR, push de la branche principale ; ailleurs « checks (push) »,
+    // QUA-121 et QUA-263), dépend du plan et des tranches, et tourne même si elles échouent.
+    const principale = "github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)";
+    const exige = `(github.event_name == 'pull_request' || (${principale})) && 'checks' || 'checks (push)'`;
+    assert.equal(checks.name, `$\{{ ${exige} }}`);
     assert.deepEqual(
       checks.needs.filter((n) => n === "plan" || n === "shards"),
       ["plan", "shards"],

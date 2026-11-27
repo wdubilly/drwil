@@ -76,6 +76,9 @@ jobs:
   checks:
     # Sauté sur le push d'une branche dont la PR ouverte porte déjà ces checks (voir matrice-os). Le job exigé garde son nom (QUA-251) et
     # agrège les tranches : `always()`, un plan ou une tranche en échec, sautée ou annulée le fait échouer, jamais un succès par défaut (QUA-013).
+    # QUA-121 : seuls une PR et le push de la branche principale rapportent le nom exigé par le ruleset ; tout autre run le suffixe « (push) ».
+    # Un succès, ou un saut, d'un autre run du même commit permettait la fusion avant le `checks` de la PR.
+    name: ${{ (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch))) && 'checks' || 'checks (push)' }}
     needs: [matrice-os, plan, shards]
     if: always() && needs.matrice-os.outputs.saute != 'true'
     runs-on: ubuntu-latest
@@ -325,7 +328,8 @@ jobs:
   kit-tests:
     needs: matrice-os
     # Nom fixé : le ruleset de master exige « kit-tests (<os>) », or `include` ajouterait gitleaks et sha256 au nom.
-    name: kit-tests (${{ matrix.os }})
+    # QUA-121 : ce nom exigé n'est rapporté que par une PR et par le push de la branche principale, comme celui de `checks`.
+    name: kit-tests (${{ matrix.os }})${{ github.event_name != 'pull_request' && (github.event_name != 'push' || github.ref != format('refs/heads/{0}', github.event.repository.default_branch)) && ' (push)' || '' }}
     strategy:
       matrix:
         include: ${{ fromJSON(needs.matrice-os.outputs.matrice) }}
