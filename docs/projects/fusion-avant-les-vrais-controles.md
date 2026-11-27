@@ -100,7 +100,59 @@ Aucun validé : QUA-121 et QUA-263 décrivent le mécanisme actuel ; leur nouvea
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-26) : cadré ; défaut observé une fois, contournement par un contrôle en échec non reproduit.
-- **En attendant** : avant de fusionner une PR de code, vérifier que le `checks` de l'exécution `pull_request` est
-  terminé et réussi ; ne pas programmer sa fusion automatique avant.
-- **Prochaine étape** : [humain] `/drwil-start`.
+- **Dernier état** (2026-11-27) : lot 1 en cours ; défaut reproduit sur la CI du dépôt (section 8) ; CI livrée pas
+  encore essayée ; P1 non tranché.
+- **En attendant** : avant de fusionner une PR, de code ou de documentation, vérifier que le `checks` de l'exécution
+  `pull_request` est terminé et réussi ; ne pas programmer sa fusion automatique avant.
+- **Prochaine étape** : [IA] CI livrée, puis push testé avant l'ouverture de la PR.
+
+## 8. Constat du lot 1 (reproduction)
+
+Dépôt d'essai public `wdubilly/drwil-essai-fusion`, heures UTC du 2026-11-27.
+
+**Montage** : copie de `master` (`a19a19f3`) en un seul commit (`5d78f2b`) ; ruleset 28200085 copié du ruleset
+24840343, seul écart `require_code_owner_review: false` (aussi dans `.github/ruleset-master.json` de la copie) ; fusion
+automatique permise. Contrôle ajouté `essai-echec` : il échoue si un fichier du dossier d’essai, propre à la copie, contient
+`ECHEC-TOUJOURS`, ou `ECHEC-SUR-PR` sur un run `pull_request`. Aucun workflow ne s'est enregistré après les premiers
+push ; Actions désactivé puis réactivé sur ce seul dépôt les a fait apparaître (cause inconnue). La PR #1, restée sans
+aucun contrôle et `BLOCKED`, a été fermée.
+
+### CI du dépôt : défaut reproduit
+
+**Observé, PR #3** (documentation seule, `ECHEC-TOUJOURS` ; push, puis PR ouverte à 00:17:09 ; fusion automatique non
+programmée ; run push 45915831859, run PR 45915839546) :
+
+- 00:17:16 : `checks` du push sauté (140234728433) ; 00:17:26 : les `kit-tests` exigés sont tous réussis.
+- 00:17:28 : `mergeStateStatus` vaut `UNSTABLE` ; une boucle d'observation lance alors `gh pr merge 3 --merge`,
+  **fusion demandée à la main, sans `--admin` ni `--auto`**.
+- 00:17:31 : **PR fusionnée** (commit `301c43dd`). Le relevé suivant montre le `checks` de la PR (140234799105) en
+  file, `started_at` 00:17:30.
+- 00:37:38 : ce `checks` finit en **échec** (« ECHEC VOLONTAIRE DE L ESSAI » ; deux contrôles en échec, `essai-echec`
+  et miroirs dépôt/gabarit, tous deux dus au fichier d'essai).
+- La CI de `master` sur la fusion (run 45915870861) échoue ; l'issue d'alerte #4 s'ouvre à 00:29:54.
+
+**Observé, PR #2** (même contenu, fusion automatique programmée à 00:07:10, une seconde après l'ouverture ; run push
+45914846239, run PR 45914852203) :
+
+- 00:07:16 : `checks` du push sauté (140231523787).
+- 00:07:35 : **`UNSTABLE`** (fusionnable), le `plan` de la PR en cours, son `checks` absent du relevé.
+- 00:07:37 : le `checks` de la PR (140231634850) apparaît en file ; 00:07:38 : `BLOCKED`, et GitHub désactive la
+  fusion automatique (`repository_rule_violation`, « Repository rule violations found »). PR non fusionnée.
+- Pendant, à 00:09:57 : fusion normale refusée (« the base branch policy prohibits the merge ») ; fusion automatique
+  réarmée à 00:10:00, PR `BLOCKED`.
+- 00:24:17 : `checks` en échec (`essai-echec`, miroirs, périmètre de l'attente sans trailer) ; ensuite PR `BLOCKED`,
+  non fusionnée, fusion automatique toujours armée.
+
+La base `5d78f2b` passe les mêmes contrôles (dernière étape des deux jobs en échec) : les échecs viennent des PR.
+
+**Déduit** :
+
+- Tant que le `checks` de la PR n'existe pas, celui, sauté, du push satisfait la règle. La fenêtre va du dernier autre
+  contrôle exigé réussi jusqu'à la création de ce `checks`.
+- PR #3 : GitHub aurait évalué la règle avant la création du `checks` de la PR, malgré un `started_at` antérieur d'une
+  seconde à la fusion.
+- PR #2 : la fusion automatique aurait été tentée dans la fenêtre et aurait abouti trop tard. **La fusion par la seule
+  fusion automatique n'est pas reproduite ici** ; sur la #481, elle a gagné la course (fusion à 21:19:07, `checks` de
+  la PR commencé à 21:19:22).
+- Une PR de code, dont les `kit-tests` Ubuntu testent réellement, dure sans doute assez pour fermer la fenêtre (non
+  essayé).
