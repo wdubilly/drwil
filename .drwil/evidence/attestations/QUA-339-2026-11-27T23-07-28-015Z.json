@@ -1,0 +1,29 @@
+{
+  "version": 4,
+  "contract": "QUA-339",
+  "status": "ATTESTED",
+  "attestedAt": "2026-11-27T23:07:28.015Z",
+  "actor": {
+    "name": "Wilfried Dubilly",
+    "source": "git config user.name, déclaratif"
+  },
+  "note": "Essai (drwil-essai-fusion) PR #14-17, CI dépôt et livrée, PR aussitôt/après push, fusion auto programmée : BLOCKED avant/pendant/après l'échec, pas de fusion, aucun nom exigé du push. Limites : pas de PR de code ; CI livrée finale pas sur la branche principale ; #17 sous 2 protections. QUA-019 : diff relu, aucun test retiré, hooks/ruleset inchangés ; 1 assertion remplacée par évaluation, 2 motifs adaptés ; 1 nouveau test sauté sous Windows.",
+  "fingerprint": "80e4d8f47a63b8b74853cf81576bbf1379502f8006ca8168dff5f46e0739f6cd",
+  "proof": {},
+  "covers": [
+    ".github/workflows/ia-first.yml",
+    "packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml"
+  ],
+  "coverage": {
+    ".github/workflows/ia-first.yml": "91c71a42789cbdfa9694a56708992c34874d2add2f61b6a06b99323aaede1084",
+    "packages/drwil/templates/common/ci/github/.github/workflows/ia-first.yml": "4d21f31280fccf5d8b56dd796cfdd050f30d7e8a4b1081716da780868ed57931"
+  },
+  "commit": "d5aeab82335b18c8a4322524c937930c0949ae6b",
+  "automated": [],
+  "origin": {
+    "source": "claude-poll",
+    "sessionId": "02a4dbf1-3743-44ab-baf6-a1c43dd73c46",
+    "toolUseId": "toolu_019cUe9idYjBanwUoqoGfJw4",
+    "askedAt": "2026-11-27T22:18:50.103Z"
+  }
+}
