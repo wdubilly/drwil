@@ -110,11 +110,13 @@ Aucun.
   `checks` de l'exécution `pull_request` est terminé et réussi ; ne pas programmer sa fusion automatique avant. De même
   ensuite pour une branche créée avant le correctif, tant qu'elle n'a pas intégré `master` : son push rapporte encore
   `checks`.
-- **Prochaine étape** : [IA] vérification et clôture ; [humain] lot 3, essai réel et attestation de QUA-339.
-- **Dépôt d'essai** : conservé pour le lot 3. `master` y porte le projet factice avec la protection classique de la CI
-  livrée ; la copie de drwil est sur `etat-depot`, désormais protégée par les quatre noms exigés (protection classique,
-  administrateurs inclus) ; le ruleset 28200085 reste désactivé. L'issue #4 reste ouverte, la PR #14 est fermée, les
-  branches d'essai sont gardées.
+- **Prochaine étape** : [IA] vérification et clôture ; [humain] lot 3 : juger les essais réels (sections 9 et 10) et
+  attester QUA-339.
+- **Dépôt d'essai** : conservé jusqu'à l'attestation. Disposition d'origine rétablie après la section 10 : `master`
+  (branche par défaut) porte le projet factice avec la protection classique de la CI livrée ; la copie de drwil est sur
+  `etat-depot` (avancée à `9e63446`), protégée par les quatre noms exigés (protection classique, administrateurs
+  inclus) ; le ruleset 28200085 est désactivé. L'issue #4 reste ouverte, les PR #14 à #17 sont fermées, les branches
+  d'essai sont gardées.
 
 ## 8. Constat du lot 1 (reproduction)
 
@@ -259,3 +261,55 @@ d'échec volontaire sont ajoutés aux branches d'essai.
   QUA-251 de la copie, d'avant le correctif, qui attend `checks` sans `name:`.
 - **Non essayés** : push réellement réussi avant l'ouverture de la PR sur la CI du dépôt ; PR de code ; CI livrée avec
   l'expression finale (celle des PR #12 et #13 n'avait pas la condition `github.event_name == 'push'`).
+
+## 10. Essais avec le workflow final avant l'attestation
+
+Joués par l'agent à la demande du demandeur, sur le seul dépôt d'essai, heures UTC du 2026-11-27 ; workflows de
+`080d6fb5`, identiques au gabarit et à ceux du dépôt. Fusion automatique demandée à l'ouverture
+(`gh pr merge --auto --merge`) ; relevés toutes les quelques secondes (toutes les 10 s environ après les 90 premières
+secondes). Ce constat ne vaut pas attestation de QUA-339.
+
+| Essai | PR ; runs push / PR ; commit | Ouverture, fusion automatique à l'historique, `checks` de la PR vu, échec, fusion normale refusée |
+|---|---|---|
+| 1. CI livrée, PR aussitôt | #15 ; 46071140202 / 46071146170 ; `2ff290f` | 21:34:06, 21:34:09, 21:34:19, 21:34:33, 21:35:22 |
+| 2. CI livrée, PR après la réussite du push | #16 ; 46071324458 / 46071384457 ; `428b016` | 21:36:14, 21:36:16, 21:36:27, 21:36:40, 21:37:30 |
+| 3. CI du dépôt, PR après la réussite du push | #17 ; 46072721961 / 46073774593 ; `2bebc6f` | 21:59:17, 21:59:20, 21:59:38, 22:14:01, 22:15:05 |
+
+**Observé** :
+
+- Les trois PR : `BLOCKED` à chaque relevé une fois la fusion automatique enregistrée, avant l'apparition du `checks`
+  de la PR, pendant et après son échec ; jamais `UNSTABLE` ni `CLEAN` ; aucune fusion. Les seuls autres états sont ceux
+  du premier relevé : `UNKNOWN` (#16, #17), ou `BLOCKED` sans fusion automatique encore (#15). L'historique de chacune
+  porte un évènement d'activation de la fusion automatique, sans désactivation ni fusion ; elle restait programmée au
+  dernier relevé. Fusion normale (sans `--admin`) refusée : « the base branch policy prohibits the merge ».
+- Chaque échec d'agrégation du `checks` de la PR (jobs 140748164567, 140748918044, 140756726797) compte un seul
+  contrôle en échec, `essai-echec` (« ECHEC VOLONTAIRE DE L ESSAI »).
+- Aucun run push n'a rapporté un nom exigé. #15 : le push s'est sauté (la PR existait déjà), `checks (push)` réussi
+  sans rejouer. #16 : le push a réellement joué les contrôles, `checks (push)` réussi à 21:36:07, avant l'ouverture.
+  #17 : push réellement réussi à 21:59:11 (`checks (push)`, contrôles et vérification du ruleset joués, 36
+  avertissements, non exécutés compris ; `kit-tests (ubuntu-latest) (push)` testé).
+- #16, avant l'apparition du `checks` de la PR : `checks (push)` réussi était le seul contrôle de ce genre sur le
+  commit et la PR restait `BLOCKED`.
+- #17 : les `kit-tests (<os>)` de la PR (changement de documentation) réussissent sans tester, vers 21:59:35-41. Le
+  premier relevé qui les montre en partie réussis montre déjà le `checks` de la PR en file : aucun relevé n'isole
+  l'instant où les trois sont réussis sans ce `checks`.
+
+**Montage et écarts** :
+
+- Essais 1 et 2 : le workflow final n'est posé que sur la branche de la PR ; le `master` d'essai garde la version sans
+  la condition `github.event_name == 'push'`. Protection classique seule, `checks` exigé, `strict`.
+- Essai 3 : le `master` factice n'ayant aucun commit commun avec la copie de drwil, un push de branche de la copie
+  échouait (« aucune branche de référence »). Le temps de l'essai, `master` a été renommé `etat-livre` et `etat-depot`
+  renommé `master` (branche par défaut), puis l'inverse. Base `9e63446` : les 10 fichiers changés par le chantier,
+  identiques à `080d6fb5`, ancien fichier d'échec retiré, dossier d'essai déclaré dans les miroirs ; poussée directement,
+  l'application aux administrateurs levée le temps du push puis rétablie. La PR n'ajoute qu'un fichier au dossier d'essai.
+- Premier essai 3 non compté (run 46071818517, commit `1051e49`) : contrôles réussis, mais run en échec à la
+  vérification du ruleset, désactivé depuis le lot 2 ; PR non ouverte. Ruleset 28200085 réactivé pour la #17 (en plus
+  de la protection classique : le blocage ne s'attribue pas à l'un des deux), désactivé ensuite.
+- La base `9e63446` échoue elle-même sur les miroirs (défaut du montage : la ligne du dossier d'essai n'y couvre aucun
+  fichier ; run 46071786812). L'étape de diagnostic de la #17 dit donc « Échec déjà présent sur la base » ; elle ne
+  porte pas sur l'échec du `checks` de la PR, dont l'agrégation ne compte que `essai-echec`. Les renommages ont aussi
+  déclenché des runs de push, en échec, sur les branches renommées.
+- CI du dépôt, PR aussitôt : non rejoué ici ; joué au lot 2 (PR #14) avec le même workflow que `080d6fb5`.
+- **Non essayés** : PR de code ; rejeu avec les hooks de la branche principale (l'agrégation échoue avant).
+
