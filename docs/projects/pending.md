@@ -137,12 +137,6 @@ d'un outil) la dit dans son statut.
 
 ## Fiches cadrées, dans l'ordre de réalisation
 
-### En tête de la 0.11.3 : protection de la fusion (2026-11-26)
-
-- [ ] [IA] [P0] (0.11.3) Aucune fusion n'est permise avant un contrôle réellement exécuté et réussi ; à affiner,
-  reproduction d'abord, puis mécanisme à trancher (cadré le 2026-11-26) —
-  `docs/projects/fusion-avant-les-vrais-controles.md`.
-
 ### Ensuite : retours d'un projet adoptant (2026-11-26)
 
 - [ ] [IA] [P0] (0.11.3) La clôture ne supprime jamais la fiche permanente d'entretien courant ; prêt,
