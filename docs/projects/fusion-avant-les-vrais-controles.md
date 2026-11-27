@@ -86,9 +86,8 @@ Aucun validé : QUA-121 et QUA-263 décrivent le mécanisme actuel ; leur nouvea
 
 ## 5. Points à trancher
 
-- [décision] P1 : le mécanisme, après la reproduction. Pistes non essayées : l'exécution sautée rapporte sous un
-  autre nom ; le workflow ne contrôle plus les push de branche qui ont une PR sans émettre les noms exigés ; abandon
-  du saut, au prix d'un double passage.
+- [décision] P1 : le mécanisme. Reproduction faite (section 8) ; options et recommandation à la fin de cette section,
+  décision au demandeur.
 
 ## 6. Increments
 
@@ -100,11 +99,14 @@ Aucun validé : QUA-121 et QUA-263 décrivent le mécanisme actuel ; leur nouvea
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-27) : lot 1 en cours ; défaut reproduit sur la CI du dépôt (section 8) ; CI livrée pas
-  encore essayée ; P1 non tranché.
+- **Dernier état** (2026-11-27) : essais du lot 1 faits, constat en section 8 ; défaut reproduit sur la CI du dépôt et
+  sur la CI livrée ; P1 non tranché ; aucun code de drwil modifié.
 - **En attendant** : avant de fusionner une PR, de code ou de documentation, vérifier que le `checks` de l'exécution
   `pull_request` est terminé et réussi ; ne pas programmer sa fusion automatique avant.
-- **Prochaine étape** : [IA] CI livrée, puis push testé avant l'ouverture de la PR.
+- **Prochaine étape** : [humain] trancher P1 ; ensuite seulement, passer au lot 2.
+- **Dépôt d'essai** : conservé pour le lot 3. `master` y porte désormais le projet factice (la copie de drwil est sur
+  `etat-depot`) ; le ruleset 28200085 est désactivé et `master` a la protection classique de la CI livrée : à remettre
+  en place pour rejouer la CI du dépôt. L'issue #4 reste ouverte, les branches d'essai sont gardées.
 
 ## 8. Constat du lot 1 (reproduction)
 
@@ -156,3 +158,75 @@ La base `5d78f2b` passe les mêmes contrôles (dernière étape des deux jobs en
   la PR commencé à 21:19:22).
 - Une PR de code, dont les `kit-tests` Ubuntu testent réellement, dure sans doute assez pour fermer la fenêtre (non
   essayé).
+
+**Observé ensuite sur la PR #2, après l'échec** : fusion normale refusée à 00:39:11 ; run push relancé à 00:39:13, qui
+crée un nouveau `checks` sauté (140241718802, 00:39:25), plus récent que l'échec ; la PR reste `BLOCKED`, fusion
+automatique armée, et la fusion normale est encore refusée à 00:39:53.
+
+### CI livrée : défaut reproduit
+
+**Montage** : l'ancien `master` d'essai renommé `etat-depot` ; nouveau `master` = projet factice avec le kit construit
+depuis la branche du chantier (CI GitHub identique au gabarit), plus le même contrôle `essai-echec`. Ruleset désactivé ;
+protection classique telle que la pose `drwil guarantees --protect` (`checks` exigé, `strict: true`, administrateurs
+inclus, PR obligatoire, 0 approbation). La barrière de périmètre du kit exige un cadrage lu dans le commit parent : les
+fichiers d'essai ont été déclarés dans la fiche permanente par la PR #5, verte et fusionnée normalement. Un premier push
+sans ce cadrage a échoué sur cette seule barrière (non compté).
+
+**Observé, push testé avant l'ouverture de la PR** (`ECHEC-SUR-PR` : le push réussit réellement, la PR échoue) :
+
+| PR | Runs push / PR | Observé |
+|---|---|---|
+| #6, sans fusion demandée | 45961247033 / 45961339764 | `UNSTABLE` de 07:51:20 jusqu'à la création du `checks` de la PR (07:51:39), puis `BLOCKED` en file, en cours et après son échec (07:51:53) ; fusion normale refusée à 07:53:03 |
+| #7, fusion automatique dès l'ouverture | 45969286634 / 45969394631 | `CLEAN` à 08:55:02, `gh pr merge --auto --merge` : **PR fusionnée à 08:55:04** ; le `checks` de la PR, apparu à 08:55:12, **échoue** à 08:55:25 (`essai-echec`) |
+
+**Observé, push puis PR aussitôt** (`ECHEC-TOUJOURS`, fusion automatique dès l'ouverture) :
+
+- PR #8 (runs 45978233529 / 45978241821) : le push se dit sauté (notice à 09:59:17) ; son `checks` (140435353785)
+  **réussit à vide**, seule l'étape « Refuse a plan or a slice… » jouée. Il finit à 09:59:26, une seconde après le
+  `started_at` du `checks` de la PR : jamais `UNSTABLE`, `BLOCKED` jusqu'après l'échec (09:59:39).
+- PR #9 (runs 45978642572 / 45978648485) : même succès à vide (140436692807, 10:02:15) ; **`UNSTABLE` à 10:02:17**,
+  le `checks` de la PR pas encore créé ; il apparaît à 10:02:18 ; à 10:02:19 GitHub désactive la fusion automatique
+  (`protected_branch`) ; échec à 10:02:37, PR non fusionnée.
+- PR #10 et #11 : deux essais de fusion à la main dans la fenêtre, sans résultat. Sur la #11, 78 tentatives refusées, le
+  succès à vide étant arrivé trop tard ; sur la #10, la boucle d'observation n'a vu aucun état fusionnable.
+
+**Déduit** : même course que sur la CI du dépôt ; un succès à vide arrivé avant la création du `checks` de la PR rend
+celle-ci fusionnable. **Une fusion aboutie avec ce succès à vide n'est pas obtenue** ; la fusion aboutie sur la CI
+livrée est celle de la PR #7. `strict: true` ne l'a pas empêchée.
+
+### Ce qu'on sait des trois temps
+
+- **Avant** la création du `checks` de la PR : fusionnable dès qu'un autre `checks` réussi ou sauté existe sur le
+  commit ; fusions abouties : #3 (dépôt, à la main) et #7 (livrée, fusion automatique).
+- **Pendant** : `BLOCKED` observé (#2, #6, #8, #9). **Après** l'échec : `BLOCKED` observé (#2, #6, #8), y compris après
+  relance du run push (#2).
+- La fusion automatique tentée trop tard est désactivée par GitHub (#2, #9) alors qu'elle avait été annoncée
+  programmée.
+- Non essayés : PR de code sur la CI du dépôt ; push testé avant la PR sur la CI du dépôt (déduit identique, son push
+  ne rejouant pas les contrôles avec les hooks de la branche principale).
+
+### Options pour P1 (non tranché)
+
+- **A. Renommer la seule exécution sautée.** Peu coûteux, noms exigés inchangés, saut conservé. **Insuffisant** : le
+  push testé avant la PR n'est pas sauté et son succès, sous le nom exigé, suffit à fusionner (#7).
+- **B. Ne pas émettre les noms exigés sur un push avec PR.** Un déclencheur ignore qu'une PR existe : revient à A ou à
+  deux workflows. Même insuffisance tant qu'un push antérieur à la PR émet ces noms.
+- **C. Abandonner le saut.** Double passage (payant pour un adoptant en dépôt privé), QUA-121 et QUA-263 renversés.
+  **Insuffisant** (déduit de #7) : un `checks` de push réellement réussi compte avant celui de la PR.
+- **D. Nommer selon l'événement** : seuls les runs `pull_request` et les push de la branche principale rapportent
+  `checks` ; tout autre run rapporte `checks (push)`. Dans le dépôt, même suffixe pour les `kit-tests (<os>)`. Le saut
+  reste : pas de double passage ; une branche sans PR reste testée, sous l'autre nom.
+  - **Essayé sur la CI livrée** (une ligne `name:` sur le job `checks`) : PR #12 verte, portant le changement, fusionnée
+    normalement (`checks` et `checks (push)` réussis) ; PR #13, push testé avant la PR et fusion automatique dès
+    l'ouverture (runs 46058345022 / 46058408636) : `checks (push)` réussi à 19:40:47, PR ouverte à 19:40:59,
+    **`BLOCKED` à chaque relevé** avant, pendant et après l'échec du `checks` (19:41:30), jamais `UNSTABLE`, fusion
+    automatique restée armée ; fusion normale refusée après l'échec.
+  - **Non essayé** : D sur la CI du dépôt et le suffixe des `kit-tests` ; push puis PR aussitôt sous D (déduit : même
+    expression, qui ignore le saut). Dans le dépôt, `checks` sauté par sa condition garde un nom à vérifier : évalué ou
+    laissé en expression, il ne devrait pas valoir `checks` sur un push de branche (déduit).
+  - **Adoptants** : le nom exigé `checks` ne change pas et vient de la PR ; effet à la mise à jour du kit, à annoncer au
+    changelog. À examiner : une règle ou un outil qui attendrait `checks` d'un run autre que ces deux-là (file de fusion
+    `merge_group`, non déclenchée par le workflow livré ; lancement manuel du workflow du dépôt sur une branche).
+- **Recommandation : D.** Seule des quatre à couvrir les deux chemins vers la fusion prématurée, essayée avec succès sur
+  la CI livrée, sans double passage ni changement des noms exigés. Limite de toute option fondée sur les noms (déduit) :
+  un autre run `pull_request` réussi sur le même commit (autre base, par exemple) rapporte aussi `checks`.
