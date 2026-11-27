@@ -103,15 +103,18 @@ Aucun.
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-27) : lot 1 fait, constat en section 8 ; défaut reproduit sur la CI du dépôt et sur la CI
-  livrée ; P1 tranché (D) ; aucun code de drwil modifié.
-- **En attendant** : avant de fusionner une PR, de code ou de documentation, vérifier que le `checks` de l'exécution
-  `pull_request` est terminé et réussi ; ne pas programmer sa fusion automatique avant.
-- **Prochaine étape** : [IA] lot 2, mécanisme D. Non essayés, à couvrir : D sur la CI du dépôt, suffixe des
-  `kit-tests`, nom d'un `checks` sauté par sa condition, push puis PR aussitôt sous D.
-- **Dépôt d'essai** : conservé pour le lot 3. `master` y porte désormais le projet factice (la copie de drwil est sur
-  `etat-depot`) ; le ruleset 28200085 est désactivé et `master` a la protection classique de la CI livrée : à remettre
-  en place pour rejouer la CI du dépôt. L'issue #4 reste ouverte, les branches d'essai sont gardées.
+- **Dernier état** (2026-11-27) : lots 1 et 2 faits. Mécanisme D dans les deux workflows, QUA-121 et QUA-263 réécrits,
+  QUA-339 (contrat `Manuel` du critère 4) créé, changelog écrit ; essai réel de D sur la CI du dépôt en section 9.
+  Le lien `QUA-339` est ajouté au critère 4 sans changer son texte (empreinte des critères identique, QUA-174).
+- **En attendant** la fusion du correctif : avant de fusionner une PR, de code ou de documentation, vérifier que le
+  `checks` de l'exécution `pull_request` est terminé et réussi ; ne pas programmer sa fusion automatique avant. De même
+  ensuite pour une branche créée avant le correctif, tant qu'elle n'a pas intégré `master` : son push rapporte encore
+  `checks`.
+- **Prochaine étape** : [IA] vérification et clôture ; [humain] lot 3, essai réel et attestation de QUA-339.
+- **Dépôt d'essai** : conservé pour le lot 3. `master` y porte le projet factice avec la protection classique de la CI
+  livrée ; la copie de drwil est sur `etat-depot`, désormais protégée par les quatre noms exigés (protection classique,
+  administrateurs inclus) ; le ruleset 28200085 reste désactivé. L'issue #4 reste ouverte, la PR #14 est fermée, les
+  branches d'essai sont gardées.
 
 ## 8. Constat du lot 1 (reproduction)
 
@@ -236,3 +239,23 @@ livrée est celle de la PR #7. `strict: true` ne l'a pas empêchée.
 - **Recommandation : D.** Seule des quatre à couvrir les deux chemins vers la fusion prématurée, essayée avec succès sur
   la CI livrée, sans double passage ni changement des noms exigés. Limite de toute option fondée sur les noms (déduit) :
   un autre run `pull_request` réussi sur le même commit (autre base, par exemple) rapporte aussi `checks`.
+
+## 9. Constat du lot 2 (D sur la CI du dépôt)
+
+Dépôt d'essai, heures UTC du 2026-11-27. Montage : `etat-depot` (`301c43dd`) protégée par les quatre noms exigés
+(protection classique, `strict` à faux, administrateurs inclus) ; seuls le workflow de `a62db940` et un fichier
+d'échec volontaire sont ajoutés aux branches d'essai.
+
+- **Push puis PR aussitôt** (PR #14, fusion automatique dès l'ouverture à 20:24:50, runs push 46063455652 et PR
+  46063461619, commit `5b9d8f53`) : le push s'est sauté. Son `checks` sauté s'affiche sous l'expression non évaluée
+  (`(github.event_name == 'pull_request' || …) && 'checks' || 'checks (push)'`), qui n'est aucun nom exigé ; son
+  `kit-tests`, réussi sans tester, s'appelle `kit-tests (ubuntu-latest) (push)`. Le run `pull_request` rapporte `checks`
+  et les trois `kit-tests (<os>)` sans suffixe. `BLOCKED` à chaque relevé (toutes les 15 s) avant, pendant et après
+  l'échec de `checks` (20:39:44) ; fusion automatique restée programmée, aucun évènement de désactivation dans
+  l'historique ; fusion normale refusée à 20:40:01. PR fermée ensuite.
+- **Push sans PR** (branche `essai/d-depot-sans-pr`, run 46063804171, commit `62bf2986`) : le push teste, ses jobs
+  s'appellent `checks (push)` et `kit-tests (ubuntu-latest) (push)`.
+- **Échecs de la PR #14**, dus au montage : l'échec volontaire ; le contrôle des miroirs (fichiers d'essai) ; le test
+  QUA-251 de la copie, d'avant le correctif, qui attend `checks` sans `name:`.
+- **Non essayés** : push réellement réussi avant l'ouverture de la PR sur la CI du dépôt ; PR de code ; CI livrée avec
+  l'expression finale (celle des PR #12 et #13 n'avait pas la condition `github.event_name == 'push'`).
