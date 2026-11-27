@@ -1,8 +1,8 @@
 # Projet : aucune fusion n'est permise avant un contrôle réellement exécuté et réussi
 
-**Statut** : cadré le 2026-11-26 — P1 se tranche après la reproduction du lot 1.
+**Statut** : cadré le 2026-11-26 ; P1 tranché le 2026-11-27, après la reproduction du lot 1.
 **Risque** : HIGH
-**Maturité** : à affiner
+**Maturité** : prêt
 
 <!-- scope
 files:
@@ -64,7 +64,9 @@ d'arbre prouvé à reprendre ; sa CI a duré environ 11 minutes (lien non vérif
 
 ## Contrats modifiés
 
-Aucun validé : QUA-121 et QUA-263 décrivent le mécanisme actuel ; leur nouveau texte dépend de P1 et sera validé avec lui.
+- `QUA-121` — le texte suit le mécanisme D : le nom rapporté dépend de l'évènement (validé par le demandeur le 2026-11-27)
+- `QUA-263` — le texte suit le mécanisme D dans la CI livrée (validé par le demandeur le 2026-11-27)
+- `.githooks/run-checks.test.mjs` — ses cas de structure du workflow suivent le mécanisme retenu à P1, sans retirer l'exigence qu'une branche sans PR reste testée ni que les noms exigés soient conservés (validé par le demandeur le 2026-11-27)
 
 ## 2. Hors périmètre
 
@@ -83,11 +85,13 @@ Aucun validé : QUA-121 et QUA-263 décrivent le mécanisme actuel ; leur nouvea
 ## 4. Décisions
 
 - 2026-11-26 : P0, en tête de la 0.11.3.
+- 2026-11-27 : P1, mécanisme D (nom selon l'évènement, options en fin de section 8).
+- 2026-11-27 : le premier critère ne vise pas les `kit-tests` Windows et macOS, réussis sans tester sur une PR par
+  conception (QUA-045) ; il vise le travail confié à une autre exécution du même commit.
 
 ## 5. Points à trancher
 
-- [décision] P1 : le mécanisme. Reproduction faite (section 8) ; options et recommandation à la fin de cette section,
-  décision au demandeur.
+Aucun.
 
 ## 6. Increments
 
@@ -99,11 +103,12 @@ Aucun validé : QUA-121 et QUA-263 décrivent le mécanisme actuel ; leur nouvea
 
 ## 7. Reprise
 
-- **Dernier état** (2026-11-27) : essais du lot 1 faits, constat en section 8 ; défaut reproduit sur la CI du dépôt et
-  sur la CI livrée ; P1 non tranché ; aucun code de drwil modifié.
+- **Dernier état** (2026-11-27) : lot 1 fait, constat en section 8 ; défaut reproduit sur la CI du dépôt et sur la CI
+  livrée ; P1 tranché (D) ; aucun code de drwil modifié.
 - **En attendant** : avant de fusionner une PR, de code ou de documentation, vérifier que le `checks` de l'exécution
   `pull_request` est terminé et réussi ; ne pas programmer sa fusion automatique avant.
-- **Prochaine étape** : [humain] trancher P1 ; ensuite seulement, passer au lot 2.
+- **Prochaine étape** : [IA] lot 2, mécanisme D. Non essayés, à couvrir : D sur la CI du dépôt, suffixe des
+  `kit-tests`, nom d'un `checks` sauté par sa condition, push puis PR aussitôt sous D.
 - **Dépôt d'essai** : conservé pour le lot 3. `master` y porte désormais le projet factice (la copie de drwil est sur
   `etat-depot`) ; le ruleset 28200085 est désactivé et `master` a la protection classique de la CI livrée : à remettre
   en place pour rejouer la CI du dépôt. L'issue #4 reste ouverte, les branches d'essai sont gardées.
@@ -206,7 +211,7 @@ livrée est celle de la PR #7. `strict: true` ne l'a pas empêchée.
 - Non essayés : PR de code sur la CI du dépôt ; push testé avant la PR sur la CI du dépôt (déduit identique, son push
   ne rejouant pas les contrôles avec les hooks de la branche principale).
 
-### Options pour P1 (non tranché)
+### Options pour P1 (tranché le 2026-11-27 : D)
 
 - **A. Renommer la seule exécution sautée.** Peu coûteux, noms exigés inchangés, saut conservé. **Insuffisant** : le
   push testé avant la PR n'est pas sauté et son succès, sous le nom exigé, suffit à fusionner (#7).
