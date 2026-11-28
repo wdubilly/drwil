@@ -77,7 +77,7 @@ déclare aucun contrôle découpé : son propre usage ne passe pas par ce cas (d
 ## 4. Décisions
 
 - 2026-11-28 : QUA-288 est modifié (ci-dessus). Écarté : un correctif par le seul workflow.
-- 2026-11-28 : en tête de la 0.11.3, resserrée pour être publiée vite.
+- 2026-11-28 : en tête de la 0.11.3, resserrée pour être publiée vite ; ensuite placée après la release en un geste (`docs/projects/release-en-un-geste.md`).
 - 2026-11-28 : pas de contournement chez l'adoptant (garder les hooks de la PR affaiblirait le rejeu).
 
 ## 5. Points à trancher
